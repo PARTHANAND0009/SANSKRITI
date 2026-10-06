@@ -250,3 +250,32 @@ analysis by default. Full list: `leaks.csv`.
 | Country Prediction | 17 | 0 | 47 |
 | General Awareness | 0 | 7 | 61 |
 | State Prediction | 0 | 304 | 271 |
+
+## 5. Association questions whose answer is the state itself (1891 rows)
+
+Association questions ask *which region* an item belongs to, and the distractors are
+regions (districts, valleys, towns). In these rows the gold option is instead the name
+of the row's own state, so the question can be answered at state level, and when the
+stem also names the state (e.g. "Where is X famous within Nagaland?" with gold
+"Nagaland") the answer is given away. We flag the latter as `leaks_answer`. In the
+templated stems the same items recur in each of the three Association templates
+(equal row counts below), so the issue sits with those items' answer field.
+
+| stem template | rows | stem also names the state |
+|---|---|---|
+| free-form | 601 | 28 |
+| assoc_or_country_associated_to | 430 | 430 |
+| assoc_regions_home_to | 430 | 81 |
+| assoc_where_famous | 430 | 430 |
+
+Examples:
+
+| qid | state | attribute | stem | gold | options |
+|---|---|---|---|---|---|
+| sk01490 | Delhi | Art | Which of the given regions is home to the Mughal Miniature Paintings? | Delhi | A. Chhindwara<br>B. Sualkuchi, Kamrup district<br>C. Mahavir Enclave<br>D. Delhi |
+| sk01710 | Delhi | Tourism | Where is the National Zoological Park famous within Delhi? | Delhi | A. Bhopal<br>B. Madhavamala village in Yerpedu mandal of Chittoor district<br>C. Delhi<br>D. Varanasi |
+| sk03102 | Ladakh | Tourism | Which of the given regions is home to the Sham Valley Trek? | Ladakh | A. Namchi district<br>B. Ladakh<br>C. Darbhanga<br>D. Manaskhand |
+
+A related, smaller case: in 15 Association rows the gold option repeats the
+item named in the stem (e.g. "Which of the given regions is home to the Nicobari
+pig-farming customs?" with gold "Nicobari pig-farming customs").

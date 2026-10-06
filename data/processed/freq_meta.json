@@ -1,0 +1,13 @@
+{
+  "infinigram_index": "v4_dolma-v1_7_llama",
+  "pageviews_year": 2024,
+  "pageviews_mode": "cached-only",
+  "pageviews_complete": false,
+  "pageviews_needed": 877,
+  "pageviews_not_fetched": 769,
+  "n_entities": 1864,
+  "n_states": 36,
+  "log_freq_primary": "corpus_count",
+  "log_freq_fallback": "wiki_pageviews_en",
+  "written": "2026-10-06T17:05:01Z"
+}

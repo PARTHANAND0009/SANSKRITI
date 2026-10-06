@@ -276,6 +276,48 @@ def _leak_summary(kept: pd.DataFrame) -> str:
     return "\n".join(lines) + "\n"
 
 
+def association_gold_is_state(kept: pd.DataFrame) -> pd.DataFrame:
+    """Association rows (non-ambiguous) whose gold option is the row's own state."""
+    if kept.empty:
+        return kept
+    a = kept[(kept["question_type"] == "Association") & ~kept["ambiguous_gold"]]
+    gold = [o[i] for o, i in zip(a["options"], a["gold_idx"])]
+    m = [_norm_text(g) == _norm_text(s) for g, s in zip(gold, a["state"])]
+    return a[m].assign(gold=[g for g, k in zip(gold, m) if k])
+
+
+def _assoc_gold_is_entity_count(kept: pd.DataFrame) -> int:
+    from data.entities import match_template
+
+    if kept.empty:
+        return 0
+    a = kept[(kept["question_type"] == "Association") & ~kept["ambiguous_gold"]]
+    n = 0
+    for stem, opts, gi in zip(a["stem"], a["options"], a["gold_idx"]):
+        h = match_template(stem, "Association")
+        if h and h[1] == "E" and _norm_text(h[2].group("E")).strip(" ?") == _norm_text(opts[gi]):
+            n += 1
+    return n
+
+
+def _assoc_state_section(kept: pd.DataFrame, n_examples: int = 3, seed: int = 0) -> str:
+    from data.entities import match_template  # local: entities imports prep-level helpers only
+
+    g = association_gold_is_state(kept)
+    if g.empty:
+        return "_none_\n"
+    rule = [(match_template(s, "Association") or ["free-form"])[0] for s in g["stem"]]
+    g = g.assign(template=rule)
+    by_t = g.groupby("template").agg(rows=("qid", "size"), also_leaks=("leaks_answer", "sum"))
+    lines = ["| stem template | rows | stem also names the state |", "|---|---|---|"]
+    for tname, r in by_t.sort_values("rows", ascending=False).iterrows():
+        lines.append(f"| {tname} | {int(r.rows)} | {int(r.also_leaks)} |")
+    lines += ["", "Examples:", ""]
+    ex = g.sample(n_examples, random_state=seed).sort_values("qid")
+    lines.append(_md_table(ex, ["qid", "state", "attribute", "stem", "gold", "options"]))
+    return "\n".join(lines)
+
+
 def write_quality_report(kept: pd.DataFrame, dropped: pd.DataFrame, path: Path, meta: dict) -> None:
     cols = ["qid", "state", "attribute", "stem", "answer", "options"]
     amb = kept[kept["ambiguous_gold"]] if len(kept) else kept
@@ -310,7 +352,22 @@ The gold option, or a name form / demonym of the gold state, appears in the
 question text. Kept and flagged (`leaks_answer`); excluded from our depth
 analysis by default. Full list: `leaks.csv`.
 
-{_leak_summary(kept)}"""
+{_leak_summary(kept)}
+## 5. Association questions whose answer is the state itself ({len(association_gold_is_state(kept))} rows)
+
+Association questions ask *which region* an item belongs to, and the distractors are
+regions (districts, valleys, towns). In these rows the gold option is instead the name
+of the row's own state, so the question can be answered at state level, and when the
+stem also names the state (e.g. "Where is X famous within Nagaland?" with gold
+"Nagaland") the answer is given away. We flag the latter as `leaks_answer`. In the
+templated stems the same items recur in each of the three Association templates
+(equal row counts below), so the issue sits with those items' answer field.
+
+{_assoc_state_section(kept)}
+A related, smaller case: in {_assoc_gold_is_entity_count(kept)} Association rows the gold option repeats the
+item named in the stem (e.g. "Which of the given regions is home to the Nicobari
+pig-farming customs?" with gold "Nicobari pig-farming customs").
+"""
     path.write_text(text)
 
 
