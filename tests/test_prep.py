@@ -48,6 +48,7 @@ def test_build_and_report(tmp_path):
     assert list(kept.qid) == ["sk00000", "sk00001"] and list(dropped.qid) == ["sk00002"]
     assert kept.gold_idx.tolist() == [2, 0]
     assert kept.ambiguous_gold.tolist() == [False, True]
+    assert kept.duplicate_options.tolist() == [False, True]
     for _, r in kept.iterrows():
         perm_opts = r.prompt_permuted.split("\n")[1:5]
         assert perm_opts[r.gold_idx_permuted][3:] == r.options[r.gold_idx]
