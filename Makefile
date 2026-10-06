@@ -20,7 +20,7 @@ tokens:
 forward:
 	$(PY) -m run.forward --model $(MODEL) --device $(DEVICE) --limit $(LIMIT)
 
-smoke: forward
+smoke: forward  # requires `make prep` and `make tokens` first
 	$(PY) scripts/smoke.py --model $(MODEL) --device $(DEVICE) --limit $(LIMIT)
 
 test:

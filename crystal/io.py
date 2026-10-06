@@ -60,6 +60,19 @@ def load_analysis_set(path: str | Path | None = None) -> pd.DataFrame:
     return df[~df["ambiguous_gold"]].reset_index(drop=True)
 
 
+def select_rows(split: str = "analysis", limit: int | None = None, path=None) -> pd.DataFrame:
+    """The rows stage 2 runs on, in a fixed order (qid order). Shared by
+    run/forward.py and scripts/smoke.py so both see the same questions."""
+    if split == "analysis":
+        df = load_analysis_set(path)
+    elif split == "all":
+        df = load_prompts(path)
+    else:
+        raise ValueError(f"split must be 'analysis' or 'all', got {split!r}")
+    df = df.sort_values("qid").reset_index(drop=True)
+    return df.head(limit) if limit else df
+
+
 def load_entities(path: str | Path | None = None) -> pd.DataFrame:
     path = path or load_run_config()["paths"]["entities"]
     return pd.read_parquet(resolve(path))

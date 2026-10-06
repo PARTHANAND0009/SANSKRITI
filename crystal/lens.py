@@ -55,6 +55,27 @@ def lens_logits(model, resid: torch.Tensor, layer: int, translator=None) -> torc
     return logits
 
 
+def lens_option_logits(model, resid: torch.Tensor, layer: int, option_ids, translator=None) -> torch.Tensor:
+    """lens_logits(...)[..., option_ids] without materialising the full vocabulary.
+    Valid because the norm and the softcap act per position / per logit."""
+    n = len(decoder_layers(model))
+    if not 0 <= layer < n:
+        raise ValueError(f"layer {layer} out of range for {n} decoder layers")
+    p = next(model.parameters())
+    h = resid.to(device=p.device, dtype=p.dtype)
+    if translator is not None:
+        h = translator(h, layer)
+    head = unembed(model)
+    idx = torch.as_tensor(option_ids, device=p.device)
+    logits = torch.nn.functional.linear(
+        final_norm(model)(h), head.weight[idx], None if head.bias is None else head.bias[idx]
+    )
+    cap = softcap(model)
+    if cap is not None:
+        logits = torch.tanh(logits / cap) * cap
+    return logits
+
+
 def restricted_probs(logits: torch.Tensor, option_ids) -> torch.Tensor:
     """Softmax restricted to the four option tokens. logits [..., V] -> [..., 4]."""
     idx = torch.as_tensor(option_ids, device=logits.device)
