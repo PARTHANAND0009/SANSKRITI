@@ -31,7 +31,7 @@ models:
     proxy: false
     # Gemma 2 softcapping + sliding window: use eager attention (HF recommendation).
     attn_implementation: eager
-    option_token_variant: pending
+    option_token_variant: space
   qwen25_05b_proxy:
     id: Qwen/Qwen2.5-0.5B
     family: qwen2
