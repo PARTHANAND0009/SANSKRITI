@@ -5,7 +5,14 @@
 - 4 CPUs, 15 GB RAM.
 - `HF_TOKEN` not set.
 
-## Network (one request each, through the session egress proxy)
+## Network, re-check 2026-10-06 (after allowlist update)
+All required endpoints answer 200: HF dataset API, en.wikipedia REST, hi.wikipedia
+action API, wikimedia pageviews, api.infini-gram.io (POST count on
+`v4_dolma-v1_7_llama` -> `{"approx", "count", "latency", "token_ids", "tokens"}`).
+`HF_TOKEN` not set: Llama-3.1-8B and gemma-2-9b config.json -> 403 (gated, manual);
+Qwen2.5-7B and Qwen2.5-0.5B accessible.
+
+## Network, first check (one request each, through the session egress proxy)
 | endpoint | result |
 |---|---|
 | huggingface.co | blocked (proxy 403 on CONNECT) |
