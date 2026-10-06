@@ -16,3 +16,5 @@ acts/
 !data/processed/entities.parquet
 !data/processed/freq.parquet
 !data/processed/swap_pool.parquet
+!data/processed/freq_entities.parquet
+!data/processed/freq_state.parquet
