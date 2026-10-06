@@ -20,7 +20,7 @@ models:
     batch_size: 16
     gated: false
     proxy: false
-    option_token_variant: pending
+    option_token_variant: space
   gemma2_9b:
     id: google/gemma-2-9b
     family: gemma2
@@ -40,4 +40,4 @@ models:
     batch_size: 8
     gated: false
     proxy: true
-    option_token_variant: pending
+    option_token_variant: space
