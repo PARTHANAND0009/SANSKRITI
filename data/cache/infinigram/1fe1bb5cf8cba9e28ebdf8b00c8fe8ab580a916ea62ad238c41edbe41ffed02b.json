@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kauna reed mats"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 6.510496139526367, "token_ids": [13680, 4347, 337, 287, 286, 1446], "tokens": ["\u2581Ka", "una", "\u2581re", "ed", "\u2581m", "ats"]}}

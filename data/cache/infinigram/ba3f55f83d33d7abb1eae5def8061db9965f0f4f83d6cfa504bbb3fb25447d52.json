@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Mahuri"}}, "status": 200, "json": {"approx": false, "count": 1490, "latency": 29.798507690429688, "token_ids": [10082, 5338], "tokens": ["\u2581Mah", "uri"]}}

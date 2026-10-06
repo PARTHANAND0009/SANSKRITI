@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kerala Ayurveda"}}, "status": 200, "json": {"approx": false, "count": 7901, "latency": 23.287534713745117, "token_ids": [12693, 2883, 15846, 332, 1490, 29874], "tokens": ["\u2581Ker", "ala", "\u2581Ay", "ur", "ved", "a"]}}

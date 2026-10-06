@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Mercury"}}, "status": 200, "json": {"approx": false, "count": 8237246, "latency": 55.33313751220703, "token_ids": [29389, 29891], "tokens": ["\u2581Mercur", "y"]}}

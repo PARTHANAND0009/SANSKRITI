@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Teej Festival"}}, "status": 200, "json": {"approx": false, "count": 2511, "latency": 31.66675567626953, "token_ids": [1920, 10337, 8518], "tokens": ["\u2581Te", "ej", "\u2581Festival"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Boat Race"}}, "status": 200, "json": {"approx": false, "count": 109495, "latency": 41.4121150970459, "token_ids": [1952, 271, 23613], "tokens": ["\u2581Bo", "at", "\u2581Race"]}}

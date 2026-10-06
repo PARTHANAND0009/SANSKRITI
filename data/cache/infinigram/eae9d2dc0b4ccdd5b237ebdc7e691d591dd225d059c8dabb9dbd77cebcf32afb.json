@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Garden of Silence"}}, "status": 200, "json": {"approx": false, "count": 1065, "latency": 29.47211265563965, "token_ids": [19906, 310, 5664, 663], "tokens": ["\u2581Garden", "\u2581of", "\u2581Sil", "ence"]}}

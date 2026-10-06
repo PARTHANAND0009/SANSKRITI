@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Hornbill Festival"}}, "status": 200, "json": {"approx": false, "count": 14516, "latency": 36.203622817993164, "token_ids": [19674, 29890, 453, 8518], "tokens": ["\u2581Horn", "b", "ill", "\u2581Festival"]}}

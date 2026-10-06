@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kavigan"}}, "status": 200, "json": {"approx": false, "count": 337, "latency": 26.06487274169922, "token_ids": [476, 3723, 273], "tokens": ["\u2581K", "avig", "an"]}}

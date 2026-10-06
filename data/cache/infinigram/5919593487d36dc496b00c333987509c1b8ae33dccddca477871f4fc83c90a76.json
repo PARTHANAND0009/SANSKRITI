@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kang festival"}}, "status": 200, "json": {"approx": false, "count": 93, "latency": 23.421287536621094, "token_ids": [476, 574, 16005], "tokens": ["\u2581K", "ang", "\u2581festival"]}}

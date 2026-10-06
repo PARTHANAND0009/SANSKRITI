@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Portuguese rule"}}, "status": 200, "json": {"approx": false, "count": 24295, "latency": 34.6674919128418, "token_ids": [25519, 5751], "tokens": ["\u2581Portuguese", "\u2581rule"]}}

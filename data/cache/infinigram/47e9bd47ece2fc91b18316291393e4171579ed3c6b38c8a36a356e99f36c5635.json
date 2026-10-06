@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Nangyar Koothu"}}, "status": 200, "json": {"approx": false, "count": 244, "latency": 18.166780471801758, "token_ids": [405, 574, 8553, 476, 6983, 29884], "tokens": ["\u2581N", "ang", "yar", "\u2581K", "ooth", "u"]}}

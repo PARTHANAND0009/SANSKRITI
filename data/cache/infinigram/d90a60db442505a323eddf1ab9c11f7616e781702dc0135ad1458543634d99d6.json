@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sea Shell Museum"}}, "status": 200, "json": {"approx": false, "count": 1159, "latency": 32.23872184753418, "token_ids": [14070, 1383, 514, 6838], "tokens": ["\u2581Sea", "\u2581Sh", "ell", "\u2581Museum"]}}

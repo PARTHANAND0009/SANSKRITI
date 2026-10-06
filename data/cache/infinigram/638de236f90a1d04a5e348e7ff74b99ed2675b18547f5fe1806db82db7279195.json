@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Tulip Festival"}}, "status": 200, "json": {"approx": false, "count": 53069, "latency": 48.19893836975098, "token_ids": [27415, 666, 8518], "tokens": ["\u2581Tul", "ip", "\u2581Festival"]}}

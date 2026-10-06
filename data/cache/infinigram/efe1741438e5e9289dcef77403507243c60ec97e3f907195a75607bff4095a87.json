@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kota Gullu"}}, "status": 200, "json": {"approx": false, "count": 83, "latency": 24.120330810546875, "token_ids": [476, 4616, 402, 913, 29884], "tokens": ["\u2581K", "ota", "\u2581G", "ull", "u"]}}

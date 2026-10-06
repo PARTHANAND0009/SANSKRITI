@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Textile weaving"}}, "status": 200, "json": {"approx": false, "count": 391, "latency": 20.301342010498047, "token_ids": [3992, 488, 591, 5555], "tokens": ["\u2581Text", "ile", "\u2581we", "aving"]}}

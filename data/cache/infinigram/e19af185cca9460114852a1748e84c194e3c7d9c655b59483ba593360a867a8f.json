@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Mirchi Bhajji"}}, "status": 200, "json": {"approx": false, "count": 249, "latency": 24.342060089111328, "token_ids": [11612, 4161, 20303, 1175, 2397], "tokens": ["\u2581Mir", "chi", "\u2581Bh", "aj", "ji"]}}

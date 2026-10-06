@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "living forts"}}, "status": 200, "json": {"approx": false, "count": 606, "latency": 33.576011657714844, "token_ids": [8471, 363, 1372], "tokens": ["\u2581living", "\u2581for", "ts"]}}

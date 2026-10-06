@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Mughal Garden"}}, "status": 200, "json": {"approx": false, "count": 6856, "latency": 28.485774993896484, "token_ids": [341, 688, 4077, 19906], "tokens": ["\u2581M", "ug", "hal", "\u2581Garden"]}}

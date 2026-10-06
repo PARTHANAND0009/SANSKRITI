@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Banana leaf"}}, "status": 200, "json": {"approx": false, "count": 6472, "latency": 27.120113372802734, "token_ids": [10765, 1648, 20447], "tokens": ["\u2581Ban", "ana", "\u2581leaf"]}}

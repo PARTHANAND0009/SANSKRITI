@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kosoi Bwtwi"}}, "status": 200, "json": {"approx": false, "count": 64, "latency": 29.440641403198242, "token_ids": [17457, 7768, 350, 14554, 4353], "tokens": ["\u2581Kos", "oi", "\u2581B", "wt", "wi"]}}

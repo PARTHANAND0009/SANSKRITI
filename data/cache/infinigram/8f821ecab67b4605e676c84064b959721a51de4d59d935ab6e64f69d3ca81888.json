@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Moula Ali hill"}}, "status": 200, "json": {"approx": false, "count": 64, "latency": 21.05116844177246, "token_ids": [29075, 433, 10785, 17306], "tokens": ["\u2581Mou", "la", "\u2581Ali", "\u2581hill"]}}

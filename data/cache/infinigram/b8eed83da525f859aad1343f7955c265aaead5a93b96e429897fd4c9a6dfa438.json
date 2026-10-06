@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sirsa"}}, "status": 200, "json": {"approx": false, "count": 91298, "latency": 39.19649124145508, "token_ids": [6290, 4977], "tokens": ["\u2581Sir", "sa"]}}

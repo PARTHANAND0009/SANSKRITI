@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Bateshwar Temples"}}, "status": 200, "json": {"approx": false, "count": 176, "latency": 28.865575790405273, "token_ids": [350, 1078, 29882, 4495, 6789, 2701], "tokens": ["\u2581B", "ates", "h", "war", "\u2581Tem", "ples"]}}

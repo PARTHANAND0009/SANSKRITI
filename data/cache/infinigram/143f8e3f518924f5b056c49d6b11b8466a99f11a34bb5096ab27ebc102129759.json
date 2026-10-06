@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Tholu Bommalata"}}, "status": 200, "json": {"approx": false, "count": 646, "latency": 28.337955474853516, "token_ids": [498, 20424, 350, 3011, 284, 532], "tokens": ["\u2581Th", "olu", "\u2581B", "omm", "al", "ata"]}}

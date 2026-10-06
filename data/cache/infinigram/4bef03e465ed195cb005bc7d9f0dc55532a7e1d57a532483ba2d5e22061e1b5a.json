@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Nabanna"}}, "status": 200, "json": {"approx": false, "count": 13779, "latency": 31.330585479736328, "token_ids": [405, 370, 9713], "tokens": ["\u2581N", "ab", "anna"]}}

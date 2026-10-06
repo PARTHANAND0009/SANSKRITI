@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Shawl weaving"}}, "status": 200, "json": {"approx": false, "count": 120, "latency": 27.577877044677734, "token_ids": [28548, 29880, 591, 5555], "tokens": ["\u2581Shaw", "l", "\u2581we", "aving"]}}

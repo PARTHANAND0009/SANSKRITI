@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Wak Bahan"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 25.79045295715332, "token_ids": [399, 557, 15174, 273], "tokens": ["\u2581W", "ak", "\u2581Bah", "an"]}}

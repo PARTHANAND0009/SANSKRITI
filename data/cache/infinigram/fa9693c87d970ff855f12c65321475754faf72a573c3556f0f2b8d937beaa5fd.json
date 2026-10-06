@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Virat Kohli"}}, "status": 200, "json": {"approx": false, "count": 1050605, "latency": 53.67326736450195, "token_ids": [6749, 271, 28590, 492], "tokens": ["\u2581Vir", "at", "\u2581Koh", "li"]}}

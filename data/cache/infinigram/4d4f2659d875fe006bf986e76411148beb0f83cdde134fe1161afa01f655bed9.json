@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Monpa paper scrolls"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 7.384061813354492, "token_ids": [2598, 3274, 5650, 6355, 29879], "tokens": ["\u2581Mon", "pa", "\u2581paper", "\u2581scroll", "s"]}}

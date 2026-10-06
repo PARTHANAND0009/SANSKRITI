@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "banarasi paan"}}, "status": 200, "json": {"approx": false, "count": 257, "latency": 32.02676773071289, "token_ids": [9892, 279, 6840, 3300, 273], "tokens": ["\u2581ban", "ar", "asi", "\u2581pa", "an"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Alwal Lake"}}, "status": 200, "json": {"approx": false, "count": 35, "latency": 23.333072662353516, "token_ids": [838, 14625, 9459], "tokens": ["\u2581Al", "wal", "\u2581Lake"]}}

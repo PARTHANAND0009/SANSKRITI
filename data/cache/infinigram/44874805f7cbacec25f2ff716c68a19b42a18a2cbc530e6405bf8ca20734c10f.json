@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Ladarcha Fair"}}, "status": 200, "json": {"approx": false, "count": 89, "latency": 24.457693099975586, "token_ids": [19955, 1279, 29874, 13822], "tokens": ["\u2581Lad", "arch", "a", "\u2581Fair"]}}

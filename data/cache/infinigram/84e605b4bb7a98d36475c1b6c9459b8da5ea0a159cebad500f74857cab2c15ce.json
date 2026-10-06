@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Shamlaji melo"}}, "status": 200, "json": {"approx": false, "count": 1, "latency": 16.27206802368164, "token_ids": [1383, 314, 433, 2397, 286, 7078], "tokens": ["\u2581Sh", "am", "la", "ji", "\u2581m", "elo"]}}

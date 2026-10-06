@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sarafa Bazaar"}}, "status": 200, "json": {"approx": false, "count": 2664, "latency": 30.487775802612305, "token_ids": [7745, 2142, 29874, 350, 834, 4025], "tokens": ["\u2581Sar", "af", "a", "\u2581B", "az", "aar"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Paitkar paintings"}}, "status": 200, "json": {"approx": false, "count": 173, "latency": 27.973651885986328, "token_ids": [349, 1249, 5689, 10675, 886], "tokens": ["\u2581P", "ait", "kar", "\u2581paint", "ings"]}}

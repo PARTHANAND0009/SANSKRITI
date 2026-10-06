@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Thoda (archery)"}}, "status": 200, "json": {"approx": false, "count": 1, "latency": 21.512985229492188, "token_ids": [498, 8887, 313, 1279, 708, 29897], "tokens": ["\u2581Th", "oda", "\u2581(", "arch", "ery", ")"]}}

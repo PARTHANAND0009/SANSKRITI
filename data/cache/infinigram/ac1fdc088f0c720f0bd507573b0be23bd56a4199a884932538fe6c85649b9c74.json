@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Alampur Museum"}}, "status": 200, "json": {"approx": false, "count": 19, "latency": 29.23583984375, "token_ids": [838, 1160, 332, 6838], "tokens": ["\u2581Al", "amp", "ur", "\u2581Museum"]}}

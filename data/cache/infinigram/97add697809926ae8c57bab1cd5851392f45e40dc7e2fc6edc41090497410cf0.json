@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Checkered Keelback"}}, "status": 200, "json": {"approx": false, "count": 449, "latency": 32.20224380493164, "token_ids": [5399, 14561, 4813, 295, 1627], "tokens": ["\u2581Check", "ered", "\u2581Ke", "el", "back"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kashmiri Rug"}}, "status": 200, "json": {"approx": false, "count": 18, "latency": 23.402929306030273, "token_ids": [476, 1161, 2460, 374, 390, 688], "tokens": ["\u2581K", "ash", "mi", "ri", "\u2581R", "ug"]}}

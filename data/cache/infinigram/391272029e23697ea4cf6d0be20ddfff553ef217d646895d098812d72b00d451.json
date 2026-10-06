@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Aayi Mandapam"}}, "status": 200, "json": {"approx": false, "count": 580, "latency": 24.515628814697266, "token_ids": [319, 388, 29875, 15419, 481, 314], "tokens": ["\u2581A", "ay", "i", "\u2581Mand", "ap", "am"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "tartan"}}, "status": 200, "json": {"approx": false, "count": 603403, "latency": 42.24991798400879, "token_ids": [13914, 273], "tokens": ["\u2581tart", "an"]}}

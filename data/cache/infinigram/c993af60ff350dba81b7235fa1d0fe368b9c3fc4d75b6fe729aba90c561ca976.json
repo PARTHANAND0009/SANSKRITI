@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Nicobari Hut"}}, "status": 200, "json": {"approx": false, "count": 20, "latency": 24.29032325744629, "token_ids": [13656, 711, 1306, 379, 329], "tokens": ["\u2581Nic", "ob", "ari", "\u2581H", "ut"]}}

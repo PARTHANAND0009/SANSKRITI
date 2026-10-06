@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Khurja Pottery"}}, "status": 200, "json": {"approx": false, "count": 127, "latency": 21.692991256713867, "token_ids": [12217, 332, 1764, 10173, 22005], "tokens": ["\u2581Kh", "ur", "ja", "\u2581Pot", "tery"]}}

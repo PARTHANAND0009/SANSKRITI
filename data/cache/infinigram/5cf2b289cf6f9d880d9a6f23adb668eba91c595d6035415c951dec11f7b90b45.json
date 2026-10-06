@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Pathargatti"}}, "status": 200, "json": {"approx": false, "count": 128, "latency": 23.59795570373535, "token_ids": [10802, 1191, 11556], "tokens": ["\u2581Path", "arg", "atti"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "King Kothi Palace"}}, "status": 200, "json": {"approx": false, "count": 496, "latency": 31.2802791595459, "token_ids": [4088, 476, 720, 29875, 24537], "tokens": ["\u2581King", "\u2581K", "oth", "i", "\u2581Palace"]}}

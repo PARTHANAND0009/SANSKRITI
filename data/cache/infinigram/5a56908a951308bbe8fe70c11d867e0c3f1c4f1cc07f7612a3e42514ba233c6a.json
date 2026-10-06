@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "La Darcha"}}, "status": 200, "json": {"approx": false, "count": 89, "latency": 26.165485382080078, "token_ids": [997, 360, 1279, 29874], "tokens": ["\u2581La", "\u2581D", "arch", "a"]}}

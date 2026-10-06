@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Shirui Hill"}}, "status": 200, "json": {"approx": false, "count": 101, "latency": 24.020910263061523, "token_ids": [1383, 381, 1481, 9143], "tokens": ["\u2581Sh", "ir", "ui", "\u2581Hill"]}}
