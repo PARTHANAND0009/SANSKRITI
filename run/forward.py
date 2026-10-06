@@ -1,14 +1,15 @@
-"""Stage 2: residual stream (resid_post) at the final prompt token, every decoder layer.
+"""Stage 2: residual stream at the final prompt token, embeddings + every decoder layer.
 
-For each question, a forward hook on every decoder layer keeps the output
-hidden state at the last prompt position. Batches are left-padded, with
+For each question, a forward pre-hook on the first decoder block keeps its
+input (the embedding output, layer 0) and a forward hook on every block keeps
+its output (resid_post, layers 1..L), at the last prompt position. Batches are left-padded, with
 attention_mask and explicit position_ids (cumsum of the mask), so position -1
 is the final prompt token for every row and padded rows see the same positions
 as unpadded ones.
 
 Output: acts/{model}/{variant}/shard_XXXXX.npz with
   qids            [n]           str
-  acts            [n, L, d]     float16   resid_post, layers 0..L-1
+  acts            [n, L+1, d]   float16   layer 0 = embeddings, layer k = block k output
   out_opt_logits  [n, 4]        float32   the model's own output logits at A..D
 plus meta.json in the same directory. Existing shards whose qids match are
 skipped, so an interrupted run resumes where it stopped.
@@ -46,7 +47,8 @@ def position_ids_from_mask(mask: torch.Tensor) -> torch.Tensor:
 
 @torch.no_grad()
 def collect_resid(model, input_ids: torch.Tensor, attention_mask: torch.Tensor, option_ids):
-    """Returns (acts [B, L, d] float32 on CPU, out_opt_logits [B, 4] float32 on CPU).
+    """Returns (acts [B, L+1, d] float32 on CPU, out_opt_logits [B, 4] float32 on CPU).
+    acts[:, 0] is the embedding output, acts[:, k] the output of block k.
 
     Requires left padding: the last column must be a real token for every row.
     """
@@ -61,7 +63,12 @@ def collect_resid(model, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
             store[i] = h[:, -1, :].detach().float().cpu()
         return f
 
-    handles = [l.register_forward_hook(hook(i)) for i, l in enumerate(layers)]
+    def pre_hook(mod, args, kwargs):
+        h = args[0] if args else kwargs["hidden_states"]
+        store[0] = h[:, -1, :].detach().float().cpu()
+
+    handles = [layers[0].register_forward_pre_hook(pre_hook, with_kwargs=True)]
+    handles += [l.register_forward_hook(hook(i + 1)) for i, l in enumerate(layers)]
     try:
         dev = next(model.parameters()).device
         out = model(
@@ -74,7 +81,7 @@ def collect_resid(model, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
     finally:
         for h in handles:
             h.remove()
-    acts = torch.stack([store[i] for i in range(len(layers))], dim=1)
+    acts = torch.stack([store[i] for i in range(len(layers) + 1)], dim=1)
     idx = torch.as_tensor(option_ids, device=out.logits.device)
     opt = out.logits[:, -1, :].float()[:, idx].cpu()
     return acts, opt
@@ -189,7 +196,8 @@ def main(argv=None):
 
     meta = {
         "model_key": args.model, "model_id": mcfg["id"], "proxy": bool(mcfg.get("proxy")),
-        "n_layers": mcfg["n_layers"], "d_model": model.config.hidden_size, "dtype": mcfg["dtype"],
+        "n_layers": mcfg["n_layers"], "n_readout_layers": mcfg["n_layers"] + 1,
+        "layer_convention": "0 = embeddings, k = output of block k", "d_model": model.config.hidden_size, "dtype": mcfg["dtype"],
         "split": args.split, "limit": args.limit, "variant": args.variant, "n_rows": len(df),
         "shard_size": args.shard_size, "option_token_variant": mcfg["option_token_variant"],
         "option_ids": opt_ids, "torch": torch.__version__, "transformers": transformers.__version__,

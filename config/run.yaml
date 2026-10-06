@@ -23,3 +23,5 @@ frequency:
   pageviews_year: 2024
   user_agent: "crystal-research/0.1 (IIT Patna x SANSKRITI collaboration; contact: parthanand67@gmail.com)"
   min_interval_s: 0.2
+  service_intervals_s:     # per-service minimum seconds between requests
+    pageviews: 1.0         # the pageviews API rate-limits this egress IP (429, Retry-After ~48s)

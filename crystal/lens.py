@@ -4,6 +4,13 @@ Logit lens: final norm -> unembedding (-> Gemma 2 final logit softcapping).
 Tuned lens (Belrose et al. 2023): an affine translator per layer is applied to
 the residual first, then the same head. Translators are trained in stage 3a
 (run/lens.py); this module only applies them.
+
+Layer convention (shared by stage 2 activations, lens curves and l*):
+  layer 0      the embedding output = residual input to the first block
+               (including Gemma's sqrt(d_model) embedding scaling)
+  layer k>=1   resid_post of the k-th decoder block
+so a model with L blocks has L + 1 readout layers 0..L, and layer L reproduces
+the model's own output logits.
 """
 from __future__ import annotations
 
@@ -28,22 +35,31 @@ def decoder_layers(model):
     return model.get_decoder().layers
 
 
+def n_readout_layers(model) -> int:
+    """L + 1: the embedding output plus one per decoder block."""
+    return len(decoder_layers(model)) + 1
+
+
+def check_layer(model, layer: int) -> None:
+    n = len(decoder_layers(model))
+    if not 0 <= layer <= n:
+        raise ValueError(f"layer {layer} out of range 0..{n} (0 = embeddings, {n} = last block)")
+
+
 def softcap(model) -> float | None:
     return getattr(model.config, "final_logit_softcapping", None)
 
 
 def lens_logits(model, resid: torch.Tensor, layer: int, translator=None) -> torch.Tensor:
-    """Vocabulary logits read out from `resid`, the output of decoder layer `layer`
-    (0-indexed, resid_post).
+    """Vocabulary logits read out from `resid` at readout layer `layer` in 0..L
+    (see the module docstring for the convention).
 
     resid: [..., d_model]. Computed in the model's parameter dtype. If
     `translator` is given (a tuned lens: callable (resid, layer) -> resid), it is
     applied before the norm. With translator=None this is the logit lens, and at
-    layer = n_layers - 1 it reproduces the model's own output logits.
+    layer = L it reproduces the model's own output logits.
     """
-    n = len(decoder_layers(model))
-    if not 0 <= layer < n:
-        raise ValueError(f"layer {layer} out of range for {n} decoder layers")
+    check_layer(model, layer)
     p = next(model.parameters())
     h = resid.to(device=p.device, dtype=p.dtype)
     if translator is not None:
@@ -58,9 +74,7 @@ def lens_logits(model, resid: torch.Tensor, layer: int, translator=None) -> torc
 def lens_option_logits(model, resid: torch.Tensor, layer: int, option_ids, translator=None) -> torch.Tensor:
     """lens_logits(...)[..., option_ids] without materialising the full vocabulary.
     Valid because the norm and the softcap act per position / per logit."""
-    n = len(decoder_layers(model))
-    if not 0 <= layer < n:
-        raise ValueError(f"layer {layer} out of range for {n} decoder layers")
+    check_layer(model, layer)
     p = next(model.parameters())
     h = resid.to(device=p.device, dtype=p.dtype)
     if translator is not None:
@@ -89,12 +103,13 @@ def gold_rank(probs: torch.Tensor, gold_idx: torch.Tensor) -> torch.Tensor:
 
 
 def crystallization_layer(top1_is_gold) -> int | None:
-    """l*: first layer where gold is top-1 and stays top-1 through the last layer.
+    """l*: first readout layer where gold is top-1 and stays top-1 through the last layer.
 
-    top1_is_gold: sequence of bools for decoder layers 0..L-1 (resid_post).
-    Returns l* 1-indexed (l* = k means "output of the k-th decoder block"), so
-    d = l*/L lies in (0, 1] and d = 1 means only the last layer gets it right.
-    Returns None if gold is not top-1 at the last layer.
+    top1_is_gold: sequence of bools over readout layers 0..L (0 = embeddings,
+    k = output of block k). Returns that index, so l* = k means "output of the
+    k-th decoder block" (1-indexed blocks) and d = l*/L; l* = 0 would mean the
+    embedding already ranks gold first. Returns None if gold is not top-1 at
+    layer L.
     """
     flags = list(map(bool, top1_is_gold))
     if not flags or not flags[-1]:
@@ -102,4 +117,4 @@ def crystallization_layer(top1_is_gold) -> int | None:
     l = len(flags) - 1
     while l > 0 and flags[l - 1]:
         l -= 1
-    return l + 1
+    return l

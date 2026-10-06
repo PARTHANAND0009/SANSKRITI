@@ -47,22 +47,33 @@ def layer_option_logits(model, acts: np.ndarray, option_ids) -> torch.Tensor:
 def live_lens_check(model, tok, prompts, report=print):
     """Lens at the last layer vs the model's own full-vocabulary logits, live.
 
-    Same dtype on both sides, so default assert_close tolerances for that dtype apply."""
+    The assertion feeds the lens the same tensor the model's head sees (the last
+    block's output over the whole sequence, with the model also computing logits
+    for every position, so both sides run identical shapes), so it tests
+    that lens_logits is the model's readout function; same dtype on both sides,
+    default assert_close tolerances. Applying the lens to the single sliced
+    position instead (what stage 2 stores) changes the RMSNorm reduction order;
+    that difference is reported, not asserted (about 1e-5 in fp32 on the proxy).
+    """
     from run.forward import left_pad_batch, position_ids_from_mask
 
     ids, mask = left_pad_batch(tok, prompts)
     dev = next(model.parameters()).device
     store = {}
     h = decoder_layers(model)[-1].register_forward_hook(
-        lambda m, i, o: store.__setitem__("r", (o[0] if isinstance(o, tuple) else o)[:, -1]))
+        lambda m, i, o: store.__setitem__("r", o[0] if isinstance(o, tuple) else o))
     try:
         out = model(input_ids=ids.to(dev), attention_mask=mask.to(dev),
-                    position_ids=position_ids_from_mask(mask).to(dev), use_cache=False, logits_to_keep=1)
+                    position_ids=position_ids_from_mask(mask).to(dev), use_cache=False, logits_to_keep=0)
     finally:
         h.remove()
-    lens = lens_logits(model, store["r"], len(decoder_layers(model)) - 1)
+    L = len(decoder_layers(model))
     ref = out.logits[:, -1]
-    report(f"live check: max |lens - output| over full vocab = {(lens.float() - ref.float()).abs().max().item():.3g}")
+    lens = lens_logits(model, store["r"], L)[:, -1]
+    sliced = lens_logits(model, store["r"][:, -1], L)
+    report(f"live check: max |lens - output| over full vocab = {(lens.float() - ref.float()).abs().max().item():.3g} "
+           f"(same input); {(sliced.float() - ref.float()).abs().max().item():.3g} on the sliced final position, "
+           f"argmax agreement {(sliced.argmax(-1) == ref.argmax(-1)).float().mean().item():.3f}")
     torch.testing.assert_close(lens, ref)
 
 
@@ -74,10 +85,10 @@ def smoke(model, tok, df, qids, acts, out_opt, option_ids, n_examples=5, gold_co
     acc_out = (out_p.argmax(-1) == gold).float().mean().item()
     mean_gold_p = out_p.gather(-1, gold[:, None]).mean().item()
 
-    lens = layer_option_logits(model, acts, option_ids)            # [n, L, 4]
+    lens = layer_option_logits(model, acts, option_ids)            # [n, L+1, 4]
     lens_p = torch.softmax(lens, -1)
-    L = lens.shape[1]
-    ranks = gold_rank(lens_p, gold[:, None].expand(-1, L))         # [n, L]
+    L = lens.shape[1] - 1                                         # blocks; readout layers are 0..L
+    ranks = gold_rank(lens_p, gold[:, None].expand(-1, L + 1))     # [n, L+1]
     acc_lens_last = (lens_p[:, -1].argmax(-1) == gold).float().mean().item()
     agree = (lens_p[:, -1].argmax(-1) == out_p.argmax(-1)).float().mean().item()
     fp16_dev = (lens[:, -1] - torch.from_numpy(out_opt)).abs().max().item()
@@ -87,6 +98,7 @@ def smoke(model, tok, df, qids, acts, out_opt, option_ids, n_examples=5, gold_co
     report(f"final-layer accuracy (logit lens on stored fp16 acts):   {acc_lens_last:.3f}")
     report(f"argmax agreement lens(fp16 acts) vs model output: {agree:.3f}; "
            f"max |option logit diff| = {fp16_dev:.3g} (fp16 storage)")
+    report("readout layers 0..L: 0 = embeddings, k = output of block k")
     report(f"mean gold probability (model output): {mean_gold_p:.3f}")
     report(f"mean gold rank per layer: {' '.join(f'{x:.2f}' for x in ranks.float().mean(0).tolist())}")
     report(f"\ngold rank per layer (0 = top-1), first {n_examples} questions:")

@@ -34,7 +34,7 @@ def test_batched_matches_single(family, tok):
     _, mask = fwd.left_pad_batch(tok, PROMPTS)
     assert (mask == 0).any(), "fixture must exercise padding"
     a_single, o_single = fwd.run_shard(model, tok, PROMPTS, ids, batch_size=1)
-    assert a_batch.shape == (len(PROMPTS), N_LAYERS, model.config.hidden_size)
+    assert a_batch.shape == (len(PROMPTS), N_LAYERS + 1, model.config.hidden_size)
     torch.testing.assert_close(a_batch, a_single)
     torch.testing.assert_close(o_batch, o_single)
 
@@ -45,8 +45,24 @@ def test_lens_on_collected_last_layer_matches_output(family, tok):
     ids = option_ids(tok, "bare")
     acts, opts = fwd.run_shard(model, tok, PROMPTS, ids, batch_size=3)
     with torch.no_grad():
-        lens = lens_option_logits(model, acts[:, -1], N_LAYERS - 1, ids)
+        lens = lens_option_logits(model, acts[:, -1], N_LAYERS, ids)
     torch.testing.assert_close(lens, opts)
+
+
+@pytest.mark.parametrize("family", ["llama", "qwen2", "gemma2"])
+def test_layers_match_hf_hidden_states(family, tok):
+    """acts[:, 0] is the embedding output (incl. Gemma's sqrt(d) scaling) and
+    acts[:, k] the output of block k, as in HF's hidden_states[k], k < L.
+    (HF's last hidden_states entry is post final-norm, so it is not compared.)"""
+    model = tiny_model(family)
+    ids, mask = fwd.left_pad_batch(tok, PROMPTS[:3])
+    acts, _ = fwd.collect_resid(model, ids, mask, option_ids(tok, "bare"))
+    with torch.no_grad():
+        hs = model(input_ids=ids, attention_mask=mask, position_ids=fwd.position_ids_from_mask(mask),
+                   output_hidden_states=True).hidden_states
+    assert len(hs) == N_LAYERS + 1
+    for k in range(N_LAYERS):
+        torch.testing.assert_close(acts[:, k], hs[k][:, -1].float())
 
 
 def test_lens_option_logits_equals_full_lens():
@@ -74,7 +90,7 @@ def test_shards_and_resume(tmp_path, tok, monkeypatch):
     assert [p.name for p in paths] == ["shard_00000.npz", "shard_00001.npz", "shard_00002.npz"]
     z = np.load(paths[1])
     assert z["qids"].tolist() == ["sk00002", "sk00003"]
-    assert z["acts"].dtype == np.float16 and z["acts"].shape == (2, N_LAYERS, model.config.hidden_size)
+    assert z["acts"].dtype == np.float16 and z["acts"].shape == (2, N_LAYERS + 1, model.config.hidden_size)
     assert z["out_opt_logits"].shape == (2, 4)
 
     # interrupted run: delete one shard; only it is recomputed
@@ -107,6 +123,6 @@ def test_smoke_pipeline_on_tiny_model(tmp_path, tok):
     qids, acts, out = smoke.load_shards(tmp_path)
     lines = []
     res = smoke.smoke(model, tok, df, qids, acts, out, ids, n_examples=3, report=lines.append)
-    assert res["ranks"].shape == (len(PROMPTS), N_LAYERS)
+    assert res["ranks"].shape == (len(PROMPTS), N_LAYERS + 1)
     assert 0.0 <= res["acc_out"] <= 1.0
     assert any("OK" in l for l in lines)
