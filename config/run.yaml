@@ -9,7 +9,7 @@ paths:
   freq: data/processed/freq.parquet
 dataset:
   hf_id: 13ari/Sanskriti
-  revision: main          # pin to a commit sha once reachable
+  revision: 8d8523795491a1484834d5cb85ed898b04839077   # HF sha, lastModified 2025-10-26
   license: CC0-1.0
   paper: arXiv:2506.15355
 prep:
@@ -21,6 +21,5 @@ sample_sizes:
 frequency:
   infinigram_index: v4_dolma-v1_7_llama   # Dolma v1.7, llama-2 tokenizer
   pageviews_year: 2024
-  # Wikimedia asks for a contact address in the User-Agent; fill in before running.
-  user_agent: "crystal-research/0.1 (IIT Patna x SANSKRITI collaboration; contact: CHANGE_ME)"
+  user_agent: "crystal-research/0.1 (IIT Patna x SANSKRITI collaboration; contact: parthanand67@gmail.com)"
   min_interval_s: 0.2
