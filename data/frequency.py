@@ -100,6 +100,7 @@ class CachedClient:
         self.max_retry_after = max_retry_after
         self._last: dict[str, float] = {}
         self.hits = self.misses = 0
+        self.throttled: dict[str, int] = {}
 
     def _path(self, service: str, key: dict) -> Path:
         h = hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()
@@ -128,6 +129,7 @@ class CachedClient:
             else:
                 if r.status_code == 429 or r.status_code >= 500:
                     err = f"HTTP {r.status_code}"
+                    self.throttled[service] = self.throttled.get(service, 0) + 1
                     ra = r.headers.get("Retry-After", "")
                     if ra.isdigit():
                         backoff = min(max(float(ra), backoff), self.max_retry_after)
@@ -217,19 +219,26 @@ def corpus_count(client: CachedClient, index: str, text: str):
 
 
 def score_strings(client, strings_wiki: list[str], strings_corpus: list[str], cfg: dict, log=print) -> pd.DataFrame:
-    """Rows aligned with the inputs. strings_wiki are looked up as titles, strings_corpus counted."""
+    """Rows aligned with the inputs. strings_wiki are looked up as titles, strings_corpus counted.
+    Three passes (Wikipedia metadata, corpus counts, pageviews) so a throttled service
+    does not hold up the others."""
     fcfg = cfg["frequency"]
     wiki = mw_lookup(client, sorted(set(strings_wiki)))
-    rows = []
-    for n, (w, c) in enumerate(zip(strings_wiki, strings_corpus)):
-        r = dict(wiki[w])
-        r["wiki_pageviews_en"] = (pageviews(client, r["wiki_title_en"], fcfg["pageviews_year"])
-                                  if r["wiki_exists_en"] else None)
+    rows = [dict(wiki[w]) for w in strings_wiki]
+    log(f"  wikipedia metadata done ({client.misses} requests, {client.hits} cached)")
+    for n, (r, c) in enumerate(zip(rows, strings_corpus)):
         r["corpus_count"], r["corpus_count_approx"] = corpus_count(client, fcfg["infinigram_index"], c)
-        rows.append(r)
         if (n + 1) % 250 == 0:
-            log(f"  {n + 1}/{len(strings_wiki)}  (cache hits {client.hits}, requests {client.misses})")
-    return pd.DataFrame(rows)
+            log(f"  corpus counts {n + 1}/{len(rows)}")
+    todo = [r for r in rows if r["wiki_exists_en"]]
+    for n, r in enumerate(todo):
+        r["wiki_pageviews_en"] = pageviews(client, r["wiki_title_en"], fcfg["pageviews_year"])
+        if (n + 1) % 50 == 0:
+            log(f"  pageviews {n + 1}/{len(todo)} (429s so far: {client.throttled.get('pageviews', 0)})")
+    for r in rows:
+        r.setdefault("wiki_pageviews_en", None)
+    return pd.DataFrame(rows)[["wiki_exists_en", "wiki_title_en", "wiki_disambig_en", "wiki_bytes_en",
+                                "wiki_exists_hi", "wiki_pageviews_en", "corpus_count", "corpus_count_approx"]]
 
 
 def add_log_freq(df: pd.DataFrame) -> pd.DataFrame:
@@ -293,7 +302,7 @@ def main():
     q[cols].to_parquet(resolve(cfg["paths"]["freq"]), index=False)
 
     # ---- report
-    print(f"\nHTTP: {client.misses} requests, {client.hits} cache hits")
+    print(f"\nHTTP: {client.misses} requests, {client.hits} cache hits, throttled (429/5xx): {client.throttled}")
     an = q[~q.ambiguous_gold]
     has_ent = an[an.entity.notna()]
     print(f"\n== missing rate per column (analysis set, {len(an)} questions; {len(has_ent)} with an entity)")
