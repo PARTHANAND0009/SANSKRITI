@@ -237,3 +237,16 @@ choices. Kept and flagged (`duplicate_options`); not excluded.
 | sk21390 | Tripura | Language | In which Indian state do residents also speak Rankahal and Halam languages, reflecting cultural diversity? | Tripura | A. Arunachal Pradesh<br>B. Tripura<br>C. Sikkim<br>D. Arunachal Pradesh |
 | sk21391 | Tripura | Language | Which Indian stateâs tribal populations speak a variety of Bengali dialects, including Sabroom, in daily communication? | Tripura | A. Meghalaya<br>B. Tripura<br>C. Jharkhand<br>D. Meghalaya |
 | sk21392 | Tripura | Language | Which Indian state officially uses English for administrative purposes but relies on Kokborok in everyday life? | Tripura | A. West Bengal<br>B. Tripura<br>C. Mizoram<br>D. West Bengal |
+
+## 4. Stem reveals the answer (1974 rows)
+
+The gold option, or a name form / demonym of the gold state, appears in the
+question text. Kept and flagged (`leaks_answer`); excluded from our depth
+analysis by default. Full list: `leaks.csv`.
+
+| question_type | gold_country_name | gold_state_name | gold_text_in_stem |
+|---|---|---|---|
+| Association | 0 | 56 | 1211 |
+| Country Prediction | 17 | 0 | 47 |
+| General Awareness | 0 | 7 | 61 |
+| State Prediction | 0 | 304 | 271 |

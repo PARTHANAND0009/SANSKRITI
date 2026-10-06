@@ -181,6 +181,8 @@ def main(argv=None):
     ap.add_argument("--shard-size", type=int, default=256)
     ap.add_argument("--batch-size", type=int, default=None, help="default: models.yaml")
     ap.add_argument("--split", choices=["analysis", "all"], default="analysis")
+    ap.add_argument("--include-leaks", action="store_true",
+                    help="keep leaks_answer rows in the analysis split (excluded by default)")
     ap.add_argument("--variant", choices=["prompt", "prompt_permuted"], default="prompt")
     ap.add_argument("--out", default=None, help="default: {acts}/{model}/{variant}")
     args = ap.parse_args(argv)
@@ -188,7 +190,7 @@ def main(argv=None):
     cfg = load_run_config()
     set_seed(cfg["seed"])
     mcfg = model_config(args.model)
-    df = select_rows(args.split, args.limit)
+    df = select_rows(args.split, args.limit, include_leaks=args.include_leaks)
     model, tok = load_model_and_tokenizer(mcfg, args.device)
     opt_ids = resolve_option_ids(mcfg, tok)
     out_dir = Path(args.out) if args.out else resolve(cfg["paths"]["acts"]) / args.model / args.variant
@@ -198,7 +200,7 @@ def main(argv=None):
         "model_key": args.model, "model_id": mcfg["id"], "proxy": bool(mcfg.get("proxy")),
         "n_layers": mcfg["n_layers"], "n_readout_layers": mcfg["n_layers"] + 1,
         "layer_convention": "0 = embeddings, k = output of block k", "d_model": model.config.hidden_size, "dtype": mcfg["dtype"],
-        "split": args.split, "limit": args.limit, "variant": args.variant, "n_rows": len(df),
+        "split": args.split, "include_leaks": args.include_leaks, "limit": args.limit, "variant": args.variant, "n_rows": len(df),
         "shard_size": args.shard_size, "option_token_variant": mcfg["option_token_variant"],
         "option_ids": opt_ids, "torch": torch.__version__, "transformers": transformers.__version__,
         "python": platform.python_version(), "device": args.device,

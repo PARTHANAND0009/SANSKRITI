@@ -5,6 +5,9 @@ Per distinct entity string (from entities.parquet):
                       as title (MediaWiki title normalisation + redirects resolved).
                       Disambiguation pages count as NOT existing (wiki_disambig_en).
   wiki_title_en       the resolved title
+  redirect_changed_concept  the resolved title differs from the entity beyond case,
+                      punctuation and plural (e.g. "Hemis Festival" -> "Hemis
+                      Monastery"); null when there is no article
   wiki_exists_hi      the en article has a Hindi interlanguage link. Null when there
                       is no en article (entities are English strings; a Hindi title
                       cannot be looked up directly).
@@ -30,6 +33,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import time
 import urllib.parse
 from pathlib import Path
@@ -39,7 +43,7 @@ import pandas as pd
 import requests
 from scipy.stats import spearmanr
 
-from crystal.io import load_entities, load_prompts, load_run_config, resolve, set_seed
+from crystal.io import load_analysis_set, load_entities, load_prompts, load_run_config, resolve, set_seed
 
 # state column value -> (en.wikipedia title of the state's article, string counted in the corpus)
 STATE_TITLES = {
@@ -241,6 +245,26 @@ def score_strings(client, strings_wiki: list[str], strings_corpus: list[str], cf
                                 "wiki_exists_hi", "wiki_pageviews_en", "corpus_count", "corpus_count_approx"]]
 
 
+def _concept_key(s: str) -> str:
+    s = re.sub(r"[^\w\s]", " ", str(s).replace("_", " ").lower())
+    words = []
+    for w in s.split():
+        if len(w) > 4 and w.endswith("ies"):
+            w = w[:-3] + "y"
+        elif len(w) > 4 and w.endswith(("ses", "xes", "zes", "ches", "shes")):
+            w = w[:-2]
+        elif len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
+            w = w[:-1]
+        words.append(w)
+    return " ".join(words)
+
+
+def redirect_changed_concept(entity: str, title) -> bool | None:
+    if title is None or (isinstance(title, float) and math.isnan(title)):
+        return None
+    return _concept_key(entity) != _concept_key(title)
+
+
 def add_log_freq(df: pd.DataFrame) -> pd.DataFrame:
     cc = df["corpus_count"].astype("Float64")
     pv = df["wiki_pageviews_en"].astype("Float64")
@@ -271,6 +295,7 @@ def main():
     ents = sorted(ent.entity.dropna().unique())
     print(f"scoring {len(ents)} distinct entity strings (index {cfg['frequency']['infinigram_index']})")
     fe = pd.concat([pd.DataFrame({"entity": ents}), score_strings(client, ents, ents, cfg)], axis=1)
+    fe["redirect_changed_concept"] = [redirect_changed_concept(e, t) for e, t in zip(fe.entity, fe.wiki_title_en)]
     fe = add_log_freq(fe)
     fe.to_parquet(out / "freq_entities.parquet", index=False)
 
@@ -291,27 +316,32 @@ def main():
     fs.to_parquet(out / "freq_state.parquet", index=False)
 
     # ---- per question
-    q = prompts[["qid", "state", "attribute", "question_type", "ambiguous_gold"]].merge(
+    q = prompts[["qid", "state", "attribute", "question_type"]].merge(
         ent[["qid", "entity"]], on="qid")
     q = q.merge(fe, on="entity", how="left")
     q["tier"] = median_tier(q)
     q = q.merge(fs[["state", "log_freq"]].rename(columns={"log_freq": "state_log_freq"}), on="state")
     cols = ["qid", "entity", "wiki_exists_en", "wiki_exists_hi", "wiki_bytes_en", "wiki_pageviews_en",
-            "corpus_count", "corpus_count_approx", "wiki_title_en", "wiki_disambig_en",
+            "corpus_count", "corpus_count_approx", "wiki_title_en", "wiki_disambig_en", "redirect_changed_concept",
             "log_freq", "log_freq_source", "tier", "state_log_freq"]
     q[cols].to_parquet(resolve(cfg["paths"]["freq"]), index=False)
 
     # ---- report
     print(f"\nHTTP: {client.misses} requests, {client.hits} cache hits, throttled (429/5xx): {client.throttled}")
-    an = q[~q.ambiguous_gold]
+    an = q[q.qid.isin(set(load_analysis_set().qid))]  # default: no ambiguous_gold, no leaks
     has_ent = an[an.entity.notna()]
-    print(f"\n== missing rate per column (analysis set, {len(an)} questions; {len(has_ent)} with an entity)")
+    print(f"\n== missing rate per column (analysis set excl. ambiguous + leaks, {len(an)} questions; "
+          f"{len(has_ent)} with an entity)")
     for c in ["entity", "wiki_exists_en", "wiki_exists_hi", "wiki_bytes_en", "wiki_pageviews_en",
               "corpus_count", "log_freq", "tier"]:
         base = an if c == "entity" else has_ent
         print(f"  {c:<20} {base[c].isna().mean():6.1%} missing"
               + (f"   (True: {(base[c] == True).mean():.1%})" if c.startswith("wiki_exists") else ""))
-    print(f"  log_freq_source: {has_ent.log_freq_source.value_counts(dropna=False).to_dict()}")
+    print(f"  log_freq_source: {has_ent.log_freq_source.value_counts(dropna=False).to_dict()} "
+          f"(pageviews fallback rows: {(has_ent.log_freq_source == 'pageviews').sum()})")
+    rc = fe[fe.wiki_exists_en.astype(bool)]
+    print(f"  redirect_changed_concept: {int(rc.redirect_changed_concept.sum())} of {len(rc)} entities with an en "
+          f"article ({(has_ent.redirect_changed_concept == True).sum()} analysis questions)")
     print("\n== per distinct entity")
     print(f"  wiki_exists_en {fe.wiki_exists_en.mean():.1%}, disambiguation {fe.wiki_disambig_en.mean():.1%}, "
           f"wiki_exists_hi True {(fe.wiki_exists_hi == True).mean():.1%}, "

@@ -25,9 +25,10 @@ from __future__ import annotations
 
 import re
 
+import numpy as np
 import pandas as pd
 
-from crystal.io import load_prompts, load_run_config, resolve, set_seed
+from crystal.io import load_analysis_set, load_prompts, load_run_config, resolve, set_seed
 
 WS = r"\s+"
 
@@ -241,8 +242,9 @@ def main():
     pool, cand = swap_pool(df, ent)
     pool.to_parquet(out / "swap_pool.parquet", index=False)
 
-    an = j[~j.qid.isin(df.qid[df.ambiguous_gold])]
-    print(f"rows: {len(j)} (analysis set {len(an)})")
+    an_qids = set(load_analysis_set().qid)  # default: no ambiguous_gold, no leaks_answer
+    an = j[j.qid.isin(an_qids)]
+    print(f"rows: {len(j)} (analysis set {len(an)}: ambiguous_gold and leaks_answer excluded)")
     cov = an.groupby("question_type").agg(
         n=("qid", "size"), has_entity=("entity", lambda s: s.notna().mean()),
         has_stem_span=("span_start", lambda s: s.notna().mean()))
@@ -250,8 +252,8 @@ def main():
     print("\n== coverage (analysis set)\n" + cov.to_string(float_format=lambda x: f"{x:.3f}"))
     print("\n== extraction_rule x confidence\n" + an.groupby(["extraction_rule", "confidence"], dropna=False)
           .size().to_string())
-    cand = cand.merge(df[["qid", "question_type", "ambiguous_gold"]], on="qid")
-    cand = cand[~cand.ambiguous_gold]
+    cand = cand.merge(df[["qid", "question_type"]], on="qid")
+    cand = cand[cand.qid.isin(an_qids)]
     print(f"\n== swap pool: {len(pool)} (attribute, entity, state) entries, "
           f"{(~pool.swap_ok).sum()} not usable as candidates ({(pool.n_states_for_entity > 1).sum()} seen under "
           f">1 state, {pool.entity_mentions_state.sum()} name a state)")
@@ -262,7 +264,23 @@ def main():
           f"{(cand.n_swap_candidates > 0).sum() / len(an):.1%} of analysis set)")
     print(cand.groupby("question_type").n_swap_candidates.agg(
         lambda s: f"{(s > 0).mean():.1%} have >=1, median {int(s.median())}").to_string())
-    print("\nmedian candidates per attribute:\n" + cand.groupby("attribute").n_swap_candidates.median().to_string())
+    per_attr = cand.groupby("attribute").n_swap_candidates.agg(["size", "min", "median", "max"])
+    per_attr.columns = ["questions_with_span", "min", "median", "max"]
+    print("\n== swap candidates per attribute (questions with a stem span)\n" + per_attr.to_string())
+    tr = cand[cand.attribute == "Transport"]
+    if len(tr):
+        print(f"Transport: {len(tr)} questions with a span; candidate counts "
+              f"{tr.n_swap_candidates.value_counts().sort_index().to_dict()} (count: questions); "
+              f"pool entities {pool[(pool.attribute == 'Transport') & pool.swap_ok].groupby('state').entity.apply(list).to_dict()}")
+
+    overall_e, overall_s = an.entity.notna().mean(), an.span_start.notna().mean()
+    st = an.groupby("state").agg(n=("qid", "size"), entity_cov=("entity", lambda s: s.notna().mean()),
+                                 span_cov=("span_start", lambda s: s.notna().mean()))
+    st["flag"] = np.where((st.entity_cov < overall_e - 0.15) | (st.span_cov < overall_s - 0.15),
+                          ">15 pts below overall", "")
+    print(f"\n== coverage per state (analysis set), sorted by span coverage; overall entity "
+          f"{overall_e:.1%}, span {overall_s:.1%}\n" + st.sort_values("span_cov").to_string(
+              formatters={"entity_cov": "{:.1%}".format, "span_cov": "{:.1%}".format}))
 
 
 if __name__ == "__main__":

@@ -54,17 +54,22 @@ def load_prompts(path: str | Path | None = None) -> pd.DataFrame:
     return df
 
 
-def load_analysis_set(path: str | Path | None = None) -> pd.DataFrame:
-    """Rows used in analysis: stage 0 output minus ambiguous_gold rows."""
+def load_analysis_set(path: str | Path | None = None, include_leaks: bool = False) -> pd.DataFrame:
+    """Rows used in analysis: stage 0 output minus ambiguous_gold rows, and minus
+    leaks_answer rows (stem reveals the gold) unless include_leaks=True."""
     df = load_prompts(path)
-    return df[~df["ambiguous_gold"]].reset_index(drop=True)
+    keep = ~df["ambiguous_gold"]
+    if not include_leaks:
+        keep &= ~df["leaks_answer"]
+    return df[keep].reset_index(drop=True)
 
 
-def select_rows(split: str = "analysis", limit: int | None = None, path=None) -> pd.DataFrame:
+def select_rows(split: str = "analysis", limit: int | None = None, path=None,
+                include_leaks: bool = False) -> pd.DataFrame:
     """The rows stage 2 runs on, in a fixed order (qid order). Shared by
     run/forward.py and scripts/smoke.py so both see the same questions."""
     if split == "analysis":
-        df = load_analysis_set(path)
+        df = load_analysis_set(path, include_leaks=include_leaks)
     elif split == "all":
         df = load_prompts(path)
     else:
