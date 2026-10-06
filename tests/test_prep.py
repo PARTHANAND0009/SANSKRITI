@@ -56,3 +56,15 @@ def test_build_and_report(tmp_path):
     write_quality_report(kept, dropped, out, {"hf_id": "x", "revision": "y", "n_raw": 3})
     text = out.read_text()
     assert "(1 rows)" in text and "sk00002" in text and "sk00001" in text
+
+
+def test_leak_rule():
+    from data.prep import leak_rule
+
+    assert leak_rule("Which state is famous for Eluru carpets Andhra?", "Andhra_Pradesh") == "gold_state_name"
+    assert leak_rule("Which state is famous for Punjabi folk music?", "Punjab") == "gold_state_name"
+    assert leak_rule("Which country is home to the Indian rhino?", "India") == "gold_country_name"
+    assert leak_rule("Where is the Hemis Festival famous within Ladakh?", "Hemis") == "gold_text_in_stem"
+    assert leak_rule("Which of the given regions is home to the Kumaoni?", "Kumaon") is None  # word-bounded
+    assert leak_rule("Which state is famous for Bengali sweets?", "Odisha") is None
+    assert leak_rule("Which state is famous for Jaapi?", "Assam") is None

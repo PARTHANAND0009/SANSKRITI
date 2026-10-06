@@ -16,6 +16,9 @@ Rules
   - any two options identical           -> duplicate_options = True (superset of
                                            ambiguous_gold: also catches duplicated
                                            distractors). Flagged only, not excluded.
+  - the stem reveals the gold answer    -> leaks_answer = True, leak_rule says how
+                                           (see leak_rule()). load_analysis_set()
+                                           excludes these unless include_leaks=True.
   - qid = "sk%05d" over the concatenated splits in their published order.
 """
 from __future__ import annotations
@@ -24,6 +27,7 @@ import argparse
 import hashlib
 import json
 import random
+import re
 import sys
 from pathlib import Path
 
@@ -70,6 +74,77 @@ def match_gold(answer, options) -> tuple[int | None, bool]:
     if not hits:
         return None, False
     return hits[0], len(hits) > 1
+
+
+# Distinctive name forms and demonyms / languages that identify one state.
+# Generic first words ("West", "Uttar", "Madhya", "Tamil" as a first word of a
+# state name is handled via the language list) are not used on their own;
+# Telugu is omitted because it does not single out one state.
+STATE_ALIASES = {
+    "andaman and nicobar": ["andaman", "nicobar", "andamanese", "nicobarese"],
+    "andhra pradesh": ["andhra"],
+    "arunachal pradesh": ["arunachal"],
+    "assam": ["assamese"],
+    "bihar": ["bihari"],
+    "chhattisgarh": ["chhattisgarhi"],
+    "dadra and nagar haveli and daman and diu": ["dadra", "nagar haveli", "daman", "diu"],
+    "goa": ["goan", "goans"],
+    "gujarat": ["gujarati"],
+    "haryana": ["haryanvi"],
+    "himachal pradesh": ["himachal", "himachali"],
+    "jammu kashmir": ["jammu and kashmir", "jammu & kashmir", "kashmir", "kashmiri", "jammu"],
+    "jharkhand": ["jharkhandi"],
+    "karnataka": ["kannada", "kannadiga"],
+    "kerala": ["malayali", "malayalam", "keralite"],
+    "ladakh": ["ladakhi"],
+    "lakshadweep": [],
+    "madhya pradesh": [],
+    "maharashtra": ["marathi"],
+    "manipur": ["manipuri"],
+    "meghalaya": [],
+    "mizoram": ["mizo"],
+    "nagaland": ["naga", "nagas"],
+    "odisha": ["odia", "oriya", "orissa", "odishan"],
+    "puducherry": ["pondicherry"],
+    "punjab": ["punjabi"],
+    "rajasthan": ["rajasthani"],
+    "sikkim": ["sikkimese"],
+    "tamil nadu": ["tamil"],
+    "telangana": [],
+    "tripura": ["tripuri"],
+    "uttar pradesh": [],
+    "uttarakhand": ["uttaranchal", "garhwali", "kumaoni"],
+    "west bengal": ["bengal", "bengali"],
+    "delhi": [],
+    "chandigarh": [],
+}
+COUNTRY_ALIASES = {"india": ["indian", "indians"]}
+
+
+def _norm_text(s) -> str:
+    return re.sub(r"\s+", " ", str(s).replace("_", " ").lower()).strip()
+
+
+def _contains_word(text: str, phrase: str) -> bool:
+    return bool(phrase) and re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", text) is not None
+
+
+def leak_rule(stem: str, gold: str) -> str | None:
+    """How the stem reveals the gold option, or None.
+
+    gold_text_in_stem   the gold option text itself occurs in the stem (word-bounded)
+    gold_state_name     gold is a state/UT and a distinctive name form, demonym or
+                        language of it occurs in the stem
+    gold_country_name   gold is India and "Indian" occurs in the stem
+    """
+    s, g = _norm_text(stem), _norm_text(gold)
+    if len(g) >= 3 and _contains_word(s, g):
+        return "gold_text_in_stem"
+    if g in STATE_ALIASES and any(_contains_word(s, a) for a in STATE_ALIASES[g]):
+        return "gold_state_name"
+    if g in COUNTRY_ALIASES and any(_contains_word(s, a) for a in COUNTRY_ALIASES[g]):
+        return "gold_country_name"
+    return None
 
 
 def has_duplicate_options(options) -> bool:
@@ -166,9 +241,13 @@ def build(raw: pd.DataFrame, base_seed: int, tok_ids: dict) -> tuple[pd.DataFram
                 "option_token_ids": tok_json,
                 "ambiguous_gold": ambiguous,
                 "duplicate_options": has_duplicate_options(options),
+                "leak_rule": leak_rule(base["stem"], options[gold_idx]),
             }
         )
-    return pd.DataFrame(rows), pd.DataFrame(dropped)
+    kept = pd.DataFrame(rows)
+    if len(kept):
+        kept["leaks_answer"] = kept["leak_rule"].notna()
+    return kept, pd.DataFrame(dropped)
 
 
 def _md_cell(x) -> str:
@@ -183,6 +262,17 @@ def _md_table(df: pd.DataFrame, cols) -> str:
     lines = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
     for _, r in df.iterrows():
         lines.append("| " + " | ".join(_md_cell(r[c]) for c in cols) + " |")
+    return "\n".join(lines) + "\n"
+
+
+def _leak_summary(kept: pd.DataFrame) -> str:
+    if kept.empty or not kept["leaks_answer"].any():
+        return "_none_\n"
+    tab = kept[kept["leaks_answer"]].groupby(["question_type", "leak_rule"]).size().unstack(fill_value=0)
+    cols = list(tab.columns)
+    lines = ["| question_type | " + " | ".join(cols) + " |", "|---|" + "---|" * len(cols)]
+    for qt, r in tab.iterrows():
+        lines.append(f"| {qt} | " + " | ".join(str(int(r[c])) for c in cols) + " |")
     return "\n".join(lines) + "\n"
 
 
@@ -213,7 +303,14 @@ determined. These rows are kept in our files but excluded from analysis.
 A distractor appears twice, so the question effectively has three distinct
 choices. Kept and flagged (`duplicate_options`); not excluded.
 
-{_md_table(dup, cols)}"""
+{_md_table(dup, cols)}
+## 4. Stem reveals the answer ({int(kept["leaks_answer"].sum()) if len(kept) else 0} rows)
+
+The gold option, or a name form / demonym of the gold state, appears in the
+question text. Kept and flagged (`leaks_answer`); excluded from our depth
+analysis by default. Full list: `leaks.csv`.
+
+{_leak_summary(kept)}"""
     path.write_text(text)
 
 
@@ -238,6 +335,9 @@ def main(argv=None):
     tok_ids = option_token_ids_by_model(load_models_config())
     kept, dropped = build(raw, cfg["prep"]["permute_seed"], tok_ids)
     kept.drop(columns=["answer"]).to_parquet(resolve(cfg["paths"]["prompts"]), index=False)
+    leaks = kept[kept["leaks_answer"]].assign(gold=lambda d: [o[i] for o, i in zip(d.options, d.gold_idx)])
+    leaks[["qid", "state", "attribute", "question_type", "leak_rule", "stem", "gold"]].to_csv(
+        out_dir / "leaks.csv", index=False)
     write_quality_report(
         kept, dropped, out_dir / "data_quality.md",
         {"hf_id": hf_id, "revision": revision, "n_raw": len(raw)},
@@ -246,7 +346,8 @@ def main(argv=None):
     n_amb = int(kept["ambiguous_gold"].sum())
     print(f"raw rows: {len(raw)}  kept: {len(kept)}  dropped (no match): {len(dropped)}  "
           f"ambiguous_gold: {n_amb}  analysis set: {len(kept) - n_amb}  "
-          f"duplicate_options (incl. ambiguous): {int(kept['duplicate_options'].sum())}")
+          f"duplicate_options (incl. ambiguous): {int(kept['duplicate_options'].sum())}  "
+          f"leaks_answer: {int(kept['leaks_answer'].sum())}")
     pending = [k for k, v in tok_ids.items() if v is None]
     if pending:
         print(f"option_token_ids pending for: {pending}")

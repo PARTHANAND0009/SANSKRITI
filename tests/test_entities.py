@@ -44,3 +44,16 @@ def test_extract_end_to_end_and_state_flag():
     assert e.loc["b", "extraction_rule"] == "lexicon" and e.loc["b", "entity"] == "Hundru Falls"
     assert not e.loc["a", "entity_mentions_state"] and e.loc["c", "entity_mentions_state"]
     assert state_name_regex(["West_Bengal"]).search("west  bengal sweets")
+
+
+def test_redirect_changed_concept():
+    from data.frequency import redirect_changed_concept as r
+
+    assert r("Bihu dances", "Bihu dance") is False
+    assert r("gale skirts", "Gale skirt") is False
+    assert r("Ghoomar.", "Ghoomar") is False
+    assert r("Pottery", "Potteries") is False
+    assert r("Bastar_district", "Bastar district") is False
+    assert r("Hemis Festival", "Hemis Monastery") is True
+    assert r("Kalbelia", "Kalbelia dance") is True
+    assert r("anything", None) is None

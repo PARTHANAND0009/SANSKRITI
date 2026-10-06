@@ -118,6 +118,8 @@ def main(argv=None):
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--limit", type=int, default=50)
     ap.add_argument("--split", choices=["analysis", "all"], default="analysis")
+    ap.add_argument("--include-leaks", action="store_true",
+                    help="keep leaks_answer rows in the analysis split (excluded by default)")
     ap.add_argument("--variant", choices=["prompt", "prompt_permuted"], default="prompt")
     ap.add_argument("--n-examples", type=int, default=None)
     args = ap.parse_args(argv)
@@ -130,7 +132,7 @@ def main(argv=None):
     out_dir = resolve(cfg["paths"]["acts"]) / args.model / args.variant
     meta = json.loads((out_dir / "meta.json").read_text())
     qids, acts, out_opt = load_shards(out_dir)
-    df = select_rows(args.split, args.limit)
+    df = select_rows(args.split, args.limit, include_leaks=args.include_leaks)
     if qids.tolist()[:len(df)] != df.qid.tolist():
         raise SystemExit("stored shards do not hold the same rows as --split/--limit")
     n = len(df)
