@@ -13,6 +13,9 @@ Rules
   - more than one option matches        -> ambiguous_gold = True, kept; gold_idx is
                                            the first match. load_analysis_set()
                                            excludes these rows.
+  - any two options identical           -> duplicate_options = True (superset of
+                                           ambiguous_gold: also catches duplicated
+                                           distractors). Flagged only, not excluded.
   - qid = "sk%05d" over the concatenated splits in their published order.
 """
 from __future__ import annotations
@@ -67,6 +70,10 @@ def match_gold(answer, options) -> tuple[int | None, bool]:
     if not hits:
         return None, False
     return hits[0], len(hits) > 1
+
+
+def has_duplicate_options(options) -> bool:
+    return len({norm(o) for o in options}) < len(options)
 
 
 def qid_seed(qid: str, base_seed: int) -> int:
@@ -158,6 +165,7 @@ def build(raw: pd.DataFrame, base_seed: int, tok_ids: dict) -> tuple[pd.DataFram
                 "gold_idx_permuted": gold_p,
                 "option_token_ids": tok_json,
                 "ambiguous_gold": ambiguous,
+                "duplicate_options": has_duplicate_options(options),
             }
         )
     return pd.DataFrame(rows), pd.DataFrame(dropped)
@@ -181,6 +189,7 @@ def _md_table(df: pd.DataFrame, cols) -> str:
 def write_quality_report(kept: pd.DataFrame, dropped: pd.DataFrame, path: Path, meta: dict) -> None:
     cols = ["qid", "state", "attribute", "stem", "answer", "options"]
     amb = kept[kept["ambiguous_gold"]] if len(kept) else kept
+    dup = kept[kept["duplicate_options"] & ~kept["ambiguous_gold"]] if len(kept) else kept
     text = f"""# SANSKRITI data quality notes
 
 Source: `{meta['hf_id']}` (revision `{meta['revision']}`), {meta['n_raw']} rows.
@@ -198,7 +207,13 @@ These rows were dropped from our analysis.
 The same text appears in two or more options, so the gold letter is not
 determined. These rows are kept in our files but excluded from analysis.
 
-{_md_table(amb, cols)}"""
+{_md_table(amb, cols)}
+## 3. Two options identical, gold still unique ({len(dup)} rows)
+
+A distractor appears twice, so the question effectively has three distinct
+choices. Kept and flagged (`duplicate_options`); not excluded.
+
+{_md_table(dup, cols)}"""
     path.write_text(text)
 
 
@@ -230,7 +245,8 @@ def main(argv=None):
 
     n_amb = int(kept["ambiguous_gold"].sum())
     print(f"raw rows: {len(raw)}  kept: {len(kept)}  dropped (no match): {len(dropped)}  "
-          f"ambiguous_gold: {n_amb}  analysis set: {len(kept) - n_amb}")
+          f"ambiguous_gold: {n_amb}  analysis set: {len(kept) - n_amb}  "
+          f"duplicate_options (incl. ambiguous): {int(kept['duplicate_options'].sum())}")
     pending = [k for k, v in tok_ids.items() if v is None]
     if pending:
         print(f"option_token_ids pending for: {pending}")
