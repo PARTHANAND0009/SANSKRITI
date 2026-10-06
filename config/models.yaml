@@ -1,0 +1,43 @@
+# Model registry. `key` (the mapping key) is used for paths: acts/{key}/...
+# option_token_variant: "space" (" A".." D"), "bare" ("A".."D"), or "pending"
+#   (tokenizer not yet checked). Set by `python -m crystal.tokens --write`.
+# proxy: true marks CPU test models. Proxy outputs are NEVER used in analysis.
+models:
+  llama31_8b:
+    id: meta-llama/Llama-3.1-8B
+    family: llama
+    n_layers: 32
+    dtype: bfloat16
+    batch_size: 16
+    gated: true
+    proxy: false
+    option_token_variant: pending
+  qwen25_7b:
+    id: Qwen/Qwen2.5-7B
+    family: qwen2
+    n_layers: 28
+    dtype: bfloat16
+    batch_size: 16
+    gated: false
+    proxy: false
+    option_token_variant: pending
+  gemma2_9b:
+    id: google/gemma-2-9b
+    family: gemma2
+    n_layers: 42
+    dtype: bfloat16
+    batch_size: 8
+    gated: true
+    proxy: false
+    # Gemma 2 softcapping + sliding window: use eager attention (HF recommendation).
+    attn_implementation: eager
+    option_token_variant: pending
+  qwen25_05b_proxy:
+    id: Qwen/Qwen2.5-0.5B
+    family: qwen2
+    n_layers: 24
+    dtype: float32
+    batch_size: 8
+    gated: false
+    proxy: true
+    option_token_variant: pending
