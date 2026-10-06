@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Tea tourism"}}, "status": 200, "json": {"approx": false, "count": 382, "latency": 35.764217376708984, "token_ids": [1920, 29874, 6282, 1608], "tokens": ["\u2581Te", "a", "\u2581tour", "ism"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Lokrang Festival"}}, "status": 200, "json": {"approx": false, "count": 123, "latency": 29.180526733398438, "token_ids": [26469, 29878, 574, 8518], "tokens": ["\u2581Lok", "r", "ang", "\u2581Festival"]}}

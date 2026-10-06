@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Lodi Gardens"}}, "status": 200, "json": {"approx": false, "count": 5111, "latency": 29.04057502746582, "token_ids": [365, 12143, 15971, 575], "tokens": ["\u2581L", "odi", "\u2581Gard", "ens"]}}

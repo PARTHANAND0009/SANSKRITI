@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sand mandala"}}, "status": 200, "json": {"approx": false, "count": 165, "latency": 24.67513084411621, "token_ids": [8564, 9619, 2883], "tokens": ["\u2581Sand", "\u2581mand", "ala"]}}

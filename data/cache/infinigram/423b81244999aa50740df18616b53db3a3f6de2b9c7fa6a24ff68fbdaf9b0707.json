@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Zari work"}}, "status": 200, "json": {"approx": false, "count": 2480, "latency": 15.076398849487305, "token_ids": [796, 1306, 664], "tokens": ["\u2581Z", "ari", "\u2581work"]}}

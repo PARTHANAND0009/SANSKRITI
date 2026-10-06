@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Banjara Hills"}}, "status": 200, "json": {"approx": false, "count": 42946, "latency": 32.8516960144043, "token_ids": [10765, 29926, 2518, 24128], "tokens": ["\u2581Ban", "j", "ara", "\u2581Hills"]}}

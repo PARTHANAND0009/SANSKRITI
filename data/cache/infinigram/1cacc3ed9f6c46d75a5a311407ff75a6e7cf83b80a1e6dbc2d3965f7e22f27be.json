@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "City of Waterfalls"}}, "status": 200, "json": {"approx": false, "count": 1027, "latency": 33.34689140319824, "token_ids": [4412, 310, 13062, 12559], "tokens": ["\u2581City", "\u2581of", "\u2581Water", "falls"]}}

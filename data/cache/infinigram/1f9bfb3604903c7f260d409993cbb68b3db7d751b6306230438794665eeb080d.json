@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kaavad"}}, "status": 200, "json": {"approx": false, "count": 1066, "latency": 28.960466384887695, "token_ids": [13680, 485, 328], "tokens": ["\u2581Ka", "av", "ad"]}}

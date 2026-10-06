@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Baadi"}}, "status": 200, "json": {"approx": false, "count": 3616, "latency": 30.633926391601562, "token_ids": [6000, 10129], "tokens": ["\u2581Ba", "adi"]}}

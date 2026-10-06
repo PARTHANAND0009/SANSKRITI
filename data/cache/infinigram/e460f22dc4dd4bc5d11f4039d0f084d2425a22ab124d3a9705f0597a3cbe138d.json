@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Shigmo Festival"}}, "status": 200, "json": {"approx": false, "count": 343, "latency": 22.7508544921875, "token_ids": [1383, 335, 4346, 8518], "tokens": ["\u2581Sh", "ig", "mo", "\u2581Festival"]}}

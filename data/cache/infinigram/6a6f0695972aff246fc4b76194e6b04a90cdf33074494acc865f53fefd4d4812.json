@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kappad Beach"}}, "status": 200, "json": {"approx": false, "count": 2084, "latency": 26.43752098083496, "token_ids": [476, 932, 328, 17594], "tokens": ["\u2581K", "app", "ad", "\u2581Beach"]}}

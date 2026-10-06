@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Apong rice beer"}}, "status": 200, "json": {"approx": false, "count": 4, "latency": 29.224872589111328, "token_ids": [6225, 549, 19408, 367, 261], "tokens": ["\u2581Ap", "ong", "\u2581rice", "\u2581be", "er"]}}

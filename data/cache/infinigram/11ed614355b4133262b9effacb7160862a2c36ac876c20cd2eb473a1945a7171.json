@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kolam designs"}}, "status": 200, "json": {"approx": false, "count": 1095, "latency": 31.72612190246582, "token_ids": [10451, 314, 25517], "tokens": ["\u2581Kol", "am", "\u2581designs"]}}

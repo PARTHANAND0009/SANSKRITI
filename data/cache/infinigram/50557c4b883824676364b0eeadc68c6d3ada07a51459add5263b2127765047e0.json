@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Museum of Toilets"}}, "status": 200, "json": {"approx": false, "count": 1473, "latency": 30.8229923248291, "token_ids": [6838, 310, 1763, 488, 1372], "tokens": ["\u2581Museum", "\u2581of", "\u2581To", "ile", "ts"]}}

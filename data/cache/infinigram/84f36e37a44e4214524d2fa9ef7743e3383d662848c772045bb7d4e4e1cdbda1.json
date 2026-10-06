@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Navreh"}}, "status": 200, "json": {"approx": false, "count": 2026, "latency": 24.4600772857666, "token_ids": [13132, 9003], "tokens": ["\u2581Nav", "reh"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Alpana floor art"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 22.574186325073242, "token_ids": [838, 29886, 1648, 11904, 1616], "tokens": ["\u2581Al", "p", "ana", "\u2581floor", "\u2581art"]}}

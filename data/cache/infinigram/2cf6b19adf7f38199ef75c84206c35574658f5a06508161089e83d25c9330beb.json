@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Rock Carvings"}}, "status": 200, "json": {"approx": false, "count": 9042, "latency": 23.919105529785156, "token_ids": [8027, 1704, 29894, 886], "tokens": ["\u2581Rock", "\u2581Car", "v", "ings"]}}

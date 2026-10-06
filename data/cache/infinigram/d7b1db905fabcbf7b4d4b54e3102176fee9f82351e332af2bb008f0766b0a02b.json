@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "huipils"}}, "status": 200, "json": {"approx": false, "count": 3474, "latency": 36.657094955444336, "token_ids": [22888, 666, 2719], "tokens": ["\u2581hu", "ip", "ils"]}}

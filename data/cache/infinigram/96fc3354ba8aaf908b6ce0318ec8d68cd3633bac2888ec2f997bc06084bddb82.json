@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Scenic beauty"}}, "status": 200, "json": {"approx": false, "count": 3713, "latency": 28.310298919677734, "token_ids": [2522, 264, 293, 15409], "tokens": ["\u2581Sc", "en", "ic", "\u2581beauty"]}}

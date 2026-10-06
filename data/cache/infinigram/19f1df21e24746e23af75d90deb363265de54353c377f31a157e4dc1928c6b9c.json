@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Banarasi Saree"}}, "status": 200, "json": {"approx": false, "count": 1844, "latency": 30.61532974243164, "token_ids": [10765, 279, 6840, 317, 598, 29872], "tokens": ["\u2581Ban", "ar", "asi", "\u2581S", "are", "e"]}}

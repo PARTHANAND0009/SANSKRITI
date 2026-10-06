@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Tabu (actress)"}}, "status": 200, "json": {"approx": false, "count": 9, "latency": 18.0966854095459, "token_ids": [11090, 29884, 313, 627, 1253, 29897], "tokens": ["\u2581Tab", "u", "\u2581(", "act", "ress", ")"]}}

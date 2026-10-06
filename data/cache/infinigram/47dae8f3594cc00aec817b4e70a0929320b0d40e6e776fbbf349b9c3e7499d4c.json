@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Crewel Embroidery"}}, "status": 200, "json": {"approx": false, "count": 1946, "latency": 32.97710418701172, "token_ids": [315, 3973, 295, 28735, 1007, 708], "tokens": ["\u2581C", "rew", "el", "\u2581Emb", "roid", "ery"]}}

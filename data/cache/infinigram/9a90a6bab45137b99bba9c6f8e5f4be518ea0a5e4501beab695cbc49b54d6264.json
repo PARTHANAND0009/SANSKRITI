@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Rongmei chants"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 22.654056549072266, "token_ids": [390, 549, 1004, 29875, 521, 1934], "tokens": ["\u2581R", "ong", "me", "i", "\u2581ch", "ants"]}}

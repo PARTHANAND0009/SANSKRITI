@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Lotus Temple"}}, "status": 200, "json": {"approx": false, "count": 38016, "latency": 42.966365814208984, "token_ids": [20815, 375, 18057], "tokens": ["\u2581Lot", "us", "\u2581Temple"]}}

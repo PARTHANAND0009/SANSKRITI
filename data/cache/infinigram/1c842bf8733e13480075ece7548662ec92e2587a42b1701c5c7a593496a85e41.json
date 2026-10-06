@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "cane crafts"}}, "status": 200, "json": {"approx": false, "count": 845, "latency": 38.832902908325195, "token_ids": [508, 29872, 25554, 29879], "tokens": ["\u2581can", "e", "\u2581craft", "s"]}}

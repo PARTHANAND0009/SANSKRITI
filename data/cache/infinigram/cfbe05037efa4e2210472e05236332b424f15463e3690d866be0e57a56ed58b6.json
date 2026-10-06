@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Laad Bazaar"}}, "status": 200, "json": {"approx": false, "count": 3926, "latency": 26.997804641723633, "token_ids": [997, 328, 350, 834, 4025], "tokens": ["\u2581La", "ad", "\u2581B", "az", "aar"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "The City Beautiful"}}, "status": 200, "json": {"approx": false, "count": 7525, "latency": 38.26451301574707, "token_ids": [450, 4412, 25685], "tokens": ["\u2581The", "\u2581City", "\u2581Beautiful"]}}

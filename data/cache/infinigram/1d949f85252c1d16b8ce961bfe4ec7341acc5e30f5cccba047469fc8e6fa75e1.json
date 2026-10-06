@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Monpa Carpets"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 24.71446990966797, "token_ids": [2598, 3274, 1704, 29886, 1691], "tokens": ["\u2581Mon", "pa", "\u2581Car", "p", "ets"]}}

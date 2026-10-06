@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Pashmina shawl"}}, "status": 200, "json": {"approx": false, "count": 3410, "latency": 33.58173370361328, "token_ids": [349, 1161, 13257, 528, 1450, 29880], "tokens": ["\u2581P", "ash", "mina", "\u2581sh", "aw", "l"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Nadi astrology"}}, "status": 200, "json": {"approx": false, "count": 2280, "latency": 35.2628231048584, "token_ids": [405, 10129, 8717, 307, 1188, 29891], "tokens": ["\u2581N", "adi", "\u2581ast", "ro", "log", "y"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Charminar"}}, "status": 200, "json": {"approx": false, "count": 66217, "latency": 31.466960906982422, "token_ids": [2896, 1195, 279], "tokens": ["\u2581Char", "min", "ar"]}}

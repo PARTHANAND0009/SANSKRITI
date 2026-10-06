@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Garden Tourism Festival"}}, "status": 200, "json": {"approx": false, "count": 431, "latency": 30.389070510864258, "token_ids": [19906, 6371, 1608, 8518], "tokens": ["\u2581Garden", "\u2581Tour", "ism", "\u2581Festival"]}}

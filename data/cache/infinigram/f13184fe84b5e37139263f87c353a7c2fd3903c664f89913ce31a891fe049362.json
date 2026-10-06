@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Babru"}}, "status": 200, "json": {"approx": false, "count": 11941, "latency": 31.705617904663086, "token_ids": [14525, 582], "tokens": ["\u2581Bab", "ru"]}}

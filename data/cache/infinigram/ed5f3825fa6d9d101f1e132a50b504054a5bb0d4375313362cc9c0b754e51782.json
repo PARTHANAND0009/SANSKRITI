@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Tweed weaving"}}, "status": 200, "json": {"approx": false, "count": 866, "latency": 35.64262390136719, "token_ids": [27637, 287, 591, 5555], "tokens": ["\u2581Twe", "ed", "\u2581we", "aving"]}}

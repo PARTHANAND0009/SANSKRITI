@@ -9,5 +9,5 @@
   "n_states": 36,
   "log_freq_primary": "corpus_count",
   "log_freq_fallback": "wiki_pageviews_en",
-  "written": "2026-10-06T17:05:01Z"
+  "written": "2026-10-06T17:39:22Z"
 }

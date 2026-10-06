@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Gotra rules"}}, "status": 200, "json": {"approx": false, "count": 9, "latency": 25.037527084350586, "token_ids": [15992, 336, 6865], "tokens": ["\u2581Got", "ra", "\u2581rules"]}}

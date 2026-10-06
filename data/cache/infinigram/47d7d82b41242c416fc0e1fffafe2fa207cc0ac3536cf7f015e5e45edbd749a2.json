@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Gajan festival"}}, "status": 200, "json": {"approx": false, "count": 267, "latency": 24.594545364379883, "token_ids": [402, 1175, 273, 16005], "tokens": ["\u2581G", "aj", "an", "\u2581festival"]}}

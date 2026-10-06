@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Ujjayanta Palace"}}, "status": 200, "json": {"approx": false, "count": 2527, "latency": 20.689964294433594, "token_ids": [501, 29926, 29926, 388, 6949, 24537], "tokens": ["\u2581U", "j", "j", "ay", "anta", "\u2581Palace"]}}

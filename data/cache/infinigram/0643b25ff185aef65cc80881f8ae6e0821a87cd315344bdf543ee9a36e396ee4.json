@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sonam Wangchuk"}}, "status": 200, "json": {"approx": false, "count": 6824, "latency": 43.69783401489258, "token_ids": [5791, 314, 23856, 305, 2679], "tokens": ["\u2581Son", "am", "\u2581Wang", "ch", "uk"]}}

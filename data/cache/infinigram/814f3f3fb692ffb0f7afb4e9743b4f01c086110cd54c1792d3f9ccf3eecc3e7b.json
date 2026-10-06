@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Bom Jesus Church"}}, "status": 200, "json": {"approx": false, "count": 910, "latency": 39.55245018005371, "token_ids": [27707, 13825, 6291], "tokens": ["\u2581Bom", "\u2581Jesus", "\u2581Church"]}}

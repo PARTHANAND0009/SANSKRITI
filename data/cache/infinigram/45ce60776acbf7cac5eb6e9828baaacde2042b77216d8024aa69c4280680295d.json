@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Granary of India"}}, "status": 200, "json": {"approx": false, "count": 247, "latency": 32.248497009277344, "token_ids": [6274, 653, 310, 7513], "tokens": ["\u2581Gran", "ary", "\u2581of", "\u2581India"]}}

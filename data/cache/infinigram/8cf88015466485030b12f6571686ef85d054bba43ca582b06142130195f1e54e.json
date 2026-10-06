@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Zawlbuk"}}, "status": 200, "json": {"approx": false, "count": 258, "latency": 27.20332145690918, "token_ids": [796, 1450, 29880, 2423, 29895], "tokens": ["\u2581Z", "aw", "l", "bu", "k"]}}

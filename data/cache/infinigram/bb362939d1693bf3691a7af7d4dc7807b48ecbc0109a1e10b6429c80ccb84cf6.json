@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Mysore painting origin"}}, "status": 200, "json": {"approx": false, "count": 1, "latency": 14.666080474853516, "token_ids": [28924, 487, 20413, 3978], "tokens": ["\u2581Mys", "ore", "\u2581painting", "\u2581origin"]}}

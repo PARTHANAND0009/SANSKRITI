@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Kharchi Puja"}}, "status": 200, "json": {"approx": false, "count": 893, "latency": 23.253202438354492, "token_ids": [12217, 1279, 29875, 12129, 1764], "tokens": ["\u2581Kh", "arch", "i", "\u2581Pu", "ja"]}}

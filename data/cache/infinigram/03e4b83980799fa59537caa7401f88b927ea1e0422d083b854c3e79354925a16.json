@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Mirasol Lake Garden"}}, "status": 200, "json": {"approx": false, "count": 279, "latency": 32.129526138305664, "token_ids": [11612, 294, 324, 9459, 19906], "tokens": ["\u2581Mir", "as", "ol", "\u2581Lake", "\u2581Garden"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Dalai Lama"}}, "status": 200, "json": {"approx": false, "count": 1786530, "latency": 38.994789123535156, "token_ids": [9400, 1794, 365, 3304], "tokens": ["\u2581Dal", "ai", "\u2581L", "ama"]}}

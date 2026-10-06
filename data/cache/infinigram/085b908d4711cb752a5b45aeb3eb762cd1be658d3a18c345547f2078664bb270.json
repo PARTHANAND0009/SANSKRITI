@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Tawa Dam"}}, "status": 200, "json": {"approx": false, "count": 400, "latency": 27.81510353088379, "token_ids": [323, 10011, 9865], "tokens": ["\u2581T", "awa", "\u2581Dam"]}}

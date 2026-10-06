@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Luanchari"}}, "status": 200, "json": {"approx": false, "count": 46, "latency": 38.84387016296387, "token_ids": [3182, 14588, 1306], "tokens": ["\u2581Lu", "anch", "ari"]}}

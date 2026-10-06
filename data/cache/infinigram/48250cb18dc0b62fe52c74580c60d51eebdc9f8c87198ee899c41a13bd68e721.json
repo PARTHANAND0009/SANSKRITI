@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Pithora Paintings"}}, "status": 200, "json": {"approx": false, "count": 65, "latency": 9.836673736572266, "token_ids": [349, 389, 2207, 349, 2365, 886], "tokens": ["\u2581P", "ith", "ora", "\u2581P", "aint", "ings"]}}

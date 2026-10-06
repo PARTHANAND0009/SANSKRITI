@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Khanvel Resort"}}, "status": 200, "json": {"approx": false, "count": 285, "latency": 32.059669494628906, "token_ids": [18915, 955, 2538, 441], "tokens": ["\u2581Khan", "vel", "\u2581Res", "ort"]}}

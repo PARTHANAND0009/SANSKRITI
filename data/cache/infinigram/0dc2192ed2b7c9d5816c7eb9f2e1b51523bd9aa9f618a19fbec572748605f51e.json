@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Khara dupatta"}}, "status": 200, "json": {"approx": false, "count": 46, "latency": 24.251222610473633, "token_ids": [12217, 2518, 5141, 14975], "tokens": ["\u2581Kh", "ara", "\u2581dup", "atta"]}}

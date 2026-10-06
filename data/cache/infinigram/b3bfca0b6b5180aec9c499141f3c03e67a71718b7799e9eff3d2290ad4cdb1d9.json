@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Topor headgear"}}, "status": 200, "json": {"approx": false, "count": 0, "latency": 25.580406188964844, "token_ids": [7488, 272, 2343, 479, 279], "tokens": ["\u2581Top", "or", "\u2581head", "ge", "ar"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Bekal Fort"}}, "status": 200, "json": {"approx": false, "count": 5989, "latency": 38.07473182678223, "token_ids": [23461, 284, 7236], "tokens": ["\u2581Bek", "al", "\u2581Fort"]}}

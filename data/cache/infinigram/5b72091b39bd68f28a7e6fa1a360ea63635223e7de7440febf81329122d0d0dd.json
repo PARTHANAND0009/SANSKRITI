@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sikki crafts"}}, "status": 200, "json": {"approx": false, "count": 18, "latency": 14.493703842163086, "token_ids": [317, 638, 1984, 25554, 29879], "tokens": ["\u2581S", "ik", "ki", "\u2581craft", "s"]}}

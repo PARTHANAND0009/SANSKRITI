@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Sikkim cuisine"}}, "status": 200, "json": {"approx": false, "count": 127, "latency": 11.567831039428711, "token_ids": [317, 638, 20903, 2723, 275, 457], "tokens": ["\u2581S", "ik", "kim", "\u2581cu", "is", "ine"]}}

@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Perak"}}, "status": 200, "json": {"approx": false, "count": 456844, "latency": 38.083553314208984, "token_ids": [2431, 557], "tokens": ["\u2581Per", "ak"]}}

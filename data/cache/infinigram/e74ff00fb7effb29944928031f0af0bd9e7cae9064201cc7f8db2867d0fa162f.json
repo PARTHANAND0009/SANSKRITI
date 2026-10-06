@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Zutho"}}, "status": 200, "json": {"approx": false, "count": 570, "latency": 23.947715759277344, "token_ids": [796, 329, 1251], "tokens": ["\u2581Z", "ut", "ho"]}}

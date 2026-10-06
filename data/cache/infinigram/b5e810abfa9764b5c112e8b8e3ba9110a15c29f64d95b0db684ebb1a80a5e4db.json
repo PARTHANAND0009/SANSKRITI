@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "bamboo crafts"}}, "status": 200, "json": {"approx": false, "count": 6333, "latency": 41.49150848388672, "token_ids": [289, 314, 833, 29877, 25554, 29879], "tokens": ["\u2581b", "am", "bo", "o", "\u2581craft", "s"]}}

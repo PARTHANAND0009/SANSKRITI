@@ -1,0 +1,1 @@
+{"request": {"method": "POST", "url": "https://api.infini-gram.io/", "params": null, "body": {"index": "v4_dolma-v1_7_llama", "query_type": "count", "query": "Independence Day"}}, "status": 200, "json": {"approx": false, "count": 2293602, "latency": 49.32856559753418, "token_ids": [28052, 663, 8373], "tokens": ["\u2581Independ", "ence", "\u2581Day"]}}
