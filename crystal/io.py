@@ -86,7 +86,7 @@ def load_freq(path: str | Path | None = None) -> pd.DataFrame:
 def load_acts(model_key: str, variant: str = "prompt", acts_dir: str | Path | None = None):
     """Concatenate all stage 2 shards for a model.
 
-    Returns (qids [n], acts [n, L, d] float16, out_opt_logits [n, 4] float32).
+    Returns (qids [n], acts [n, L+1, d] float16 (0 = embeddings), out_opt_logits [n, 4] float32).
     """
     acts_dir = resolve(acts_dir or load_run_config()["paths"]["acts"])
     shards = sorted((acts_dir / model_key / variant).glob("shard_*.npz"))
