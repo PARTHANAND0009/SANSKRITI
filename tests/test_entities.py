@@ -57,3 +57,41 @@ def test_redirect_changed_concept():
     assert r("Hemis Festival", "Hemis Monastery") is True
     assert r("Kalbelia", "Kalbelia dance") is True
     assert r("anything", None) is None
+
+
+def test_log_freq_and_tier():
+    import numpy as np
+    import pandas as pd
+
+    from data.frequency import add_log_freq, median_tier
+
+    df = pd.DataFrame({"corpus_count": [0, 10, None, None], "wiki_pageviews_en": [5, None, 99, None],
+                       "attribute": ["a", "a", "a", "a"]})
+    df = add_log_freq(df)
+    assert df.log_freq_source.tolist() == ["corpus_count", "corpus_count", "pageviews", None]
+    assert np.isclose(df.log_freq[1], np.log1p(10)) and np.isnan(df.log_freq[3])
+    assert median_tier(df).tolist() == ["low", "low", "high", None]
+
+
+def test_client_caches_only_answers(tmp_path, monkeypatch):
+    """403/429 are retried and never cached; 200 and 404 are cached; other 4xx are returned uncached."""
+    import data.frequency as fq
+
+    class R:
+        def __init__(self, status, js):
+            self.status_code, self._js, self.headers = status, js, {}
+
+        def json(self):
+            return self._js
+
+    seq = {"a": [R(403, {"message": "Forbidden"}), R(200, {"count": 3})], "b": [R(404, {})], "c": [R(400, {"e": 1})]}
+    c = fq.CachedClient(tmp_path, "test", 0.0)
+    monkeypatch.setattr(c.session, "request", lambda m, u, params=None, json=None, timeout=None: seq[json["q"]].pop(0))
+    monkeypatch.setattr(fq.time, "sleep", lambda s: None)
+    assert c.request("s", "POST", "u", body={"q": "a"}) == (200, {"count": 3})
+    assert c.throttled == {"s": 1}
+    assert c.request("s", "POST", "u", body={"q": "b"}) == (404, {})
+    assert c.request("s", "POST", "u", body={"q": "c"}) == (400, {"e": 1})
+    assert len(list((tmp_path / "s").glob("*.json"))) == 2          # a and b only
+    assert c.request("s", "POST", "u", body={"q": "a"}) == (200, {"count": 3}) and c.hits == 1
+    assert c.request("s", "POST", "u", body={"q": "x"}, cache_only=True) == (None, None)
