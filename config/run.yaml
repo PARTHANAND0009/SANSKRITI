@@ -1,0 +1,26 @@
+seed: 1234
+paths:
+  raw: data/raw
+  processed: data/processed
+  cache: data/cache
+  acts: acts
+  prompts: data/processed/prompts.parquet
+  entities: data/processed/entities.parquet
+  freq: data/processed/freq.parquet
+dataset:
+  hf_id: 13ari/Sanskriti
+  revision: main          # pin to a commit sha once reachable
+  license: CC0-1.0
+  paper: arXiv:2506.15355
+prep:
+  permute_seed: 1234      # combined with qid -> per-question permutation seed
+sample_sizes:
+  entity_audit: 100
+  smoke_limit: 50
+  smoke_rank_examples: 5
+frequency:
+  infinigram_index: v4_dolma-v1_7_llama   # Dolma v1.7, llama-2 tokenizer
+  pageviews_year: 2024
+  # Wikimedia asks for a contact address in the User-Agent; fill in before running.
+  user_agent: "crystal-research/0.1 (IIT Patna x SANSKRITI collaboration; contact: CHANGE_ME)"
+  min_interval_s: 0.2

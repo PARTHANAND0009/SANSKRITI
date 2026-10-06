@@ -1,0 +1,17 @@
+# environments
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# large / regenerable data
+data/raw/
+data/cache/
+acts/
+*.npz
+*.safetensors
+# large parquet: only the small processed tables are tracked
+*.parquet
+!data/processed/prompts.parquet
+!data/processed/entities.parquet
+!data/processed/freq.parquet
