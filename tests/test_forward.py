@@ -158,3 +158,21 @@ def test_select_rows_sample_is_seeded():
     assert a.qid.tolist() == b.qid.tolist() and a.qid.is_monotonic_increasing
     assert a.qid.tolist() != select_rows("analysis", sample=40, seed=1).qid.tolist()
     assert a.state.nunique() > 5  # not a single-state slice
+
+
+def test_depth_table_on_tiny_model(tok):
+    from analysis.depth import depth_table
+    from crystal.lens import crystallization_layer
+
+    model = tiny_model("llama")
+    ids = option_ids(tok, "bare")
+    acts, opts = fwd.run_shard(model, tok, PROMPTS, ids, batch_size=2)
+    gold = np.array([0, 1, 2, 3, 0])
+    t = depth_table(model, [f"q{i}" for i in range(5)], acts.numpy(), gold, ids)
+    assert len(t) == 5 and len(t.gold_rank_by_layer[0]) == N_LAYERS + 1
+    # final layer agrees with the model's own output
+    assert (t.correct_final.to_numpy() == (opts.argmax(-1).numpy() == gold)).all()
+    for r in t.itertuples():
+        assert (pd.isna(r.l_star) and not r.correct_final) or r.l_star == crystallization_layer(r.gold_rank_by_layer == 0)
+        if not pd.isna(r.l_star):
+            assert r.d == r.l_star / N_LAYERS
