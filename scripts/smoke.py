@@ -122,6 +122,8 @@ def main(argv=None):
                     help="keep leaks_answer rows in the analysis split (excluded by default)")
     ap.add_argument("--variant", choices=["prompt", "prompt_permuted"], default="prompt")
     ap.add_argument("--n-examples", type=int, default=None)
+    ap.add_argument("--sample", type=int, default=None)
+    ap.add_argument("--cpu-layers", type=int, default=None)
     args = ap.parse_args(argv)
 
     from run.forward import load_model_and_tokenizer
@@ -132,11 +134,12 @@ def main(argv=None):
     out_dir = resolve(cfg["paths"]["acts"]) / args.model / args.variant
     meta = json.loads((out_dir / "meta.json").read_text())
     qids, acts, out_opt = load_shards(out_dir)
-    df = select_rows(args.split, args.limit, include_leaks=args.include_leaks)
+    df = select_rows(args.split, args.limit, include_leaks=args.include_leaks, sample=args.sample,
+                     seed=cfg["seed"])
     if qids.tolist()[:len(df)] != df.qid.tolist():
         raise SystemExit("stored shards do not hold the same rows as --split/--limit")
     n = len(df)
-    model, tok = load_model_and_tokenizer(mcfg, args.device)
+    model, tok = load_model_and_tokenizer(mcfg, args.device, cpu_layers=args.cpu_layers)
     gold_col = "gold_idx" if args.variant == "prompt" else "gold_idx_permuted"
     smoke(model, tok, df, qids[:n], acts[:n], out_opt[:n], meta["option_ids"],
           n_examples=args.n_examples or cfg["sample_sizes"]["smoke_rank_examples"],

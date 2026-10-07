@@ -150,7 +150,20 @@ def run_forward(model, tok, df, out_dir: Path, option_ids, prompt_field="prompt"
     return paths
 
 
-def load_model_and_tokenizer(mcfg: dict, device: str):
+def offload_device_map(model_id: str, n_layers: int, cpu_layers: int) -> dict:
+    """Embeddings, final norm, rotary embedding and LM head in RAM ("cpu"); the
+    first `cpu_layers` decoder blocks in RAM, the rest streamed from disk by
+    accelerate (weights are read from the safetensors files per forward).
+    Keeping the head and norm resident lets crystal.lens read them directly."""
+    dm = {"model.embed_tokens": "cpu", "model.norm": "cpu", "model.rotary_emb": "cpu", "lm_head": "cpu"}
+    for i in range(n_layers):
+        dm[f"model.layers.{i}"] = "cpu" if i < cpu_layers else "disk"
+    return dm
+
+
+def load_model_and_tokenizer(mcfg: dict, device: str, cpu_layers: int | None = None, offload_dir=None):
+    """cpu_layers=None: whole model on `device`. cpu_layers=k (CPU only): keep k
+    decoder blocks in RAM and offload the rest to disk, for models larger than RAM."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tok = AutoTokenizer.from_pretrained(mcfg["id"])
@@ -159,7 +172,16 @@ def load_model_and_tokenizer(mcfg: dict, device: str):
     kw = {"dtype": DTYPES[mcfg["dtype"]]}
     if mcfg.get("attn_implementation"):
         kw["attn_implementation"] = mcfg["attn_implementation"]
-    model = AutoModelForCausalLM.from_pretrained(mcfg["id"], **kw).to(device).eval()
+    if cpu_layers is None:
+        model = AutoModelForCausalLM.from_pretrained(mcfg["id"], **kw).to(device).eval()
+    else:
+        if device != "cpu":
+            raise ValueError("disk offload (--cpu-layers) is only supported with --device cpu")
+        offload_dir = Path(offload_dir or resolve("acts") / ".offload" / mcfg["key"])
+        offload_dir.mkdir(parents=True, exist_ok=True)
+        model = AutoModelForCausalLM.from_pretrained(
+            mcfg["id"], device_map=offload_device_map(mcfg["id"], mcfg["n_layers"], cpu_layers),
+            offload_folder=str(offload_dir), offload_state_dict=True, **kw).eval()
     n = len(decoder_layers(model))
     if n != mcfg["n_layers"]:
         raise RuntimeError(f"{mcfg['id']}: {n} decoder layers, models.yaml says {mcfg['n_layers']}")
@@ -185,13 +207,18 @@ def main(argv=None):
                     help="keep leaks_answer rows in the analysis split (excluded by default)")
     ap.add_argument("--variant", choices=["prompt", "prompt_permuted"], default="prompt")
     ap.add_argument("--out", default=None, help="default: {acts}/{model}/{variant}")
+    ap.add_argument("--sample", type=int, default=None,
+                    help="seeded random sample of N rows from the split (seed: run.yaml)")
+    ap.add_argument("--cpu-layers", type=int, default=None,
+                    help="CPU only: keep this many decoder blocks in RAM, stream the rest from disk")
     args = ap.parse_args(argv)
 
     cfg = load_run_config()
     set_seed(cfg["seed"])
     mcfg = model_config(args.model)
-    df = select_rows(args.split, args.limit, include_leaks=args.include_leaks)
-    model, tok = load_model_and_tokenizer(mcfg, args.device)
+    df = select_rows(args.split, args.limit, include_leaks=args.include_leaks, sample=args.sample,
+                     seed=cfg["seed"])
+    model, tok = load_model_and_tokenizer(mcfg, args.device, cpu_layers=args.cpu_layers)
     opt_ids = resolve_option_ids(mcfg, tok)
     out_dir = Path(args.out) if args.out else resolve(cfg["paths"]["acts"]) / args.model / args.variant
     import transformers
@@ -200,7 +227,8 @@ def main(argv=None):
         "model_key": args.model, "model_id": mcfg["id"], "proxy": bool(mcfg.get("proxy")),
         "n_layers": mcfg["n_layers"], "n_readout_layers": mcfg["n_layers"] + 1,
         "layer_convention": "0 = embeddings, k = output of block k", "d_model": model.config.hidden_size, "dtype": mcfg["dtype"],
-        "split": args.split, "include_leaks": args.include_leaks, "limit": args.limit, "variant": args.variant, "n_rows": len(df),
+        "split": args.split, "include_leaks": args.include_leaks, "limit": args.limit, "sample": args.sample,
+        "cpu_layers": args.cpu_layers, "variant": args.variant, "n_rows": len(df),
         "shard_size": args.shard_size, "option_token_variant": mcfg["option_token_variant"],
         "option_ids": opt_ids, "torch": torch.__version__, "transformers": transformers.__version__,
         "python": platform.python_version(), "device": args.device,

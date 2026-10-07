@@ -126,3 +126,35 @@ def test_smoke_pipeline_on_tiny_model(tmp_path, tok):
     assert res["ranks"].shape == (len(PROMPTS), N_LAYERS + 1)
     assert 0.0 <= res["acc_out"] <= 1.0
     assert any("OK" in l for l in lines)
+
+
+@pytest.mark.parametrize("family", ["llama", "qwen2", "gemma2"])
+def test_disk_offload_matches_in_memory(family, tok, tmp_path):
+    """Loading with --cpu-layers (some blocks streamed from disk) must give the same
+    activations and option logits as the in-memory model."""
+    from transformers import AutoModelForCausalLM
+
+    model = tiny_model(family)
+    model.save_pretrained(tmp_path / "m")
+    kw = {"attn_implementation": "eager"} if family == "gemma2" else {}
+    off = AutoModelForCausalLM.from_pretrained(
+        tmp_path / "m", device_map=fwd.offload_device_map("x", N_LAYERS, cpu_layers=2),
+        offload_folder=str(tmp_path / "off"), offload_state_dict=True, dtype=torch.float32, **kw).eval()
+    assert any(getattr(m, "_hf_hook", None) is not None for m in off.modules()), "nothing was offloaded"
+    ids = option_ids(tok, "bare")
+    a_ref, o_ref = fwd.run_shard(model, tok, PROMPTS, ids, batch_size=2)
+    a_off, o_off = fwd.run_shard(off, tok, PROMPTS, ids, batch_size=2)
+    torch.testing.assert_close(a_off, a_ref)
+    torch.testing.assert_close(o_off, o_ref)
+    with torch.no_grad():
+        torch.testing.assert_close(lens_option_logits(off, a_off[:, -1], N_LAYERS, ids), o_off)
+
+
+def test_select_rows_sample_is_seeded():
+    from crystal.io import select_rows
+
+    a = select_rows("analysis", sample=40, seed=1234)
+    b = select_rows("analysis", sample=40, seed=1234)
+    assert a.qid.tolist() == b.qid.tolist() and a.qid.is_monotonic_increasing
+    assert a.qid.tolist() != select_rows("analysis", sample=40, seed=1).qid.tolist()
+    assert a.state.nunique() > 5  # not a single-state slice
