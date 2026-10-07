@@ -2,6 +2,7 @@
 # For GPU machines install the matching CUDA torch wheel first, then the rest.
 torch==2.14.1
 transformers==5.18.0
+accelerate==1.15.0      # only for --cpu-layers disk offload
 tokenizers==0.23.2
 safetensors==0.8.0
 huggingface_hub==1.33.0

@@ -65,7 +65,7 @@ def load_analysis_set(path: str | Path | None = None, include_leaks: bool = Fals
 
 
 def select_rows(split: str = "analysis", limit: int | None = None, path=None,
-                include_leaks: bool = False) -> pd.DataFrame:
+                include_leaks: bool = False, sample: int | None = None, seed: int = 0) -> pd.DataFrame:
     """The rows stage 2 runs on, in a fixed order (qid order). Shared by
     run/forward.py and scripts/smoke.py so both see the same questions."""
     if split == "analysis":
@@ -74,6 +74,8 @@ def select_rows(split: str = "analysis", limit: int | None = None, path=None,
         df = load_prompts(path)
     else:
         raise ValueError(f"split must be 'analysis' or 'all', got {split!r}")
+    if sample:
+        df = df.sample(n=min(sample, len(df)), random_state=seed)
     df = df.sort_values("qid").reset_index(drop=True)
     return df.head(limit) if limit else df
 
