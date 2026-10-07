@@ -11,7 +11,7 @@ models:
     batch_size: 16
     gated: true
     proxy: false
-    option_token_variant: pending
+    option_token_variant: space
   qwen25_7b:
     id: Qwen/Qwen2.5-7B
     family: qwen2
