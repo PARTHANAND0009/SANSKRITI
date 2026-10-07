@@ -10,7 +10,14 @@ Questions the model gets wrong at layer L have l* = None (kept, not dropped).
 
 Output: results/depth_{model}_{variant}_logit.parquet with
   qid, l_star, d, correct_final, gold_prob_final, gold_prob_by_layer (list),
-  gold_rank_by_layer (list), and the stage 2 run metadata in results/*.meta.json.
+  gold_rank_by_layer (list), option_probs_by_layer (flattened [(L+1)*4]), and the
+  stage 2 run metadata in results/*.meta.json.
+
+Caveat (pilot finding): in early layers the logit lens ranks one default letter
+first for every question (B for Llama-3.1-8B and Qwen2.5-7B at layer 3), so
+questions whose gold is that letter get a spuriously early l*. Compare against
+the option-permuted variant or correct for the per-layer letter prior before
+interpreting per-question l*.
 
   python -m analysis.depth --model llama31_8b [--variant prompt] [--cpu-layers 0]
 """
@@ -52,6 +59,9 @@ def depth_table(model, qids, acts: np.ndarray, gold: np.ndarray, option_ids, bat
         "gold_prob_final": gold_p[:, -1],
         "gold_prob_by_layer": list(gold_p.astype(np.float32)),
         "gold_rank_by_layer": list(ranks.astype(np.int8)),
+        # all four restricted option probabilities per layer, flattened [(L+1)*4], A..D
+        # per layer; kept so letter-prior corrections can be computed without the model
+        "option_probs_by_layer": list(probs.reshape(n, -1)),
     })
 
 

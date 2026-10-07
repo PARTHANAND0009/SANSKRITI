@@ -1,0 +1,30 @@
+{
+  "model_key": "qwen25_7b",
+  "model_id": "Qwen/Qwen2.5-7B",
+  "proxy": false,
+  "n_layers": 28,
+  "n_readout_layers": 29,
+  "layer_convention": "0 = embeddings, k = output of block k",
+  "d_model": 3584,
+  "dtype": "bfloat16",
+  "split": "analysis",
+  "include_leaks": false,
+  "limit": null,
+  "sample": 2000,
+  "cpu_layers": 18,
+  "variant": "prompt",
+  "n_rows": 2000,
+  "shard_size": 256,
+  "option_token_variant": "space",
+  "option_ids": [
+    362,
+    425,
+    356,
+    422
+  ],
+  "torch": "2.14.1+cu130",
+  "transformers": "5.18.0",
+  "python": "3.13.16",
+  "device": "cpu",
+  "readout": "logit_lens"
+}

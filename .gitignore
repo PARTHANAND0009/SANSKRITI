@@ -21,3 +21,4 @@ acts/
 
 # local model copies (scripts/convert_bf16.py)
 models/
+!results/*.parquet
