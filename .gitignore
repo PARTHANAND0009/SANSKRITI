@@ -18,3 +18,6 @@ acts/
 !data/processed/swap_pool.parquet
 !data/processed/freq_entities.parquet
 !data/processed/freq_state.parquet
+
+# local model copies (scripts/convert_bf16.py)
+models/
