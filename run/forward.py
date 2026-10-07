@@ -166,21 +166,23 @@ def load_model_and_tokenizer(mcfg: dict, device: str, cpu_layers: int | None = N
     decoder blocks in RAM and offload the rest to disk, for models larger than RAM."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    tok = AutoTokenizer.from_pretrained(mcfg["id"])
+    # local_path (models.yaml): a local copy, e.g. made by scripts/convert_bf16.py
+    src = str(resolve(mcfg["local_path"])) if mcfg.get("local_path") else mcfg["id"]
+    tok = AutoTokenizer.from_pretrained(src)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     kw = {"dtype": DTYPES[mcfg["dtype"]]}
     if mcfg.get("attn_implementation"):
         kw["attn_implementation"] = mcfg["attn_implementation"]
     if cpu_layers is None:
-        model = AutoModelForCausalLM.from_pretrained(mcfg["id"], **kw).to(device).eval()
+        model = AutoModelForCausalLM.from_pretrained(src, **kw).to(device).eval()
     else:
         if device != "cpu":
             raise ValueError("disk offload (--cpu-layers) is only supported with --device cpu")
         offload_dir = Path(offload_dir or resolve("acts") / ".offload" / mcfg["key"])
         offload_dir.mkdir(parents=True, exist_ok=True)
         model = AutoModelForCausalLM.from_pretrained(
-            mcfg["id"], device_map=offload_device_map(mcfg["id"], mcfg["n_layers"], cpu_layers),
+            src, device_map=offload_device_map(mcfg["id"], mcfg["n_layers"], cpu_layers),
             offload_folder=str(offload_dir), offload_state_dict=True, **kw).eval()
     n = len(decoder_layers(model))
     if n != mcfg["n_layers"]:
