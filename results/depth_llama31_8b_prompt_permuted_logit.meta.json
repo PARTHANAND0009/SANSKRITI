@@ -1,0 +1,30 @@
+{
+  "model_key": "llama31_8b",
+  "model_id": "meta-llama/Llama-3.1-8B",
+  "proxy": false,
+  "n_layers": 32,
+  "n_readout_layers": 33,
+  "layer_convention": "0 = embeddings, k = output of block k",
+  "d_model": 4096,
+  "dtype": "bfloat16",
+  "split": "analysis",
+  "include_leaks": false,
+  "limit": null,
+  "sample": 2000,
+  "cpu_layers": 20,
+  "variant": "prompt_permuted",
+  "n_rows": 2000,
+  "shard_size": 256,
+  "option_token_variant": "space",
+  "option_ids": [
+    362,
+    426,
+    356,
+    423
+  ],
+  "torch": "2.14.1+cu130",
+  "transformers": "5.18.0",
+  "python": "3.13.16",
+  "device": "cpu",
+  "readout": "logit_lens"
+}
