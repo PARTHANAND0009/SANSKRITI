@@ -2,3 +2,23 @@
 pythonpath = ["."]
 testpaths = ["tests"]
 markers = ["network: needs huggingface.co (skipped when unreachable)"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["data/raw", "data/cache", "acts", "paper"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "BLE", "UP", "SIM", "RUF"]
+ignore = [
+    "E741",    # `l` is the conventional name for a layer index in this codebase's math
+    "B905",    # zip(strict=...) would change behaviour on unequal lengths
+    "SIM108",  # ternaries are not always clearer
+    "RUF001", "RUF002", "RUF003",  # ambiguous unicode in strings: intentional (curly quotes in regexes, ℓ)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["crystal", "data", "run", "analysis", "tests"]
+
+[tool.ruff.format]
+quote-style = "double"

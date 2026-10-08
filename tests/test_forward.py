@@ -1,11 +1,16 @@
 """Stage 2 on tiny random models: batching, padding, shards, resume."""
+
+import logging
+
 import numpy as np
 import pandas as pd
 import pytest
 import torch
 
 import run.forward as fwd
+from crystal.io import read_shards
 from crystal.lens import lens_option_logits
+from crystal.models import offload_device_map
 from crystal.tokens import option_ids
 from data.prep import build_prompt
 from tests.fixtures import N_LAYERS, char_tokenizer, tiny_model
@@ -13,8 +18,10 @@ from tests.fixtures import N_LAYERS, char_tokenizer, tiny_model
 # prompt lengths differ a lot so batches carry real left padding
 PROMPTS = [
     build_prompt("Which dish?", ["x", "y", "z", "w"]),
-    build_prompt("A much longer question stem that pads the others in its batch?",
-                 ["first option", "second", "third option here", "4"]),
+    build_prompt(
+        "A much longer question stem that pads the others in its batch?",
+        ["first option", "second", "third option here", "4"],
+    ),
     build_prompt("Q?", ["a", "b", "c", "d"]),
     build_prompt("Which festival is celebrated in this region every year?", ["p", "q", "r", "s"]),
     build_prompt("Mid-length stem here?", ["one", "two", "three", "four"]),
@@ -58,8 +65,9 @@ def test_layers_match_hf_hidden_states(family, tok):
     ids, mask = fwd.left_pad_batch(tok, PROMPTS[:3])
     acts, _ = fwd.collect_resid(model, ids, mask, option_ids(tok, "bare"))
     with torch.no_grad():
-        hs = model(input_ids=ids, attention_mask=mask, position_ids=fwd.position_ids_from_mask(mask),
-                   output_hidden_states=True).hidden_states
+        hs = model(
+            input_ids=ids, attention_mask=mask, position_ids=fwd.position_ids_from_mask(mask), output_hidden_states=True
+        ).hidden_states
     assert len(hs) == N_LAYERS + 1
     for k in range(N_LAYERS):
         torch.testing.assert_close(acts[:, k], hs[k][:, -1].float())
@@ -86,7 +94,7 @@ def test_shards_and_resume(tmp_path, tok, monkeypatch):
     model = tiny_model("qwen2")
     ids = option_ids(tok, "bare")
     df = pd.DataFrame({"qid": [f"sk{i:05d}" for i in range(len(PROMPTS))], "prompt": PROMPTS})
-    paths = fwd.run_forward(model, tok, df, tmp_path, ids, shard_size=2, batch_size=2, meta={"x": 1}, log=lambda *_: None)
+    paths = fwd.run_forward(model, tok, df, tmp_path, ids, shard_size=2, batch_size=2, meta={"x": 1})
     assert [p.name for p in paths] == ["shard_00000.npz", "shard_00001.npz", "shard_00002.npz"]
     z = np.load(paths[1])
     assert z["qids"].tolist() == ["sk00002", "sk00003"]
@@ -98,16 +106,16 @@ def test_shards_and_resume(tmp_path, tok, monkeypatch):
     calls = []
     orig = fwd.run_shard
     monkeypatch.setattr(fwd, "run_shard", lambda *a, **k: calls.append(1) or orig(*a, **k))
-    fwd.run_forward(model, tok, df, tmp_path, ids, shard_size=2, batch_size=2, log=lambda *_: None)
+    fwd.run_forward(model, tok, df, tmp_path, ids, shard_size=2, batch_size=2)
     assert len(calls) == 1
     np.testing.assert_array_equal(np.load(paths[1])["acts"], z["acts"])
 
     # a changed row selection must not silently mix with old shards
     with pytest.raises(RuntimeError, match="different qids"):
-        fwd.run_forward(model, tok, df.iloc[1:], tmp_path, ids, shard_size=2, batch_size=2, log=lambda *_: None)
+        fwd.run_forward(model, tok, df.iloc[1:], tmp_path, ids, shard_size=2, batch_size=2)
 
 
-def test_smoke_pipeline_on_tiny_model(tmp_path, tok):
+def test_smoke_pipeline_on_tiny_model(tmp_path, tok, caplog):
     """forward -> shards -> scripts/smoke.py checks, end to end on a tiny model."""
     import importlib.util
 
@@ -117,15 +125,16 @@ def test_smoke_pipeline_on_tiny_model(tmp_path, tok):
 
     model = tiny_model("gemma2", tie=True)
     ids = option_ids(tok, "bare")
-    df = pd.DataFrame({"qid": [f"sk{i:05d}" for i in range(len(PROMPTS))], "prompt": PROMPTS,
-                       "gold_idx": [0, 1, 2, 3, 0]})
-    fwd.run_forward(model, tok, df, tmp_path, ids, shard_size=2, batch_size=2, log=lambda *_: None)
-    qids, acts, out = smoke.load_shards(tmp_path)
-    lines = []
-    res = smoke.smoke(model, tok, df, qids, acts, out, ids, n_examples=3, report=lines.append)
+    df = pd.DataFrame(
+        {"qid": [f"sk{i:05d}" for i in range(len(PROMPTS))], "prompt": PROMPTS, "gold_idx": [0, 1, 2, 3, 0]}
+    )
+    fwd.run_forward(model, tok, df, tmp_path, ids, shard_size=2, batch_size=2)
+    qids, acts, out = read_shards(tmp_path)
+    with caplog.at_level(logging.INFO):
+        res = smoke.smoke(model, tok, df, qids, acts, out, ids, n_examples=3)
     assert res["ranks"].shape == (len(PROMPTS), N_LAYERS + 1)
     assert 0.0 <= res["acc_out"] <= 1.0
-    assert any("OK" in l for l in lines)
+    assert any("OK" in r.getMessage() for r in caplog.records)
 
 
 @pytest.mark.parametrize("family", ["llama", "qwen2", "gemma2"])
@@ -138,8 +147,13 @@ def test_disk_offload_matches_in_memory(family, tok, tmp_path):
     model.save_pretrained(tmp_path / "m")
     kw = {"attn_implementation": "eager"} if family == "gemma2" else {}
     off = AutoModelForCausalLM.from_pretrained(
-        tmp_path / "m", device_map=fwd.offload_device_map("x", N_LAYERS, cpu_layers=2),
-        offload_folder=str(tmp_path / "off"), offload_state_dict=True, dtype=torch.float32, **kw).eval()
+        tmp_path / "m",
+        device_map=offload_device_map(N_LAYERS, cpu_layers=2),
+        offload_folder=str(tmp_path / "off"),
+        offload_state_dict=True,
+        dtype=torch.float32,
+        **kw,
+    ).eval()
     assert any(getattr(m, "_hf_hook", None) is not None for m in off.modules()), "nothing was offloaded"
     ids = option_ids(tok, "bare")
     a_ref, o_ref = fwd.run_shard(model, tok, PROMPTS, ids, batch_size=2)
@@ -173,7 +187,9 @@ def test_depth_table_on_tiny_model(tok):
     # final layer agrees with the model's own output
     assert (t.correct_final.to_numpy() == (opts.argmax(-1).numpy() == gold)).all()
     for r in t.itertuples():
-        assert (pd.isna(r.l_star) and not r.correct_final) or r.l_star == crystallization_layer(r.gold_rank_by_layer == 0)
+        assert (pd.isna(r.l_star) and not r.correct_final) or r.l_star == crystallization_layer(
+            r.gold_rank_by_layer == 0
+        )
         if not pd.isna(r.l_star):
             assert r.d == r.l_star / N_LAYERS
 

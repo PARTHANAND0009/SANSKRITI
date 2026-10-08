@@ -1,4 +1,5 @@
 """Tuned lens on a tiny random model (CPU, seconds)."""
+
 import torch
 
 from run.tune_lens import TunedLens, evaluate, load_tuned_lens, train
@@ -21,8 +22,20 @@ def test_tuned_lens_beats_logit_lens_and_last_layer_stays_identity():
     g = torch.Generator().manual_seed(0)
     train_chunks = torch.randint(4, VOCAB, (64, 24), generator=g)
     eval_chunks = torch.randint(4, VOCAB, (16, 24), generator=g)
-    lens = train(model, train_chunks, 64, "cpu", steps=60, batch=8, tokens_per_seq=16, lr=1.0, momentum=0.9,
-                 weight_decay=1e-3, warmup=5, seed=0, log=lambda *_: None)
+    lens = train(
+        model,
+        train_chunks,
+        64,
+        "cpu",
+        steps=60,
+        batch=8,
+        tokens_per_seq=16,
+        lr=1.0,
+        momentum=0.9,
+        weight_decay=1e-3,
+        warmup=5,
+        seed=0,
+    )
     raw, tuned = evaluate(model, lens, eval_chunks, batch=8, device="cpu")
     assert (tuned[:N_LAYERS] < raw[:N_LAYERS]).all(), (raw, tuned)
     dev = lens.deviation_from_identity()

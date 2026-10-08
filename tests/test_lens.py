@@ -1,4 +1,5 @@
 """lens_logits at the last layer must reproduce the model's own output logits."""
+
 import pytest
 import torch
 

@@ -1,4 +1,5 @@
 """Results archive: package -> verify; tampering is caught."""
+
 import importlib.util
 import json
 import tarfile
@@ -22,8 +23,8 @@ def test_package_and_verify_roundtrip(tmp_path):
     m = pkg.build(out)
     paths = {f["path"] for f in m["files"]}
     assert any(p.startswith("results/") for p in paths)
-    assert not any(p.startswith("acts/") for p in paths)                 # activations excluded by default
-    assert not any(p.endswith(".pt") for p in paths)                      # lens weights excluded by default
+    assert not any(p.startswith("acts/") for p in paths)  # activations excluded by default
+    assert not any(p.endswith(".pt") for p in paths)  # lens weights excluded by default
     work = tmp_path / "w"
     work.mkdir()
     m2 = ing.verify(out, work)

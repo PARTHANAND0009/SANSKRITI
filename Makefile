@@ -1,9 +1,10 @@
 PY ?= python
+RUFF ?= ruff
 MODEL ?= qwen25_05b_proxy
 DEVICE ?= cpu
 LIMIT ?= 50
 
-.PHONY: prep entities frequency tokens forward smoke test
+.PHONY: prep entities frequency tokens forward smoke test lint format
 
 prep:
 	$(PY) -m data.prep
@@ -20,8 +21,16 @@ tokens:
 forward:
 	$(PY) -m run.forward --model $(MODEL) --device $(DEVICE) --limit $(LIMIT)
 
-smoke: forward  # requires `make prep` and `make tokens` first
+smoke: forward  # needs `make prep` and `make tokens` first
 	$(PY) scripts/smoke.py --model $(MODEL) --device $(DEVICE) --limit $(LIMIT)
 
 test:
 	$(PY) -m pytest -q
+
+lint:
+	$(RUFF) check .
+	$(RUFF) format --check .
+
+format:
+	$(RUFF) check --fix .
+	$(RUFF) format .

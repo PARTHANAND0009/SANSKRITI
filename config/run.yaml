@@ -26,3 +26,38 @@ frequency:
   service_intervals_s:     # per-service minimum seconds between requests
     pageviews: 1.0         # the pageviews API rate-limits this egress IP (429, Retry-After ~48s)
     infinigram: 0.5        # at 0.2 s the gateway answered 403 Forbidden after ~190 queries
+forward:
+  shard_size: 256            # questions per activation shard (the unit a rerun resumes from)
+depth:
+  lens_batch: 256            # questions per batch when reading stored activations through a lens
+  max_gold_letter_share: 0.4 # a table's own letter prior is used only if gold letters are this balanced
+  n_boot: 1000               # bootstrap resamples for split-half reliability CIs
+primary_metric:              # pre-registered rule, ANALYSIS_PLAN.md section 2
+  default: d_soft
+  challengers: [l_star_cyc, d_margin]
+  margin: 0.10
+stats:                       # ANALYSIS_PLAN.md sections 4-6
+  n_perm: 1000               # state-label permutations
+  n_boot: 2000               # bootstrap resamples for per-state median CIs
+  equivalence_bound: 0.10    # smallest effect of interest, |beta_std|
+patching:
+  target: 1200               # questions in the stratified sample
+  anchor_states: [Maharashtra, Bihar]
+  anchor_min: 40             # minimum questions per anchor state
+  min_swap_candidates: 3     # per question, same attribute and different state
+  min_effect: 1.0            # logits; smaller corruption effects are flagged invalid
+  thresholds: [0.3, 0.5, 0.7]
+  shard_size: 50
+tuned_lens:                  # Belrose et al. 2023 recipe, scaled to one GPU
+  steps: 250
+  batch: 8
+  seq_len: 512
+  tokens_per_seq: 128        # positions per sequence in the loss
+  train_tokens: 4000000
+  eval_tokens: 100000
+  lr: 1.0
+  momentum: 0.9
+  weight_decay: 0.001
+  warmup: 25
+  grad_clip: 1.0
+  min_doc_chars: 200         # WikiText paragraphs shorter than this are skipped

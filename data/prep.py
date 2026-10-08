@@ -1,51 +1,38 @@
-"""Stage 0: build prompts.parquet from the SANSKRITI release (HF 13ari/Sanskriti, CC0).
+"""Stage 0: prompts.parquet and data_quality.md from the SANSKRITI release (HF 13ari/Sanskriti, CC0).
 
-Outputs
-  data/processed/prompts.parquet   qid, state, attribute, question_type, stem,
-                                   options, gold_idx, prompt, prompt_permuted,
-                                   gold_idx_permuted, prompt_cyc0..3, gold_idx_cyc0..3,
-                                   option_token_ids, ambiguous_gold
-  data/processed/data_quality.md   every dropped and every ambiguous row, for the
-                                   dataset authors
-
-Rules
-  - gold matching is on strip + lowercase text.
-  - no option matches the answer field  -> row dropped (listed in data_quality.md)
-  - more than one option matches        -> ambiguous_gold = True, kept; gold_idx is
-                                           the first match. load_analysis_set()
-                                           excludes these rows.
-  - any two options identical           -> duplicate_options = True (superset of
-                                           ambiguous_gold: also catches duplicated
-                                           distractors). Flagged only, not excluded.
-  - the stem reveals the gold answer    -> leaks_answer = True, leak_rule says how
-                                           (see leak_rule()). load_analysis_set()
-                                           excludes these unless include_leaks=True.
-  - qid = "sk%05d" over the concatenated splits in their published order.
-  - prompt_cyc{k} (k = 0..3): the options rotated cyclically so the gold answer is at
-    letter k (gold_idx_cyc{k} = k). These four are the main design: each question is
-    seen with gold at A, B, C and D exactly once, so letter preferences cancel when
-    averaged. prompt_permuted (seeded shuffle) is kept as a robustness check.
+Rules (gold matching compares stripped, lowercased text):
+  no option matches the answer     row dropped, listed in data_quality.md
+  several options match            ambiguous_gold; gold_idx is the first match
+  two options identical            duplicate_options (also catches repeated distractors); flag only
+  the stem reveals the answer      leaks_answer, with leak_rule saying how
+load_analysis_set() excludes ambiguous_gold and leaks_answer rows. qid is "sk%05d" over the
+splits in published order. prompt_cyc{k} rotates the options so gold is at letter k (the main
+design); prompt_permuted is a seeded shuffle (robustness).
 """
+
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import logging
 import random
 import re
-import sys
 from pathlib import Path
 
 import pandas as pd
 
-from crystal.io import load_models_config, load_run_config, resolve, set_seed
+from crystal.io import load_models_config, load_run_config, resolve, set_seed, stable_seed
+from crystal.log import setup_logging
+from crystal.text import norm_text, word_pattern
+from data.entities import match_template
+
+log = logging.getLogger(__name__)
 
 TEMPLATE = "Question: {stem}\nA. {o0}\nB. {o1}\nC. {o2}\nD. {o3}\nAnswer:"
 LETTERS = ("A", "B", "C", "D")
 
-# Header names in the release. Each target field maps to the first candidate
-# present; if none is present we stop and print the actual columns rather than
-# guess. Confirm against the real release on first run.
+# Each field maps to the first candidate header present in the release; with none present
+# we stop and show the actual columns rather than guess.
 COLUMN_CANDIDATES = {
     "state": ["state", "State"],
     "attribute": ["attribute", "Attribute", "category", "Category"],
@@ -81,10 +68,8 @@ def match_gold(answer, options) -> tuple[int | None, bool]:
     return hits[0], len(hits) > 1
 
 
-# Distinctive name forms and demonyms / languages that identify one state.
-# Generic first words ("West", "Uttar", "Madhya", "Tamil" as a first word of a
-# state name is handled via the language list) are not used on their own;
-# Telugu is omitted because it does not single out one state.
+# Name forms, demonyms and languages that identify one state. Generic first words ("West",
+# "Uttar", "Madhya") are not used alone; Telugu is left out because it spans two states.
 STATE_ALIASES = {
     "andaman and nicobar": ["andaman", "nicobar", "andamanese", "nicobarese"],
     "andhra pradesh": ["andhra"],
@@ -126,23 +111,18 @@ STATE_ALIASES = {
 COUNTRY_ALIASES = {"india": ["indian", "indians"]}
 
 
-def _norm_text(s) -> str:
-    return re.sub(r"\s+", " ", str(s).replace("_", " ").lower()).strip()
-
-
 def _contains_word(text: str, phrase: str) -> bool:
-    return bool(phrase) and re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", text) is not None
+    return bool(phrase) and re.search(word_pattern(phrase), text) is not None
 
 
 def leak_rule(stem: str, gold: str) -> str | None:
     """How the stem reveals the gold option, or None.
 
-    gold_text_in_stem   the gold option text itself occurs in the stem (word-bounded)
-    gold_state_name     gold is a state/UT and a distinctive name form, demonym or
-                        language of it occurs in the stem
+    gold_text_in_stem   the gold option text occurs in the stem
+    gold_state_name     gold is a state and one of its STATE_ALIASES occurs in the stem
     gold_country_name   gold is India and "Indian" occurs in the stem
     """
-    s, g = _norm_text(stem), _norm_text(gold)
+    s, g = norm_text(stem), norm_text(gold)
     if len(g) >= 3 and _contains_word(s, g):
         return "gold_text_in_stem"
     if g in STATE_ALIASES and any(_contains_word(s, a) for a in STATE_ALIASES[g]):
@@ -156,38 +136,30 @@ def has_duplicate_options(options) -> bool:
     return len({norm(o) for o in options}) < len(options)
 
 
-def qid_seed(qid: str, base_seed: int) -> int:
-    h = hashlib.sha256(f"{base_seed}:{qid}".encode()).hexdigest()
-    return int(h[:16], 16)
-
-
 def permute(options, gold_idx: int, qid: str, base_seed: int):
-    """Shuffle options with a fixed per-qid seed. Returns (options_perm, gold_idx_perm)."""
-    order = list(range(len(options)))
-    random.Random(qid_seed(qid, base_seed)).shuffle(order)
+    """Seeded per-question shuffle. Returns (options_perm, gold_idx_perm)."""
+    order = option_order("perm", gold_idx, qid, base_seed, len(options))
     return [options[i] for i in order], order.index(gold_idx)
 
 
 def rotate(options, gold_idx: int, k: int):
-    """Cyclic rotation of the options that puts the gold answer at position k (A=0..D=3),
-    preserving the cyclic order of the options. Returns (options_rot, k)."""
+    """Cyclic rotation putting the gold answer at position k (A=0..D=3). Returns (options_rot, k)."""
     n = len(options)
     shift = (k - gold_idx) % n
     return [options[(j - shift) % n] for j in range(n)], k
 
 
 def option_order(variant: str, gold_idx: int, qid: str, base_seed: int, n: int = 4) -> list[int]:
-    """For a prompt variant, the original option index shown at each letter A..D.
-    "prompt": identity; "perm"/"prompt_permuted": the seeded shuffle used by permute();
-    "cyc{k}": the rotation used by rotate(). Used to align answers by content across
-    variants (the same answer text sits at different letters in different variants)."""
+    """The original option index shown at each letter A..D in a prompt variant.
+
+    Aligns answers by content across variants, where the same text sits at different letters.
+    """
     idx = list(range(n))
     if variant == "prompt":
         return idx
     if variant in ("perm", "prompt_permuted"):
-        order = list(range(n))
-        random.Random(qid_seed(qid, base_seed)).shuffle(order)
-        return order
+        random.Random(stable_seed(qid, base_seed)).shuffle(idx)
+        return idx
     if variant.startswith("cyc"):
         return rotate(idx, gold_idx, int(variant[3:]))[0]
     raise ValueError(f"unknown variant {variant!r}")
@@ -222,8 +194,7 @@ def load_raw(hf_id: str, revision: str, raw_dir: Path) -> pd.DataFrame:
 
 
 def option_token_ids_by_model(models: dict) -> dict:
-    """{model_key: [id_A, id_B, id_C, id_D] or None}, from option_token_variant.
-    Models whose variant is still 'pending' get None (tokenizer not checked)."""
+    """{model_key: [id_A, id_B, id_C, id_D], or None while option_token_variant is pending}."""
     from crystal.tokens import option_ids
 
     out = {}
@@ -314,27 +285,23 @@ def association_gold_is_state(kept: pd.DataFrame) -> pd.DataFrame:
         return kept
     a = kept[(kept["question_type"] == "Association") & ~kept["ambiguous_gold"]]
     gold = [o[i] for o, i in zip(a["options"], a["gold_idx"])]
-    m = [_norm_text(g) == _norm_text(s) for g, s in zip(gold, a["state"])]
+    m = [norm_text(g) == norm_text(s) for g, s in zip(gold, a["state"])]
     return a[m].assign(gold=[g for g, k in zip(gold, m) if k])
 
 
 def _assoc_gold_is_entity_count(kept: pd.DataFrame) -> int:
-    from data.entities import match_template
-
     if kept.empty:
         return 0
     a = kept[(kept["question_type"] == "Association") & ~kept["ambiguous_gold"]]
     n = 0
     for stem, opts, gi in zip(a["stem"], a["options"], a["gold_idx"]):
         h = match_template(stem, "Association")
-        if h and h[1] == "E" and _norm_text(h[2].group("E")).strip(" ?") == _norm_text(opts[gi]):
+        if h and h[1] == "E" and norm_text(h[2].group("E")).strip(" ?") == norm_text(opts[gi]):
             n += 1
     return n
 
 
 def _assoc_state_section(kept: pd.DataFrame, n_examples: int = 3, seed: int = 0) -> str:
-    from data.entities import match_template  # local: entities imports prep-level helpers only
-
     g = association_gold_is_state(kept)
     if g.empty:
         return "_none_\n"
@@ -356,7 +323,7 @@ def write_quality_report(kept: pd.DataFrame, dropped: pd.DataFrame, path: Path, 
     dup = kept[kept["duplicate_options"] & ~kept["ambiguous_gold"]] if len(kept) else kept
     text = f"""# SANSKRITI data quality notes
 
-Source: `{meta['hf_id']}` (revision `{meta['revision']}`), {meta['n_raw']} rows.
+Source: `{meta["hf_id"]}` (revision `{meta["revision"]}`), {meta["n_raw"]} rows.
 `qid` is the 0-based row position over the published splits, formatted `sk00000`.
 Matching compares the answer field with each option after trimming whitespace and
 lowercasing.
@@ -404,6 +371,7 @@ pig-farming customs?" with gold "Nicobari pig-farming customs").
 
 
 def main(argv=None):
+    setup_logging()
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--revision", default=None)
     args = ap.parse_args(argv)
@@ -416,33 +384,33 @@ def main(argv=None):
     raw_dir.mkdir(parents=True, exist_ok=True)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    try:
-        raw = load_raw(hf_id, revision, raw_dir)
-    except Exception as e:  # network / auth: stop, don't fall back
-        sys.exit(f"cannot load {hf_id}@{revision}: {type(e).__name__}: {e}")
-
+    raw = load_raw(hf_id, revision, raw_dir)
     tok_ids = option_token_ids_by_model(load_models_config())
     kept, dropped = build(raw, cfg["prep"]["permute_seed"], tok_ids)
     kept.drop(columns=["answer"]).to_parquet(resolve(cfg["paths"]["prompts"]), index=False)
     leaks = kept[kept["leaks_answer"]].assign(gold=lambda d: [o[i] for o, i in zip(d.options, d.gold_idx)])
     leaks[["qid", "state", "attribute", "question_type", "leak_rule", "stem", "gold"]].to_csv(
-        out_dir / "leaks.csv", index=False)
+        out_dir / "leaks.csv", index=False
+    )
     write_quality_report(
-        kept, dropped, out_dir / "data_quality.md",
+        kept,
+        dropped,
+        out_dir / "data_quality.md",
         {"hf_id": hf_id, "revision": revision, "n_raw": len(raw)},
     )
 
     n_amb = int(kept["ambiguous_gold"].sum())
-    print(f"raw rows: {len(raw)}  kept: {len(kept)}  dropped (no match): {len(dropped)}  "
-          f"ambiguous_gold: {n_amb}  analysis set: {len(kept) - n_amb}  "
-          f"duplicate_options (incl. ambiguous): {int(kept['duplicate_options'].sum())}  "
-          f"leaks_answer: {int(kept['leaks_answer'].sum())}")
+    log.info(
+        f"raw rows: {len(raw)}  kept: {len(kept)}  dropped (no match): {len(dropped)}  "
+        f"ambiguous_gold: {n_amb}  analysis set: {len(kept) - n_amb}  "
+        f"duplicate_options (incl. ambiguous): {int(kept['duplicate_options'].sum())}  "
+        f"leaks_answer: {int(kept['leaks_answer'].sum())}"
+    )
     pending = [k for k, v in tok_ids.items() if v is None]
     if pending:
-        print(f"option_token_ids pending for: {pending}")
+        log.warning(f"option_token_ids pending for: {pending}")
     for col in ("state", "attribute", "question_type"):
-        print(f"\n== counts by {col} (kept rows)")
-        print(kept[col].value_counts().sort_index().to_string())
+        log.info(f"\ncounts by {col} (kept rows)\n{kept[col].value_counts().sort_index().to_string()}")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 """Config and data loaders shared by every stage."""
+
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import random
@@ -13,11 +15,9 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 
-# Prompt variants: name -> (prompt column, gold-index column) in prompts.parquet.
-# cyc0..cyc3 are the cyclic rotations of the options with gold at A, B, C, D (the main
-# design: every question is seen once with gold at each letter). perm is the seeded
-# random permutation (robustness check). "prompt"/"prompt_permuted" are the original
-# order and the permutation under their pre-rotation names (pilot activations use them).
+# Prompt variant -> (prompt column, gold-index column) in prompts.parquet. cyc0..cyc3 put
+# the gold answer at A..D so letter preferences cancel over the four; perm is a seeded
+# shuffle. "prompt"/"prompt_permuted" are the names the pilot activations were written under.
 VARIANTS = {
     "cyc0": ("prompt_cyc0", "gold_idx_cyc0"),
     "cyc1": ("prompt_cyc1", "gold_idx_cyc1"),
@@ -37,8 +37,8 @@ def variant_columns(variant: str) -> tuple[str, str]:
 
 
 def load_run_config(path: str | Path | None = None) -> dict:
-    """config/run.yaml. The environment variable CRYSTAL_ACTS_DIR overrides paths.acts
-    (used by scripts/preflight.py to keep its test activations out of acts/)."""
+    """config/run.yaml; CRYSTAL_ACTS_DIR overrides paths.acts (preflight keeps its test
+    activations out of acts/)."""
     with open(path or ROOT / "config" / "run.yaml") as f:
         cfg = yaml.safe_load(f)
     if os.environ.get("CRYSTAL_ACTS_DIR"):
@@ -63,6 +63,19 @@ def resolve(path: str | Path) -> Path:
     return p if p.is_absolute() else ROOT / p
 
 
+def stable_seed(key: str, base_seed: int) -> int:
+    """Seed derived from a string key, identical on every machine and Python version."""
+    return int(hashlib.sha256(f"{base_seed}:{key}".encode()).hexdigest()[:16], 16)
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -84,8 +97,7 @@ def load_prompts(path: str | Path | None = None) -> pd.DataFrame:
 
 
 def load_analysis_set(path: str | Path | None = None, include_leaks: bool = False) -> pd.DataFrame:
-    """Rows used in analysis: stage 0 output minus ambiguous_gold rows, and minus
-    leaks_answer rows (stem reveals the gold) unless include_leaks=True."""
+    """Stage 0 rows minus ambiguous_gold and (unless include_leaks) leaks_answer."""
     df = load_prompts(path)
     keep = ~df["ambiguous_gold"]
     if not include_leaks:
@@ -93,10 +105,15 @@ def load_analysis_set(path: str | Path | None = None, include_leaks: bool = Fals
     return df[keep].reset_index(drop=True)
 
 
-def select_rows(split: str = "analysis", limit: int | None = None, path=None,
-                include_leaks: bool = False, sample: int | None = None, seed: int = 0) -> pd.DataFrame:
-    """The rows stage 2 runs on, in a fixed order (qid order). Shared by
-    run/forward.py and scripts/smoke.py so both see the same questions."""
+def select_rows(
+    split: str = "analysis",
+    limit: int | None = None,
+    path=None,
+    include_leaks: bool = False,
+    sample: int | None = None,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """The rows stage 2 runs on, in qid order (run/forward.py and scripts/smoke.py must agree)."""
     if split == "analysis":
         df = load_analysis_set(path, include_leaks=include_leaks)
     elif split == "all":
@@ -119,15 +136,15 @@ def load_freq(path: str | Path | None = None) -> pd.DataFrame:
     return pd.read_parquet(resolve(path))
 
 
-def load_acts(model_key: str, variant: str = "prompt", acts_dir: str | Path | None = None):
-    """Concatenate all stage 2 shards for a model.
+def read_shards(shard_dir: Path):
+    """Concatenate the stage 2 shards in a directory.
 
-    Returns (qids [n], acts [n, L+1, d] float16 (0 = embeddings), out_opt_logits [n, 4] float32).
+    Returns:
+        qids [n], acts [n, L+1, d] float16 (layer 0 = embeddings), out_opt_logits [n, 4] float32.
     """
-    acts_dir = resolve(acts_dir or load_run_config()["paths"]["acts"])
-    shards = sorted((acts_dir / model_key / variant).glob("shard_*.npz"))
+    shards = sorted(Path(shard_dir).glob("shard_*.npz"))
     if not shards:
-        raise FileNotFoundError(f"no shards in {acts_dir / model_key / variant}")
+        raise FileNotFoundError(f"no shards in {shard_dir}")
     qids, acts, out = [], [], []
     for s in shards:
         z = np.load(s, allow_pickle=False)
@@ -135,3 +152,9 @@ def load_acts(model_key: str, variant: str = "prompt", acts_dir: str | Path | No
         acts.append(z["acts"])
         out.append(z["out_opt_logits"])
     return np.concatenate(qids), np.concatenate(acts), np.concatenate(out)
+
+
+def load_acts(model_key: str, variant: str = "prompt", acts_dir: str | Path | None = None):
+    """read_shards for acts/{model}/{variant}."""
+    acts_dir = resolve(acts_dir or load_run_config()["paths"]["acts"])
+    return read_shards(acts_dir / model_key / variant)

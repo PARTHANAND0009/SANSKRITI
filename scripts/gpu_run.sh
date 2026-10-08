@@ -33,7 +33,7 @@ if [[ -z "${HF_TOKEN:-}" ]]; then
   echo "HF_TOKEN is not set (needed for meta-llama/Llama-3.1-8B and google/gemma-2-9b)" >&2
   exit 1
 fi
-export HF_TOKEN            # huggingface_hub reads it from the environment
+export HF_TOKEN
 export HF_HUB_ENABLE_HF_TRANSFER=${HF_HUB_ENABLE_HF_TRANSFER:-0}
 
 stamp() { date -u +%Y-%m-%dT%H:%M:%SZ; }
@@ -45,7 +45,7 @@ step() {  # step <model> <name> <command...>: run, time and log one step
   printf '%s\t%s\t%s\t%s\n' "$(stamp)" "$m" "$name" "$(( $(date +%s) - t0 ))" >> "$LOG"
 }
 
-# ---------------------------------------------------------------- environment
+# Environment
 if [[ "${SKIP_SETUP:-0}" != 1 ]]; then
   python3 -m venv .venv
   $PY -m pip install -q --upgrade pip
@@ -60,7 +60,7 @@ EOF
 [[ -s $LOG ]] || printf 'time\tmodel\tstep\tseconds\n' > "$LOG"
 $PY -m pip freeze > results/env_pip_freeze.txt
 
-# ---------------------------------------------------------------- data (already in git; rebuilt only if missing)
+# Data: tracked in git, rebuilt only if missing
 [[ -f data/processed/prompts.parquet ]] || step all prep $PY -m data.prep
 [[ -f data/processed/patch_sample.csv ]] || step all patch_sample $PY -m run.patch --build-sample
 step all tokens $PY -m crystal.tokens
@@ -76,7 +76,7 @@ push_results() {
   git push -q origin HEAD || echo "git push failed; results are committed locally" >&2
 }
 
-# ---------------------------------------------------------------- per model
+# Per model
 for m in $MODELS; do
   BATCH_ARG=()
   [[ -n "${BATCH:-}" ]] && BATCH_ARG=(--batch-size "$BATCH")
@@ -88,7 +88,7 @@ from crystal.io import model_config
 snapshot_download(model_config(sys.argv[1])["id"], allow_patterns=["*.json", "*.safetensors", "*.model"])
 EOF
 
-  for v in $VARIANTS; do        # stage 2: full analysis set; shards resume
+  for v in $VARIANTS; do
     step "$m" "forward_$v" $PY -m run.forward --model "$m" --device cuda --split analysis --variant "$v" "${BATCH_ARG[@]}"
   done
 
@@ -101,8 +101,8 @@ EOF
     done
     step "$m" "aggregate_$readout" $PY -m analysis.depth aggregate --model "$m" --variants cyc0 cyc1 cyc2 cyc3 --readout "$readout"
     step "$m" "splithalf_$readout" $PY -m analysis.depth split-half --model "$m" --readout "$readout"
-    # orig = cyc{gold_idx} per question; orig vs perm is the pilot's test-retest design and
-    # both orders have balanced gold letters, so the pooled letter prior is valid
+    # orig is cyc{gold_idx}; orig vs perm repeats the pilot's test-retest design, and both
+    # orders have balanced gold letters, so their pooled letter prior is valid
     step "$m" "reliability_$readout" $PY -m analysis.depth reliability --model "$m" --variants orig perm --readout "$readout"
   done
 
@@ -113,8 +113,7 @@ EOF
   push_results "$m"
 done
 
-# ---------------------------------------------------------------- stats over all models (still labelled PRELIMINARY
-# until reviewed; the output directory is separate from the CPU pilot's)
+# Across models; output kept apart from the CPU pilot's results/prelim
 step all primary_metric $PY -m analysis.depth choose-primary --models $MODELS
 step all stats $PY -m analysis.stats --models $MODELS --agg cyc --out results/gpu_stats
 push_results "stats"

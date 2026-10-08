@@ -1,18 +1,16 @@
-"""Ingest a results archive made by scripts/package_results.py (e.g. from a collaborator's
-GPU run): verify every checksum, then put each file at its path in this repo.
+"""Verify a results archive from scripts/package_results.py and install its files in this repo.
 
-  python results/ingest.py results_20261020.tar.gz            # verify + install
-  python results/ingest.py results_20261020.tar.gz --check    # verify only
-  python results/ingest.py results_20261020.tar.gz --force    # overwrite differing files
+  python results/ingest.py results_20261020.tar.gz [--check | --force]
 
-Refuses to install if any checksum fails, if a path would leave the repo, or (without
---force) if an existing file differs. Prints what was installed and the next commands.
+Refuses if any checksum fails, a path would leave the repo, or (without --force) an existing
+file differs. --check only verifies.
 """
+
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import logging
 import re
 import shutil
 import sys
@@ -21,15 +19,13 @@ import tempfile
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from crystal.io import sha256_file  # noqa: E402
+from crystal.log import setup_logging  # noqa: E402
+
+log = logging.getLogger(__name__)
 ALLOWED_TOP = {"results", "lenses", "data", "config", "acts", "ANALYSIS_PLAN.md"}
-
-
-def sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def safe_member(name: str) -> bool:
@@ -51,10 +47,13 @@ def verify(archive: Path, workdir: Path) -> dict:
         listed.add(f["path"])
         if not p.is_file():
             errors.append(f"missing: {f['path']}")
-        elif p.stat().st_size != f["bytes"] or sha256(p) != f["sha256"]:
+        elif p.stat().st_size != f["bytes"] or sha256_file(p) != f["sha256"]:
             errors.append(f"checksum mismatch: {f['path']}")
-    extra = [str(p.relative_to(workdir)) for p in workdir.rglob("*")
-             if p.is_file() and p.name != "MANIFEST.json" and str(p.relative_to(workdir)) not in listed]
+    extra = [
+        str(p.relative_to(workdir))
+        for p in workdir.rglob("*")
+        if p.is_file() and p.name != "MANIFEST.json" and str(p.relative_to(workdir)) not in listed
+    ]
     if extra:
         errors.append(f"files not in manifest: {extra[:5]}")
     if errors:
@@ -67,7 +66,7 @@ def install(manifest: dict, workdir: Path, force: bool) -> tuple[list, list, lis
     for f in manifest["files"]:
         dst = ROOT / f["path"]
         if dst.exists():
-            (same if sha256(dst) == f["sha256"] else conflict).append(f["path"])
+            (same if sha256_file(dst) == f["sha256"] else conflict).append(f["path"])
         else:
             new.append(f["path"])
     if conflict and not force:
@@ -80,6 +79,7 @@ def install(manifest: dict, workdir: Path, force: bool) -> tuple[list, list, lis
 
 
 def main(argv=None):
+    setup_logging()
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("archive")
     ap.add_argument("--check", action="store_true", help="verify only")
@@ -90,18 +90,23 @@ def main(argv=None):
         work = Path(tmp)
         m = verify(archive, work)
         env = m["environment"]
-        print(f"archive OK: {len(m['files'])} files, all checksums match. Created {m['created_utc']} "
-              f"from commit {env.get('git_commit', '?')[:10]} (dirty={env.get('git_dirty')}), "
-              f"GPU: {env.get('nvidia_smi')}, torch {env.get('torch')}, transformers {env.get('transformers')}")
+        log.info(
+            f"archive OK: {len(m['files'])} files, all checksums match. Created {m['created_utc']} "
+            f"from commit {env.get('git_commit', '?')[:10]} (dirty={env.get('git_dirty')}), "
+            f"GPU: {env.get('nvidia_smi')}, torch {env.get('torch')}, transformers {env.get('transformers')}"
+        )
         if args.check:
             return 0
         new, same, conflict = install(m, work, args.force)
-    print(f"installed: {len(new)} new, {len(conflict)} overwritten, {len(same)} already identical")
+    log.info(f"installed: {len(new)} new, {len(conflict)} overwritten, {len(same)} already identical")
     pat = re.compile(r"^results/depth_(.+)_cyc_logit_agg\.parquet$")
     models = sorted({mm.group(1) for f in m["files"] if (mm := pat.match(f["path"]))})
     if models:
-        print("next:\n  python -m analysis.stats --models " + " ".join(models) +
-              " --agg cyc --out results/gpu_stats\n  python analysis/figures.py")
+        log.info(
+            "next:\n  python -m analysis.stats --models "
+            + " ".join(models)
+            + " --agg cyc --out results/gpu_stats\n  python analysis/figures.py"
+        )
     return 0
 
 
