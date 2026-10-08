@@ -176,6 +176,23 @@ def rotate(options, gold_idx: int, k: int):
     return [options[(j - shift) % n] for j in range(n)], k
 
 
+def option_order(variant: str, gold_idx: int, qid: str, base_seed: int, n: int = 4) -> list[int]:
+    """For a prompt variant, the original option index shown at each letter A..D.
+    "prompt": identity; "perm"/"prompt_permuted": the seeded shuffle used by permute();
+    "cyc{k}": the rotation used by rotate(). Used to align answers by content across
+    variants (the same answer text sits at different letters in different variants)."""
+    idx = list(range(n))
+    if variant == "prompt":
+        return idx
+    if variant in ("perm", "prompt_permuted"):
+        order = list(range(n))
+        random.Random(qid_seed(qid, base_seed)).shuffle(order)
+        return order
+    if variant.startswith("cyc"):
+        return rotate(idx, gold_idx, int(variant[3:]))[0]
+    raise ValueError(f"unknown variant {variant!r}")
+
+
 def map_columns(columns) -> dict:
     cols = set(columns)
     out, missing = {}, []

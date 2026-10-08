@@ -90,3 +90,14 @@ def test_build_has_cyclic_prompts():
     for k in range(4):
         lines = r[f"prompt_cyc{k}"].split("\n")[1:5]
         assert lines[k][3:] == r.options[r.gold_idx] and r[f"gold_idx_cyc{k}"] == k
+
+
+def test_option_order_matches_prompts():
+    from data.prep import option_order
+
+    kept, _ = build(_raw(), 1234, {"m": None})
+    for _, r in kept.iterrows():
+        for v, col in [("prompt", "prompt"), ("perm", "prompt_permuted")] + [(f"cyc{k}", f"prompt_cyc{k}") for k in range(4)]:
+            shown = [line[3:] for line in r[col].split("\n")[1:5]]
+            order = option_order(v, r.gold_idx, r.qid, 1234)
+            assert shown == [r.options[i] for i in order], (v, shown)
