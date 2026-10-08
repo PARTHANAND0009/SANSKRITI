@@ -130,4 +130,6 @@ split-half, `choose_primary`), `analysis/stats.py` (models, Holm, permutation, e
 
 ## Deviations
 
-None yet. Each deviation is appended here with a date, what changed and why.
+Each deviation is appended here with a date, what changed and why.
+
+- 2026-10-08: Disclosure, not a change of plan. This plan was written after the 2,000-question CPU pilot (Llama-3.1-8B, Qwen2.5-7B, partial Gemma-2-9B), whose results informed the metric definitions, controls and decision rules; the pilot is therefore exploratory, and only the full GPU run is confirmatory.
