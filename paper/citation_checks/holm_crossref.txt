@@ -1,3 +1,4 @@
 10.2307/2532027 | ['Correction: An Improved Sequentially Rejective Bonferroni Test Procedure'] | ['Biometrics'] | 43 3 737 | [[1987, 9]] | []
 10.2307/2531823 | ['An Improved Sequentially Rejective Bonferroni Test Procedure'] | ['Biometrics'] | 43 2 417 | [[1987, 6]] | ['Holland', 'Copenhaver']
 10.2307/2337008 | ['A Sequentially Rejective Test Procedure Based on a Modified Bonferroni Inequality'] | ['Biometrika'] | 77 3 663 | [[1990, 9]] | ['Rom']
+Holm (1979): Crossref has no DOI for Scand. J. Statist. 6(2); JSTOR stable/4615733 returned a bot challenge (not circumvented). Reference as supplied by the authors, corroborated by web search results naming JSTOR 4615733, Vol. 6, No. 2, pp. 65-70 (2026-10-08).
