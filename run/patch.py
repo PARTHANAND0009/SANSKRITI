@@ -15,7 +15,12 @@ model's output restricted to A-D. Recovery_k = (LD_patched_k - LD_corrupt) /
 for t in 0.3, 0.5, 0.7 (layers; /L in the *_frac columns). Rows where the corruption
 moves LD by less than --min-effect logits are kept but flagged valid = False.
 
-Stratified sample (--build-sample): 3 attributes x 12 states x 2 frequency tiers x 20
+Stratified sample (--build-sample): strata = attribute x frequency tier over all eligible
+states, ~1,200 questions (--target), equal quota per stratum (small strata taken whole,
+remainder redistributed), round-robin across states within a stratum; the anchor states
+Maharashtra and Bihar get at least --anchor-min questions each. Counts:
+patch_sample_cells.csv (per stratum) and patch_sample_states.csv (per state).
+--grid keeps the earlier builder: 3 attributes x 12 states x 2 frequency tiers x 20
 questions, from the analysis set (no ambiguous_gold, no leaks_answer), questions with a
 stem span and a frequency tier, attributes whose questions all have >= 3 swap
 candidates. Excluded because the swap cannot change the answer: Country Prediction (the
@@ -74,6 +79,65 @@ def eligible_questions() -> pd.DataFrame:
     attr_min = df.groupby("attribute").n_swap_candidates.min()
     keep_attr = attr_min[attr_min >= MIN_SWAP_CANDIDATES].index
     return df[df.attribute.isin(keep_attr)]
+
+
+ANCHOR_STATES = ("Maharashtra", "Bihar")
+SAMPLE_COLS = ["qid", "state", "attribute", "question_type", "tier", "log_freq", "entity", "span_start", "span_end",
+               "n_swap_candidates"]
+
+
+def _state_round_robin(g: pd.DataFrame, seed: int) -> pd.DataFrame:
+    """Order a stratum so consecutive rows cycle through states (each state's questions
+    in seeded random order); taking the first n then spreads n across states."""
+    g = g.sample(frac=1, random_state=seed)
+    g = g.assign(_k=g.groupby("state").cumcount(),
+                 _s=g.state.map({s: i for i, s in enumerate(sorted(g.state.unique()))}))
+    return g.sort_values(["_k", "_s"]).drop(columns=["_k", "_s"])
+
+
+def allocate(sizes: dict, total: int) -> dict:
+    """Equal quota per stratum, capped at the stratum size; the remainder is redistributed
+    to strata that still have questions (water-filling)."""
+    alloc, left, open_ = {k: 0 for k in sizes}, total, set(sizes)
+    while left > 0 and open_:
+        share = max(1, left // len(open_))
+        for k in sorted(open_):
+            take = min(share, sizes[k] - alloc[k], left)
+            alloc[k] += take
+            left -= take
+        open_ = {k for k in open_ if alloc[k] < sizes[k]}
+    return alloc
+
+
+def build_sample_strata(target=1200, seed=1234, anchors=ANCHOR_STATES, anchor_min=40):
+    """Strata = attribute x frequency tier over all eligible states. Each stratum gets an
+    equal share of `target` (capped at its size, remainder redistributed); within a stratum
+    questions are taken round-robin across states. Anchor states get at least `anchor_min`
+    questions each (or all they have), spread over their strata and counted in the quotas."""
+    df = eligible_questions()
+    sizes = df.groupby(["attribute", "tier"]).size().to_dict()
+    alloc = allocate(sizes, target)
+    chosen = []
+    for a in anchors:                                    # anchors first, round-robin over their strata
+        g = df[df.state == a]
+        if g.empty:
+            continue
+        g = g.sample(frac=1, random_state=seed)
+        g = g.assign(_k=g.groupby(["attribute", "tier"]).cumcount()).sort_values(["_k", "attribute", "tier"])
+        chosen.append(g.drop(columns="_k").head(anchor_min))
+    pre = pd.concat(chosen) if chosen else df.iloc[:0]
+    parts = [pre]
+    for (a, t), n in alloc.items():
+        g = df[(df.attribute == a) & (df.tier == t) & ~df.qid.isin(pre.qid)]
+        already = int(((pre.attribute == a) & (pre.tier == t)).sum())
+        parts.append(_state_round_robin(g, seed).head(max(0, n - already)))
+    sample = pd.concat(parts).drop_duplicates("qid").sort_values("qid")
+    cells = (sample.groupby(["attribute", "tier"]).size().rename("n").reset_index()
+             .merge(pd.Series(sizes, name="eligible").rename_axis(["attribute", "tier"]).reset_index(),
+                    on=["attribute", "tier"]))
+    cells = cells.merge(pd.Series(alloc, name="quota").rename_axis(["attribute", "tier"]).reset_index(),
+                        on=["attribute", "tier"])
+    return sample[SAMPLE_COLS], cells
 
 
 def build_sample(n_attr=3, n_states=12, per_cell=20, seed=1234, attributes=None, states=None):
@@ -221,6 +285,10 @@ def patch_question(model, tok, clean_prompt, corrupt_prompt, gold, option_ids, d
 def main(argv=None):
     ap = argparse.ArgumentParser(description="stage 3b: activation patching")
     ap.add_argument("--build-sample", action="store_true")
+    ap.add_argument("--grid", action="store_true",
+                    help="old builder: 3 attributes x 12 states x 2 tiers x --per-cell (default: strata)")
+    ap.add_argument("--target", type=int, default=1200, help="strata builder: total questions")
+    ap.add_argument("--anchor-min", type=int, default=40)
     ap.add_argument("--attributes", nargs="*", default=None)
     ap.add_argument("--states", nargs="*", default=None)
     ap.add_argument("--per-cell", type=int, default=20)
@@ -238,15 +306,28 @@ def main(argv=None):
     set_seed(cfg["seed"])
     proc = resolve(cfg["paths"]["processed"])
 
-    if args.build_sample:
+    if args.build_sample and args.grid:
         sample, counts = build_sample(per_cell=args.per_cell, seed=cfg["seed"], attributes=args.attributes,
                                       states=args.states)
         sample.to_csv(proc / "patch_sample.csv", index=False)
         counts.to_csv(proc / "patch_sample_cells.csv", index=False)
         pv = counts.pivot_table(index="state", columns=["attribute", "tier"], values="n")
-        print(f"patch sample: {len(sample)} questions (target {len(counts)} cells x {args.per_cell} = "
+        print(f"patch sample (grid): {len(sample)} questions (target {len(counts)} cells x {args.per_cell} = "
               f"{len(counts) * args.per_cell}); cells below target: {(counts.n < args.per_cell).sum()}")
         print(pv.to_string())
+        if not args.model:
+            return
+    elif args.build_sample:
+        sample, cells = build_sample_strata(args.target, cfg["seed"], anchor_min=args.anchor_min)
+        sample.to_csv(proc / "patch_sample.csv", index=False)
+        cells.to_csv(proc / "patch_sample_cells.csv", index=False)
+        by_state = sample.groupby(["state", "tier"]).size().unstack(fill_value=0)
+        by_state.to_csv(proc / "patch_sample_states.csv")
+        print(f"patch sample (strata: attribute x tier, all eligible states): {len(sample)} questions "
+              f"(target {args.target}), {sample.state.nunique()} states, {sample.attribute.nunique()} attributes")
+        print(cells.to_string(index=False))
+        print("\nper state (tier):")
+        print(by_state.assign(total=by_state.sum(axis=1)).sort_values("total").to_string())
         if not args.model:
             return
 
