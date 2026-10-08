@@ -108,3 +108,18 @@ def test_orig_from_cyclic_matches_original_order():
     orig = table_from_probs(pr.index.tolist(), _variant_probs(pr, "prompt", cryst), pr.gold_idx.to_numpy())
     got = orig_from_cyclic(cyc, pr).set_index("qid").loc[orig.qid]
     np.testing.assert_allclose(np.stack(got.option_probs_by_layer.to_numpy()), np.stack(orig.option_probs_by_layer.to_numpy()))
+
+
+def test_choose_primary_rule():
+    from analysis.depth import choose_primary
+
+    def tab(ds, lc, dm, w=0.02):
+        return pd.DataFrame({"metric": ["d_soft", "l_star_cyc", "d_margin"],
+                             "spearman_brown_full": [ds, lc, dm],
+                             "sb_full_ci_low": [ds - w, lc - w, dm - w], "sb_full_ci_high": [ds + w, lc + w, dm + w]})
+    # d_soft stays: challengers better by < 0.10
+    assert choose_primary({"a": tab(0.7, 0.75, 0.6), "b": tab(0.7, 0.78, 0.6), "c": tab(0.7, 0.6, 0.6)})[0] == "d_soft"
+    # l_star_cyc better by >= 0.10 with separated CIs in 2 of 3 models
+    assert choose_primary({"a": tab(0.6, 0.75, 0.6), "b": tab(0.6, 0.72, 0.6), "c": tab(0.7, 0.6, 0.6)})[0] == "l_star_cyc"
+    # better by 0.10 but CIs overlap -> stays
+    assert choose_primary({"a": tab(0.6, 0.72, 0.6, w=0.1), "b": tab(0.6, 0.72, 0.6, w=0.1), "c": tab(0.7, 0.6, 0.6)})[0] == "d_soft"
