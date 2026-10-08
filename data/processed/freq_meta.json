@@ -2,9 +2,9 @@
   "infinigram_index": "v4_dolma-v1_7_llama",
   "pageviews_year": 2024,
   "pageviews_mode": "cached-only",
-  "pageviews_complete": false,
+  "pageviews_complete": true,
   "pageviews_needed": 877,
-  "pageviews_not_fetched": 117,
+  "pageviews_not_fetched": 0,
   "n_entities": 1864,
   "n_states": 36,
   "log_freq_primary": "corpus_count",
@@ -16,5 +16,5 @@
     "r": -0.5905745134061459,
     "n": 1864
   },
-  "written": "2026-10-08T17:03:08Z"
+  "written": "2026-10-08T17:28:55Z"
 }

@@ -15,7 +15,7 @@
 | 0 prep | done | 21,853 raw → 127 dropped, 10 ambiguous_gold, 1,974 leaks_answer; default analysis set 19,742 |
 | tokens | done | all four models `space` (Llama [362, 426, 356, 423]) |
 | 1a entities | done | 84.4% entity, 68.3% stem span (analysis set) |
-| 1b frequency | done except pageviews | corpus_count complete; pageviews 752/877 (`pageviews_complete: false`); provisional Spearman(corpus, pageviews) 0.65, n=733 |
+| 1b frequency | done except pageviews | corpus_count and pageviews complete (`pageviews_complete: true`); Spearman(corpus_count, pageviews) 0.672, n=826; length-adjusted frequency added |
 | lens | done | lens(last layer) == model output, bit-exact on proxy |
 | design | done | 4 cyclic option orders per question (`cyc0..cyc3`, gold at A..D) + `perm` |
 | 2 forward | done; CPU pilot run | `--variant cyc0..3/perm`, `--cpu-layers`, `--sample N` |
