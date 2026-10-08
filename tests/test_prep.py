@@ -68,3 +68,25 @@ def test_leak_rule():
     assert leak_rule("Which of the given regions is home to the Kumaoni?", "Kumaon") is None  # word-bounded
     assert leak_rule("Which state is famous for Bengali sweets?", "Odisha") is None
     assert leak_rule("Which state is famous for Jaapi?", "Assam") is None
+
+
+def test_cyclic_rotations():
+    from data.prep import rotate
+
+    opts = ["w", "x", "y", "z"]
+    for g in range(4):
+        rots = [rotate(opts, g, k)[0] for k in range(4)]
+        for k, r in enumerate(rots):
+            assert r[k] == opts[g]                       # gold lands at letter k
+            i = r.index("w")
+            assert [r[(i + j) % 4] for j in range(4)] == opts  # cyclic order preserved
+        assert len({tuple(r) for r in rots}) == 4        # four distinct orders
+        assert opts in rots                              # the original order is one of them
+
+
+def test_build_has_cyclic_prompts():
+    kept, _ = build(_raw(), 1234, {"m": None})
+    r = kept.iloc[0]
+    for k in range(4):
+        lines = r[f"prompt_cyc{k}"].split("\n")[1:5]
+        assert lines[k][3:] == r.options[r.gold_idx] and r[f"gold_idx_cyc{k}"] == k

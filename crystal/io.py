@@ -12,6 +12,29 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 
+# Prompt variants: name -> (prompt column, gold-index column) in prompts.parquet.
+# cyc0..cyc3 are the cyclic rotations of the options with gold at A, B, C, D (the main
+# design: every question is seen once with gold at each letter). perm is the seeded
+# random permutation (robustness check). "prompt"/"prompt_permuted" are the original
+# order and the permutation under their pre-rotation names (pilot activations use them).
+VARIANTS = {
+    "cyc0": ("prompt_cyc0", "gold_idx_cyc0"),
+    "cyc1": ("prompt_cyc1", "gold_idx_cyc1"),
+    "cyc2": ("prompt_cyc2", "gold_idx_cyc2"),
+    "cyc3": ("prompt_cyc3", "gold_idx_cyc3"),
+    "perm": ("prompt_permuted", "gold_idx_permuted"),
+    "prompt": ("prompt", "gold_idx"),
+    "prompt_permuted": ("prompt_permuted", "gold_idx_permuted"),
+}
+CYCLIC = ("cyc0", "cyc1", "cyc2", "cyc3")
+
+
+def variant_columns(variant: str) -> tuple[str, str]:
+    if variant not in VARIANTS:
+        raise ValueError(f"unknown variant {variant!r}; known: {sorted(VARIANTS)}")
+    return VARIANTS[variant]
+
+
 def load_run_config(path: str | Path | None = None) -> dict:
     with open(path or ROOT / "config" / "run.yaml") as f:
         return yaml.safe_load(f)

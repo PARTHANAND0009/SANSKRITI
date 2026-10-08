@@ -31,9 +31,8 @@ models:
     proxy: false
     # Gemma 2 softcapping + sliding window: use eager attention (HF recommendation).
     attn_implementation: eager
-    # The hub ships fp32 shards (36.97 GB); scripts/convert_bf16.py writes this bf16 copy
-    # (same cast as from_pretrained(dtype=bfloat16)). Remove to load from the hub.
-    local_path: models/gemma-2-9b-bf16
+    # The hub ships fp32 shards (36.97 GB); from_pretrained(dtype=bfloat16) casts at load.
+    # On a small disk, scripts/convert_bf16.py makes a bf16 copy; then set local_path to it.
     option_token_variant: space
   qwen25_05b_proxy:
     id: Qwen/Qwen2.5-0.5B

@@ -3,7 +3,8 @@
 Outputs
   data/processed/prompts.parquet   qid, state, attribute, question_type, stem,
                                    options, gold_idx, prompt, prompt_permuted,
-                                   gold_idx_permuted, option_token_ids, ambiguous_gold
+                                   gold_idx_permuted, prompt_cyc0..3, gold_idx_cyc0..3,
+                                   option_token_ids, ambiguous_gold
   data/processed/data_quality.md   every dropped and every ambiguous row, for the
                                    dataset authors
 
@@ -20,6 +21,10 @@ Rules
                                            (see leak_rule()). load_analysis_set()
                                            excludes these unless include_leaks=True.
   - qid = "sk%05d" over the concatenated splits in their published order.
+  - prompt_cyc{k} (k = 0..3): the options rotated cyclically so the gold answer is at
+    letter k (gold_idx_cyc{k} = k). These four are the main design: each question is
+    seen with gold at A, B, C and D exactly once, so letter preferences cancel when
+    averaged. prompt_permuted (seeded shuffle) is kept as a robustness check.
 """
 from __future__ import annotations
 
@@ -163,6 +168,14 @@ def permute(options, gold_idx: int, qid: str, base_seed: int):
     return [options[i] for i in order], order.index(gold_idx)
 
 
+def rotate(options, gold_idx: int, k: int):
+    """Cyclic rotation of the options that puts the gold answer at position k (A=0..D=3),
+    preserving the cyclic order of the options. Returns (options_rot, k)."""
+    n = len(options)
+    shift = (k - gold_idx) % n
+    return [options[(j - shift) % n] for j in range(n)], k
+
+
 def map_columns(columns) -> dict:
     cols = set(columns)
     out, missing = {}, []
@@ -238,6 +251,8 @@ def build(raw: pd.DataFrame, base_seed: int, tok_ids: dict) -> tuple[pd.DataFram
                 "prompt": build_prompt(base["stem"], options),
                 "prompt_permuted": build_prompt(base["stem"], opts_p),
                 "gold_idx_permuted": gold_p,
+                **{f"prompt_cyc{k}": build_prompt(base["stem"], rotate(options, gold_idx, k)[0]) for k in range(4)},
+                **{f"gold_idx_cyc{k}": k for k in range(4)},
                 "option_token_ids": tok_json,
                 "ambiguous_gold": ambiguous,
                 "duplicate_options": has_duplicate_options(options),
