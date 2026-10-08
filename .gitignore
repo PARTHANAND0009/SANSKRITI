@@ -25,3 +25,6 @@ models/
 
 # tuned-lens weights (large); the .eval.json reports are tracked
 lenses/*.pt
+
+# results archives (scripts/package_results.py)
+results_*.tar.gz
