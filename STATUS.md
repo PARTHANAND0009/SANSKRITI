@@ -32,7 +32,24 @@ Activations (`acts/`, ~1 GB per model) are not in git.
 | Llama-3.1-8B | permuted | 0.832 | 0.638 | 18 | 0.567 |
 | Qwen2.5-7B (L=28) | original | 0.811 | 0.735 | 20 | 0.743 |
 | Qwen2.5-7B | permuted | 0.824 | 0.752 | 20 | 0.739 |
-| gemma-2-9b (L=42) | running | | | | |
+| gemma-2-9b (L=42) | original, 1536 q* | 0.848 | 0.599 | 28 | 0.672 |
+| gemma-2-9b | permuted | not run | | | |
+
+\* Gemma stopped at 6 of 8 shards: a container restart moved the session to a host without
+AMX / AVX-512-bf16, where bf16 matmuls ran >8x slower (an hour without finishing one shard).
+Shards run in qid order, so these 1536 are the first 1536 of the sample by qid and include
+only 38 State Prediction questions; compare models on the matched set below.
+
+Matched comparison, same 1536 questions, original prompts:
+
+| model | accuracy | l*_cal median | d_cal q25 / median / q75 | raw d mean (correct) |
+|---|---|---|---|---|
+| Llama-3.1-8B | 0.845 | 18 / 32 | 0.53 / 0.56 / 0.56 | 0.640 |
+| Qwen2.5-7B | 0.828 | 20 / 28 | 0.71 / 0.71 / 0.79 | 0.731 |
+| gemma-2-9b | 0.848 | 28 / 42 | 0.64 / 0.67 / 0.69 | 0.599 |
+
+In every model the calibrated gold-top-1 share first exceeds 0.5 exactly at the median
+l*_cal: crystallisation is a sharp, model-specific event (d = 0.56 / 0.71 / 0.67).
 
 Checks on the real models: lens at the last layer reproduces the model's full-vocabulary
 output exactly (with disk offload); stored-fp16 readout agrees with model output on all
@@ -82,6 +99,7 @@ pageviews API rate-limits this cloud IP to about 4 requests/min (429, Retry-Afte
 so the remaining 769 take roughly 3 hours.
 
 ## Next
-- Gemma pilot (running), then a GPU run on the full analysis set with 4 option rotations.
+- GPU run on the full analysis set with 4 option rotations (the CPU host now lacks AMX, so
+  further CPU runs are impractical); finish Gemma permuted there.
 - Decide whether `corpus_count` should be normalised (whitespace, phrase length) before
   stage 4; hand-check `entity_audit.csv`.

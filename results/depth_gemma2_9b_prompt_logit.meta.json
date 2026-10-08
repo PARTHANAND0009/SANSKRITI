@@ -1,0 +1,30 @@
+{
+  "model_key": "gemma2_9b",
+  "model_id": "google/gemma-2-9b",
+  "proxy": false,
+  "n_layers": 42,
+  "n_readout_layers": 43,
+  "layer_convention": "0 = embeddings, k = output of block k",
+  "d_model": 3584,
+  "dtype": "bfloat16",
+  "split": "analysis",
+  "include_leaks": false,
+  "limit": null,
+  "sample": 2000,
+  "cpu_layers": 22,
+  "variant": "prompt",
+  "n_rows": 2000,
+  "shard_size": 256,
+  "option_token_variant": "space",
+  "option_ids": [
+    586,
+    599,
+    585,
+    608
+  ],
+  "torch": "2.14.1+cu130",
+  "transformers": "5.18.0",
+  "python": "3.13.16",
+  "device": "cpu",
+  "readout": "logit_lens"
+}
