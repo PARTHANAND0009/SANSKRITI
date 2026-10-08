@@ -92,6 +92,22 @@ Findings that matter for stage 4:
   swap pool. On Qwen2.5-0.5B only 1 of 20 corruptions moved the answer by >= 1 logit (12 clean
   answers already wrong); mechanics verified (recovery 0 at layer 0, 1 at layer L).
 
+## Session: confound controls, preregistration, handoff, paper draft
+- Stats control for entity token length and word count; `log_freq_lenadj` (residual of log
+  count on log tokens, slope -4.95, r -0.59) reported as a secondary measure. With length
+  controls (d_soft, layers per SD): Llama -0.24 [-0.42, -0.06], Holm p 0.028; Qwen +0.18
+  [-0.07, 0.44], n.s.; state effects null (permutation p 0.58 / 0.71).
+- Patching sample rebuilt as frequency tier x attribute strata over all eligible states:
+  1,200 questions, 36 states, 15 attributes, Maharashtra 57, Bihar 52 (`--grid` keeps the old
+  builder). Cell counts in `data/processed/patch_sample_cells.csv`.
+- Pageviews complete: Spearman(corpus_count, pageviews) = 0.67 over 826 entities.
+- `ANALYSIS_PLAN.md` registered (commit c05260c); only its Deviations section may change.
+- GPU handoff: `RUN_FOR_ARIJIT.md`, `scripts/preflight.py` (PASS here with GPU, disk and
+  token checks skipped; pipeline 216 s on CPU), `ARCHIVE=1` mode of `scripts/gpu_run.sh`,
+  `results/ingest.py`, `HANDOFF_MESSAGE.md`.
+- Paper draft in `paper/` (ACL template, 8 pages with appendix, 12 TODO-RESULT markers);
+  `python analysis/figures.py` regenerates figures/tables from whatever is in `results/`.
+
 ## Data quality findings (data/processed/data_quality.md, for the SANSKRITI authors)
 1. 127 rows: answer matches no option (dropped).
 2. 10 rows: gold text appears in two options (excluded).
@@ -123,7 +139,9 @@ pageviews API rate-limits this cloud IP to about 4 requests/min (429, Retry-Afte
 so the remaining 125 take about 30-45 minutes.
 
 ## Next
-- `HF_TOKEN=... bash scripts/gpu_run.sh` on an A100 (README: ~6-8 h on 40 GB, ~4-6 h on 80 GB,
+- Arijit runs preflight, then `ARCHIVE=1 SKIP_SETUP=1 bash scripts/gpu_run.sh`; ingest the
+  archive with `results/ingest.py`, then `python analysis/figures.py` and fill TODO-RESULT.
+- (Equivalent manual route) `HF_TOKEN=... bash scripts/gpu_run.sh` on an A100 (README: ~6-8 h on 40 GB, ~4-6 h on 80 GB,
   ~160 GB disk). Then check split-half reliability before fixing the primary metric.
 - Decide whether `corpus_count` should be normalised (whitespace, phrase length) before
   stage 4; hand-check `entity_audit.csv`.
