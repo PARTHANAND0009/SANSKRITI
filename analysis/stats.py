@@ -6,8 +6,13 @@ with freq.parquet (entity log_freq, state_log_freq) and prompts.parquet.
 For each model and each depth metric (as d = layers / L):
   rows      questions correct under the content-averaged readout (correct_cyc_final)
             with a defined depth and an entity log_freq
-  model     d ~ z(entity log_freq) + z(state log_freq) + acc + z(stem words)
-                + C(attribute) + C(question_type)
+  model     d ~ z(entity frequency) + z(state log_freq) + acc + z(stem words)
+                + z(log entity tokens) + z(entity words) + C(attribute) + C(question_type)
+            run twice, once per entity frequency measure (freq_measure):
+              raw     log_freq = log1p(exact-string corpus count)
+              lenadj  log_freq_lenadj = residual of log_freq on log entity token length
+            Exact-string counts fall with entity length, so both models control for the
+            entity's token length and word count.
             acc = mean correctness across the orders. Mixed model with a random
             intercept per state (statsmodels MixedLM, REML); if it fails to converge
             cleanly, OLS with state-clustered SEs is reported instead. OLS-clustered is
@@ -16,6 +21,8 @@ For each model and each depth metric (as d = layers / L):
             states, the OLS is refitted, n_perm times; p = (1 + #|b_perm| >= |b_obs|) /
             (1 + n_perm) for the state_log_freq coefficient.
   per state median depth with percentile bootstrap CIs (resampling questions within state).
+  Holm  p_holm: Holm-Bonferroni across the depth metrics, within (model, estimator,
+        freq_measure, term).
 
 Outputs (every file says PRELIMINARY): results/prelim/PRELIMINARY_*.csv + README.md.
 
@@ -34,27 +41,48 @@ from crystal.io import load_freq, load_prompts, load_run_config, model_config, r
 
 LABEL = "PRELIMINARY"
 METRICS = ("d_soft", "l_star_cyc", "d_margin", "l_star_cal_mean", "l_star_mean")
-FORMULA = "y ~ z_logfreq + z_state_logfreq + acc + z_stem_words + C(attribute) + C(question_type)"
+FORMULA = ("y ~ z_freq + z_state_logfreq + acc + z_stem_words + z_ent_tokens + z_ent_words"
+           " + C(attribute) + C(question_type)")
+FREQ_MEASURES = {"raw": "log_freq", "lenadj": "log_freq_lenadj"}
+TERMS = ("z_freq", "z_state_logfreq", "acc", "z_stem_words", "z_ent_tokens", "z_ent_words")
+
+
+def holm(p: pd.Series) -> pd.Series:
+    """Holm-Bonferroni adjusted p-values (step-down, monotone, capped at 1)."""
+    p = p.astype(float)
+    order = p.sort_values().index
+    m = p.notna().sum()
+    adj, running = pd.Series(np.nan, index=p.index), 0.0
+    for i, idx in enumerate(order):
+        if np.isnan(p[idx]):
+            continue
+        running = max(running, min(1.0, (m - i) * p[idx]))
+        adj[idx] = running
+    return adj
 
 
 def build_frame(model: str, agg_name: str, readout: str = "logit") -> pd.DataFrame:
     if model_config(model).get("proxy"):
         raise SystemExit(f"{model} is a proxy model; never used in analysis")
     agg = pd.read_parquet(resolve("results") / f"depth_{model}_{agg_name}_{readout}_agg.parquet")
-    fr = load_freq()[["qid", "log_freq", "state_log_freq"]]
+    fr = load_freq()[["qid", "log_freq", "log_freq_lenadj", "entity_n_tokens", "entity_n_words", "state_log_freq"]]
     pr = load_prompts()[["qid", "stem"]]
     df = agg.merge(fr, on="qid", how="left").merge(pr, on="qid", how="left")
     df["stem_words"] = df.stem.str.split().str.len()
-    for c, z in (("log_freq", "z_logfreq"), ("state_log_freq", "z_state_logfreq"), ("stem_words", "z_stem_words")):
+    df["log_ent_tokens"] = np.log(df.entity_n_tokens.astype(float))
+    for c, z in (("log_freq", "z_freq_raw"), ("log_freq_lenadj", "z_freq_lenadj"),
+                 ("state_log_freq", "z_state_logfreq"), ("stem_words", "z_stem_words"),
+                 ("log_ent_tokens", "z_ent_tokens"), ("entity_n_words", "z_ent_words")):
         x = df[c].astype(float)
         df[z] = (x - x.mean()) / x.std()
     df["model"] = model
     return df
 
 
-def metric_rows(df: pd.DataFrame, metric: str) -> pd.DataFrame:
-    d = df[df.correct_cyc_final & df.log_freq.notna()].copy()
+def metric_rows(df: pd.DataFrame, metric: str, freq_measure: str = "raw") -> pd.DataFrame:
+    d = df[df.correct_cyc_final & df[FREQ_MEASURES[freq_measure]].notna() & df.z_ent_tokens.notna()].copy()
     d["y"] = d[f"d_frac_{metric}"].astype(float)
+    d["z_freq"] = d[f"z_freq_{freq_measure}"]
     return d[d.y.notna()]
 
 
@@ -127,6 +155,7 @@ def main(argv=None):
     ap.add_argument("--metrics", nargs="+", default=list(METRICS))
     ap.add_argument("--n-perm", type=int, default=1000)
     ap.add_argument("--n-boot", type=int, default=2000)
+    ap.add_argument("--freq-measures", nargs="+", default=list(FREQ_MEASURES))
     ap.add_argument("--out", default="results/prelim")
     args = ap.parse_args(argv)
     cfg = load_run_config()
@@ -138,38 +167,45 @@ def main(argv=None):
     for m in args.models:
         df = build_frame(m, args.agg, args.readout)
         L = int(df.L.iloc[0])
-        for metric in args.metrics:
-            d = metric_rows(df, metric)
-            desc.append({"model": m, "metric": metric, "n": len(d), "n_states": d.state.nunique(), "L": L,
-                         "d_mean": d.y.mean(), "d_sd": d.y.std(), "layers_sd": d.y.std() * L})
-            ols = fit_ols(d)
-            mixed, status = fit_mixed(d)
-            for term in [x for x in ("z_logfreq", "z_state_logfreq", "acc", "z_stem_words") if x in ols.params]:
-                base = {"label": LABEL, "model": m, "metric": metric, "n": len(d), "L": L, "mixed_status": status}
-                if mixed is not None:
-                    reg.append({**base, **coef_row(mixed, term, "mixedlm_state_re")})
-                reg.append({**base, **coef_row(ols, term, "ols_cluster_state")})
-            perm.append({"label": LABEL, "model": m, "metric": metric, "n": len(d),
-                         **permutation_state(d, args.n_perm, rng)})
-            sm = state_medians(d, args.n_boot, rng)
-            sm.insert(0, "metric", metric)
-            sm.insert(0, "model", m)
-            sm.insert(0, "label", LABEL)
-            med.append(sm)
-            print(f"[{LABEL}] {m} {metric}: n={len(d)} mixed={status}")
+        for fm in args.freq_measures:
+            for metric in args.metrics:
+                d = metric_rows(df, metric, fm)
+                desc.append({"model": m, "freq_measure": fm, "metric": metric, "n": len(d),
+                             "n_states": d.state.nunique(), "L": L, "d_mean": d.y.mean(), "d_sd": d.y.std(),
+                             "layers_sd": d.y.std() * L})
+                ols = fit_ols(d)
+                mixed, status = fit_mixed(d)
+                for term in [x for x in TERMS if x in ols.params]:
+                    base = {"label": LABEL, "model": m, "freq_measure": fm, "metric": metric, "n": len(d), "L": L,
+                            "mixed_status": status}
+                    if mixed is not None:
+                        reg.append({**base, **coef_row(mixed, term, "mixedlm_state_re")})
+                    reg.append({**base, **coef_row(ols, term, "ols_cluster_state")})
+                perm.append({"label": LABEL, "model": m, "freq_measure": fm, "metric": metric, "n": len(d),
+                             **permutation_state(d, args.n_perm, rng)})
+                if fm == "raw":   # per-state medians do not depend on the frequency measure
+                    sm = state_medians(d, args.n_boot, rng)
+                    sm.insert(0, "metric", metric)
+                    sm.insert(0, "model", m)
+                    sm.insert(0, "label", LABEL)
+                    med.append(sm)
+                print(f"[{LABEL}] {m} {fm} {metric}: n={len(d)} mixed={status}")
 
     reg = pd.DataFrame(reg)
     reg["beta_layers"] = reg.beta * reg.L
     reg["ci_low_layers"] = reg.ci_low * reg.L
     reg["ci_high_layers"] = reg.ci_high * reg.L
+    reg["p_holm"] = reg.groupby(["model", "estimator", "freq_measure", "term"]).p.transform(holm)
     reg.to_csv(out / "PRELIMINARY_regression.csv", index=False)
-    pd.DataFrame(perm).to_csv(out / "PRELIMINARY_state_permutation.csv", index=False)
     pd.concat(med).to_csv(out / "PRELIMINARY_state_medians.csv", index=False)
     pd.DataFrame(desc).assign(label=LABEL).to_csv(out / "PRELIMINARY_descriptives.csv", index=False)
     print(f"wrote {out}/PRELIMINARY_*.csv")
-    focus = reg[reg.term.isin(["z_logfreq", "z_state_logfreq"])]
-    print(focus[["model", "metric", "estimator", "term", "n", "beta", "ci_low", "ci_high", "p", "beta_layers"]]
-          .round(4).to_string(index=False))
+    perm_df = pd.DataFrame(perm)
+    perm_df["p_perm_holm"] = perm_df.groupby(["model", "freq_measure"]).p_perm.transform(holm)
+    perm_df.to_csv(out / "PRELIMINARY_state_permutation.csv", index=False)
+    focus = reg[reg.term.isin(["z_freq", "z_state_logfreq"])]
+    print(focus[["model", "freq_measure", "metric", "estimator", "term", "n", "beta_layers", "ci_low_layers",
+                 "ci_high_layers", "p", "p_holm"]].round(4).to_string(index=False))
 
 
 if __name__ == "__main__":

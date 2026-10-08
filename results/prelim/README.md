@@ -11,7 +11,9 @@ rotations, full analysis set, tuned lens, patching, Gemma) has not been run yet.
   metric, 36 states.
 - Depth as a fraction of L, averaged over the two orders by answer content (letter bias
   only partly cancels with two orders).
-- `d ~ z(entity log_freq) + z(state log_freq) + acc + z(stem words) + attribute + question_type`.
+- `d ~ z(entity freq) + z(state log_freq) + acc + z(stem words) + z(log entity tokens) + z(entity words)
+  + attribute + question_type`, fitted once per entity frequency measure: `raw` (log1p of the
+  exact-string count) and `lenadj` (residual of that on log entity token length).
   Mixed model with a state random intercept: **every fit hit the boundary** (state variance
   ≈ 0 after controls), so per protocol OLS with state-clustered SEs is reported.
 - Control: state labels shuffled across states (1,000 permutations) for the state coefficient.
@@ -32,32 +34,39 @@ Spearman-Brown projects 0.72 (Llama) / 0.65 (Qwen) for d_soft averaged over 4 or
 4-rotation metrics (`l_star_cyc`, `d_margin`) cannot be tested on the pilot; the GPU run's
 `analysis.depth split-half` will measure them.
 
-## Effects, per +1 SD of log_freq (layers; 95% CI; OLS, state-clustered)
+## Effects, per +1 SD of entity frequency (layers; 95% CI; OLS, state-clustered)
 
-| model | metric | entity log_freq | state log_freq | state perm. p |
-|---|---|---|---|---|
-| Llama (L=32) | d_soft | −0.18 [−0.32, −0.03] | −0.06 [−0.22, 0.09] | 0.50 |
-| Llama | l_star_cyc | −0.30 [−0.48, −0.12] | −0.28 [−0.61, 0.06] | 0.045 |
-| Llama | d_margin | −0.07 [−0.20, 0.05] | −0.24 [−0.48, 0.00] | 0.020 |
-| Qwen (L=28) | d_soft | +0.17 [+0.01, +0.34] | −0.03 [−0.16, 0.10] | 0.73 |
-| Qwen | l_star_cyc | +0.29 [−0.06, +0.65] | −0.25 [−0.57, 0.08] | 0.12 |
-| Qwen | d_margin | +0.04 [−0.05, +0.12] | −0.09 [−0.16, −0.03] | 0.053 |
+Raw log count, with entity token length and word count controlled:
 
-Other metrics, all terms and full CIs: `PRELIMINARY_regression.csv`.
+| model | metric | entity freq | Holm p | state log_freq | state perm. p |
+|---|---|---|---|---|---|
+| Llama (L=32) | d_soft | −0.24 [−0.42, −0.06] | 0.028 | −0.05 [−0.21, 0.11] | 0.58 |
+| Llama | l_star_cyc | −0.35 [−0.54, −0.16] | 0.001 | −0.27 [−0.63, 0.10] | 0.059 |
+| Llama | d_margin | −0.18 [−0.38, 0.02] | 0.077 | −0.22 [−0.46, 0.03] | 0.029 |
+| Qwen (L=28) | d_soft | +0.18 [−0.07, 0.44] | 0.82 | −0.03 [−0.17, 0.11] | 0.71 |
+| Qwen | l_star_cyc | +0.10 [−0.31, 0.50] | 1.00 | −0.21 [−0.53, 0.11] | 0.23 |
+| Qwen | d_margin | −0.03 [−0.16, 0.09] | 1.00 | −0.08 [−0.15, −0.01] | 0.10 |
+
+Length-adjusted frequency gives the same tests (same t and p) because the model already
+controls log entity token length, and the adjusted measure is the raw one minus a linear
+function of that control; only the per-SD scale changes (Llama d_soft −0.19 [−0.34, −0.05]
+per SD of the adjusted measure). The adjusted measure matters where length is not
+controlled (tier splits, state medians). Holm p: across the five depth metrics within model,
+estimator, frequency measure and term. All rows: `PRELIMINARY_regression.csv`.
 
 ## Reading
 - Effects are **small**: a few tenths of a layer per SD, against a depth SD of 2–6 layers.
-- **Entity frequency has opposite signs** in the two models on the primary metric (Llama
-  earlier, Qwen later). No consistent entity effect.
-- **State frequency**: point estimates are negative (better-documented states slightly
-  earlier) for every metric and model, but the primary metric's CIs include 0 and its
-  permutation p is 0.50 / 0.73. Some event-style metrics pass the permutation control at
-  p < 0.05; with 10 model × metric tests and no correction, that is weak evidence.
+- **Llama**: with entity length controlled, better-documented entities crystallise slightly
+  earlier on most metrics (d_soft Holm p 0.028). **Qwen**: no entity effect once length is
+  controlled (the uncontrolled +0.17 on d_soft in the previous version came partly from length).
+  The two models still disagree in direction.
+- **State frequency**: negative point estimates throughout, CIs mostly include 0; no
+  permutation p survives Holm across metrics (smallest Holm-adjusted 0.12).
 - Per-state medians with bootstrap CIs: `PRELIMINARY_state_medians.csv` (n per state 4–150;
   CIs mostly overlap).
 
 ## Caveats
-- `log_freq` is an exact-string count and falls with entity length (Spearman −0.57 vs word
-  count); stem length is controlled, entity length is not.
+- `log_freq` is an exact-string count and falls with entity length (log count vs log token
+  length r = −0.59); entity token length and word count are now controlled.
 - Two orders, not four: letter bias is only partly removed.
 - Sample: seeded 2,000 of 19,742; Gemma excluded (incomplete).

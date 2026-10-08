@@ -18,6 +18,11 @@ Per distinct entity string (from entities.parquet):
                       config/run.yaml (frequency.infinigram_index)
   log_freq            log1p(corpus_count); falls back to log1p(pageviews) when
                       corpus_count is unavailable (log_freq_source says which)
+  entity_n_tokens     entity length in the index tokenizer (from the infini-gram response)
+  entity_n_words      whitespace word count
+  log_freq_lenadj     residual of log1p(corpus_count) on log(entity_n_tokens), OLS over
+                      distinct entities: frequency relative to entities of the same length
+                      (exact-string counts fall with length; secondary measure)
   tier                low / high: median split of log_freq within attribute
                       (> median -> high), over questions
 State level: the same scores for each state's own en article (title map below).
@@ -232,12 +237,14 @@ def pageviews(client: CachedClient, title: str, year: int, cache_only: bool = Fa
 
 
 def corpus_count(client: CachedClient, index: str, text: str):
-    """(count or None, approx flag)."""
+    """(count or None, approx flag, n_tokens or None). n_tokens is the length of the
+    query in the index's tokenizer (Llama-2 for v4_dolma-v1_7_llama), from the response."""
     status, js = client.request("infinigram", "POST", IG_API,
                                 body={"index": index, "query_type": "count", "query": text})
     if status != 200 or js is None or "error" in js or "count" not in js:
-        return None, None
-    return int(js["count"]), bool(js.get("approx"))
+        return None, None, None
+    toks = js.get("token_ids")
+    return int(js["count"]), bool(js.get("approx")), (len(toks) if toks is not None else None)
 
 
 # ---------------------------------------------------------------- scoring
@@ -253,7 +260,8 @@ def score_strings(client, strings_wiki: list[str], strings_corpus: list[str], cf
     rows = [dict(wiki[w]) for w in strings_wiki]
     log(f"  wikipedia metadata done ({client.misses} requests, {client.hits} cached)")
     for n, (r, c) in enumerate(zip(rows, strings_corpus)):
-        r["corpus_count"], r["corpus_count_approx"] = corpus_count(client, fcfg["infinigram_index"], c)
+        r["corpus_count"], r["corpus_count_approx"], r["corpus_n_tokens"] = corpus_count(
+            client, fcfg["infinigram_index"], c)
         if (n + 1) % 250 == 0:
             log(f"  corpus counts {n + 1}/{len(rows)}")
     todo = [r for r in rows if r["wiki_exists_en"]]
@@ -267,7 +275,7 @@ def score_strings(client, strings_wiki: list[str], strings_corpus: list[str], cf
         r.setdefault("pageviews_status", "no_article")
     return pd.DataFrame(rows)[["wiki_exists_en", "wiki_title_en", "wiki_disambig_en", "wiki_bytes_en",
                                 "wiki_exists_hi", "wiki_pageviews_en", "pageviews_status",
-                                "corpus_count", "corpus_count_approx"]]
+                                "corpus_count", "corpus_count_approx", "corpus_n_tokens"]]
 
 
 def _concept_key(s: str) -> str:
@@ -288,6 +296,22 @@ def redirect_changed_concept(entity: str, title) -> bool | None:
     if title is None or (isinstance(title, float) and math.isnan(title)):
         return None
     return _concept_key(entity) != _concept_key(title)
+
+
+def add_length_adjusted(fe: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Exact-string counts fall with entity length. Adds entity_n_tokens (index tokenizer),
+    entity_n_words, and log_freq_lenadj = residual of log1p(corpus_count) on
+    log(entity_n_tokens), fitted by OLS over the distinct entities. Returns (fe, fit)."""
+    fe = fe.copy()
+    fe["entity_n_tokens"] = pd.to_numeric(fe["corpus_n_tokens"], errors="coerce")
+    fe["entity_n_words"] = fe["entity"].str.split().str.len()
+    y = np.log1p(pd.to_numeric(fe["corpus_count"], errors="coerce").astype(float))
+    x = np.log(fe["entity_n_tokens"].astype(float))
+    ok = y.notna() & x.notna() & np.isfinite(x)
+    slope, intercept = np.polyfit(x[ok], y[ok], 1)
+    fe["log_freq_lenadj"] = np.where(ok, y - (intercept + slope * x), np.nan)
+    r = np.corrcoef(x[ok], y[ok])[0, 1]
+    return fe, {"slope": float(slope), "intercept": float(intercept), "r": float(r), "n": int(ok.sum())}
 
 
 def add_log_freq(df: pd.DataFrame) -> pd.DataFrame:
@@ -330,6 +354,7 @@ def main(argv=None):
                                                                            pageviews_cache_only=pv_cache_only)], axis=1)
     fe["redirect_changed_concept"] = [redirect_changed_concept(e, t) for e, t in zip(fe.entity, fe.wiki_title_en)]
     fe = add_log_freq(fe)
+    fe, lenfit = add_length_adjusted(fe)
     fe.to_parquet(out / "freq_entities.parquet", index=False)
 
     # ---- states
@@ -357,8 +382,8 @@ def main(argv=None):
     q = q.merge(fs[["state", "log_freq"]].rename(columns={"log_freq": "state_log_freq"}), on="state")
     cols = ["qid", "entity", "wiki_exists_en", "wiki_exists_hi", "wiki_bytes_en", "wiki_pageviews_en",
             "pageviews_status", "corpus_count", "corpus_count_approx", "wiki_title_en", "wiki_disambig_en",
-            "redirect_changed_concept",
-            "log_freq", "log_freq_source", "tier", "state_log_freq"]
+            "redirect_changed_concept", "entity_n_tokens", "entity_n_words",
+            "log_freq", "log_freq_source", "log_freq_lenadj", "tier", "state_log_freq"]
     q[cols].to_parquet(resolve(cfg["paths"]["freq"]), index=False)
 
     pv_needed = int(fe.wiki_exists_en.sum() + fs.wiki_exists_en.sum())
@@ -372,6 +397,7 @@ def main(argv=None):
         "pageviews_not_fetched": pv_missing,
         "n_entities": len(fe), "n_states": len(fs),
         "log_freq_primary": "corpus_count", "log_freq_fallback": "wiki_pageviews_en",
+        "length_adjustment": {"model": "log1p(corpus_count) ~ log(entity_n_tokens)", **lenfit},
         "written": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
     (out / "freq_meta.json").write_text(json.dumps(meta, indent=2))

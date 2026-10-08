@@ -4,10 +4,17 @@
   "pageviews_mode": "cached-only",
   "pageviews_complete": false,
   "pageviews_needed": 877,
-  "pageviews_not_fetched": 125,
+  "pageviews_not_fetched": 117,
   "n_entities": 1864,
   "n_states": 36,
   "log_freq_primary": "corpus_count",
   "log_freq_fallback": "wiki_pageviews_en",
-  "written": "2026-10-08T16:06:37Z"
+  "length_adjustment": {
+    "model": "log1p(corpus_count) ~ log(entity_n_tokens)",
+    "slope": -4.948366410095628,
+    "intercept": 13.224414120469623,
+    "r": -0.5905745134061459,
+    "n": 1864
+  },
+  "written": "2026-10-08T17:03:08Z"
 }
