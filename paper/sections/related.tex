@@ -4,6 +4,8 @@
 The logit lens decodes intermediate residual states with the model's own final norm and unembedding \citep{nostalgebraist2020logitlens}.
 It is biased in early layers, whose representations are not in the basis the unembedding expects; the tuned lens fixes this with an affine translator per layer, trained so that each layer's decoded distribution matches the final one \citep{belrose2023tuned}.
 \citet{wendler-etal-2024-llamas} used the logit lens to show that Llama-2 passes through an English-like latent space when translating between other languages.
+\citet{panchal-etal-2026-indic} adapt the tuned lens to ten Indian languages.
+\citet{huang2026alignment} use the logit lens on long-tail factual questions and find that confident wrong answers in instruction-tuned models arise in late layers.
 We use both lenses and report the tuned lens as a secondary readout.
 
 \paragraph{Prediction depth.}
@@ -34,3 +36,5 @@ We work within one country, comparing entities across \nStates{} states and unio
 We measure documentation as corpus counts and test it per question with controls and a preregistered null, where both studies compare culture means against an assigned representation label.
 Our depth is the settling layer of a multiple-choice answer read directly from the model, debiased for answer letters and checked for reliability, rather than the first layer at which a decoder names a culture or a gold token enters the top-$k$.
 And we relate patching depth to lens depth per question rather than per model.
+Other mechanistic work on culture localises where cultural information sits rather than when it resolves: sparse-autoencoder features whose ablation harms culturally conditioned tasks \citep{zou-etal-2026-deciphering}, steering vectors that close the gap between explicitly and implicitly localised answers \citep{veselovsky-etal-2026-localized}, and a few mid-layer attention heads that bind cultural items to identities \citep{floro2026binding}.
+In a search of arXiv and the ACL Anthology in October 2026 we found no work that studies SANSKRITI or another Indian cultural benchmark mechanistically.
