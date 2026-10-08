@@ -15,7 +15,7 @@
 | 0 prep | done | 21,853 raw → 127 dropped, 10 ambiguous_gold, 1,974 leaks_answer; default analysis set 19,742 |
 | tokens | done | all four models `space` (Llama [362, 426, 356, 423]) |
 | 1a entities | done | 84.4% entity, 68.3% stem span (analysis set) |
-| 1b frequency | done except pageviews | corpus_count complete; pageviews 108/877 (`pageviews_complete: false`) |
+| 1b frequency | done except pageviews | corpus_count complete; pageviews 752/877 (`pageviews_complete: false`); provisional Spearman(corpus, pageviews) 0.65, n=733 |
 | lens | done | lens(last layer) == model output, bit-exact on proxy |
 | design | done | 4 cyclic option orders per question (`cyc0..cyc3`, gold at A..D) + `perm` |
 | 2 forward | done; CPU pilot run | `--variant cyc0..3/perm`, `--cpu-layers`, `--sample N` |
@@ -115,12 +115,12 @@ Also: 1,634 duplicated stems; mojibake in some stems (e.g. "stateâs").
 
 ## Resuming pageviews
 ```
-python -m data.frequency                         # fetches only the 769 uncached pageviews
+python -m data.frequency                         # fetches only the uncached pageviews (125 left)
 python -m data.frequency --pageviews cached-only # rebuild outputs from cache, no requests
 ```
 The cache (`data/cache/`, 8.8 MB, force-added to git) holds every answered request. The
 pageviews API rate-limits this cloud IP to about 4 requests/min (429, Retry-After ~48 s),
-so the remaining 769 take roughly 3 hours.
+so the remaining 125 take about 30-45 minutes.
 
 ## Next
 - `HF_TOKEN=... bash scripts/gpu_run.sh` on an A100 (README: ~6-8 h on 40 GB, ~4-6 h on 80 GB,
