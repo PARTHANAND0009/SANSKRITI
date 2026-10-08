@@ -1,23 +1,55 @@
-# Status (2026-10-06)
+# Status (2026-10-08)
 
 ## Environment
 - Python 3.13.16, torch 2.14.1 (CPU), transformers 5.18.0. No CUDA (expected). 4 CPUs, 15 GB RAM.
-- `HF_TOKEN` not set in this session.
+- Hugging Face token: provided by the user, stored in the HF credential file outside the
+  repo (never committed). All three gated/ungated models accessible.
 - Network: huggingface.co (+ CDN), en/hi.wikipedia.org, wikimedia.org, api.infini-gram.io all reachable.
-- Gated models: `google/gemma-2-9b` config, tokenizer, weight index and shard headers download
-  (no token needed from this session). Weights are **fp32, 8 shards, 36.97 GB**.
-  `meta-llama/Llama-3.1-8B` still 403 (needs `HF_TOKEN` with accepted licence).
+- Weights: Llama-3.1-8B 4 shards 16.06 GB bf16; Qwen2.5-7B ~15.2 GB bf16; gemma-2-9b ships
+  **fp32, 8 shards, 36.97 GB**, converted to a local bf16 copy (18 GB) by
+  `scripts/convert_bf16.py` (range requests, no fp32 on disk).
 
 ## Stage status
 | stage | state | notes |
 |---|---|---|
 | 0 prep | done | 21,853 raw → 127 dropped, 10 ambiguous_gold, 1,974 leaks_answer; default analysis set 19,742 |
-| tokens | 3/4 | Qwen2.5-7B, Qwen2.5-0.5B, gemma-2-9b: `space`; Llama-3.1-8B pending (gated) |
+| tokens | done | all four models `space` (Llama [362, 426, 356, 423]) |
 | 1a entities | done | 84.4% entity, 68.3% stem span (analysis set) |
 | 1b frequency | done except pageviews | corpus_count complete; pageviews 108/877 (`pageviews_complete: false`) |
 | lens | done | lens(last layer) == model output, bit-exact on proxy |
-| 2 forward | done, proxy-tested | layer 0 = embeddings; ready for GPU |
-| 3–4 | stubs | |
+| 2 forward | done; CPU pilot run | `--cpu-layers` disk offload, `--sample N`; see pilot below |
+| 4a depth | logit lens done | `analysis/depth.py`: l*, d, plus letter-prior calibrated l*_cal |
+| 3, 4b | stubs | tuned lens, patching, stats |
+
+## CPU pilot (no GPU available): 2000 sampled questions per model
+Seeded random sample (seed 1234) of the analysis set (ambiguous + leaks excluded), bf16 on a
+4-core Xeon with AMX, decoder blocks partly streamed from disk. Results in `results/`.
+Activations (`acts/`, ~1 GB per model) are not in git.
+
+| model | variant | accuracy | d mean (raw) | l*_cal median | d_cal mean |
+|---|---|---|---|---|---|
+| Llama-3.1-8B (L=32) | original | 0.834 | 0.636 | 18 | 0.564 |
+| Llama-3.1-8B | permuted | 0.832 | 0.638 | 18 | 0.567 |
+| Qwen2.5-7B (L=28) | original | 0.811 | 0.735 | 20 | 0.743 |
+| Qwen2.5-7B | permuted | 0.824 | 0.752 | 20 | 0.739 |
+| gemma-2-9b (L=42) | running | | | | |
+
+Checks on the real models: lens at the last layer reproduces the model's full-vocabulary
+output exactly (with disk offload); stored-fp16 readout agrees with model output on all
+checked questions; no fp16 overflow (Llama max |x| 28).
+
+Findings that matter for stage 4:
+1. **Early l* is a letter prior.** Uncalibrated early layers rank one letter first for every
+   question (B at layer 3 in both models). All 273 Llama questions with l* <= 13 have gold B;
+   all 271 Qwen questions with l* <= 12 have gold A. `l_star_cal` removes each layer's mean
+   letter log-prob; with it early layers sit at chance and crystallisation is a narrow event
+   (Llama layers 17-18; Qwen layers 19-22).
+2. **Per-question l* is not stable across option orders.** Raw l* identical in 28% of
+   questions (Llama and Qwen), within one layer 35-38%; calibrated within one layer 61-62%,
+   Spearman 0.14 (Llama) / 0.27 (Qwen). Aggregate depth is stable. Per-question depth should
+   be averaged over option orders (e.g. all 4 cyclic rotations) before stage 4.
+3. Exploratory (Llama, raw d, correct only): entity log_freq vs d Spearman -0.07 (p=0.008);
+   low vs high tier d 0.651 vs 0.624. Accuracy unrelated to log_freq. Not controlled.
 
 ## Data quality findings (data/processed/data_quality.md, for the SANSKRITI authors)
 1. 127 rows: answer matches no option (dropped).
@@ -50,7 +82,6 @@ pageviews API rate-limits this cloud IP to about 4 requests/min (429, Retry-Afte
 so the remaining 769 take roughly 3 hours.
 
 ## Next
-- Set `HF_TOKEN` (Llama licence accepted), then `make tokens` and `make prep`.
-- GPU run of stage 2 for the three models (see README).
+- Gemma pilot (running), then a GPU run on the full analysis set with 4 option rotations.
 - Decide whether `corpus_count` should be normalised (whitespace, phrase length) before
   stage 4; hand-check `entity_audit.csv`.
