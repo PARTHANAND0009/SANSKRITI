@@ -1,4 +1,5 @@
 """Stage 0 logic on hand-written fixtures (not dataset rows)."""
+
 import pandas as pd
 import pytest
 
@@ -34,13 +35,19 @@ def test_map_columns_fails_loudly():
 
 
 def _raw():
-    return pd.DataFrame({
-        "state": ["S1", "S2", "S3"], "attribute": ["food"] * 3, "question_type": ["t"] * 3,
-        "question": ["q0?", "q1?", "q2?"],
-        "option1": ["a", "a", "a"], "option2": ["b", "A ", "b"],
-        "option3": ["c", "c", "c"], "option4": ["d", "d", "d"],
-        "answer": ["c", "a", "zzz"],
-    })
+    return pd.DataFrame(
+        {
+            "state": ["S1", "S2", "S3"],
+            "attribute": ["food"] * 3,
+            "question_type": ["t"] * 3,
+            "question": ["q0?", "q1?", "q2?"],
+            "option1": ["a", "a", "a"],
+            "option2": ["b", "A ", "b"],
+            "option3": ["c", "c", "c"],
+            "option4": ["d", "d", "d"],
+            "answer": ["c", "a", "zzz"],
+        }
+    )
 
 
 def test_build_and_report(tmp_path):
@@ -77,11 +84,11 @@ def test_cyclic_rotations():
     for g in range(4):
         rots = [rotate(opts, g, k)[0] for k in range(4)]
         for k, r in enumerate(rots):
-            assert r[k] == opts[g]                       # gold lands at letter k
+            assert r[k] == opts[g]  # gold lands at letter k
             i = r.index("w")
             assert [r[(i + j) % 4] for j in range(4)] == opts  # cyclic order preserved
-        assert len({tuple(r) for r in rots}) == 4        # four distinct orders
-        assert opts in rots                              # the original order is one of them
+        assert len({tuple(r) for r in rots}) == 4  # four distinct orders
+        assert opts in rots  # the original order is one of them
 
 
 def test_build_has_cyclic_prompts():
@@ -97,7 +104,9 @@ def test_option_order_matches_prompts():
 
     kept, _ = build(_raw(), 1234, {"m": None})
     for _, r in kept.iterrows():
-        for v, col in [("prompt", "prompt"), ("perm", "prompt_permuted")] + [(f"cyc{k}", f"prompt_cyc{k}") for k in range(4)]:
+        for v, col in [("prompt", "prompt"), ("perm", "prompt_permuted")] + [
+            (f"cyc{k}", f"prompt_cyc{k}") for k in range(4)
+        ]:
             shown = [line[3:] for line in r[col].split("\n")[1:5]]
             order = option_order(v, r.gold_idx, r.qid, 1234)
             assert shown == [r.options[i] for i in order], (v, shown)

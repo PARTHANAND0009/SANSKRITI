@@ -1,4 +1,5 @@
 """Activation patching on a tiny random model."""
+
 import numpy as np
 import torch
 
@@ -36,5 +37,5 @@ def test_allocate_water_filling():
     from run.patch import allocate
 
     a = allocate({"x": 5, "y": 100, "z": 100}, 90)
-    assert a == {"x": 5, "y": 43, "z": 42} or sum(a.values()) == 90 and a["x"] == 5
+    assert a == {"x": 5, "y": 43, "z": 42} or (sum(a.values()) == 90 and a["x"] == 5)
     assert sum(allocate({"x": 3, "y": 4}, 50).values()) == 7

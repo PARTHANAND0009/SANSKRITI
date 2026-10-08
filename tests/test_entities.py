@@ -1,4 +1,5 @@
 """Stage 1a rules on hand-written stems (template forms copied from the release)."""
+
 import pandas as pd
 
 from data.entities import extract, extract_row, lexicon_match, state_name_regex
@@ -7,7 +8,7 @@ from data.entities import extract, extract_row, lexicon_match, state_name_regex
 def test_stem_templates_and_spans():
     s = "Which of the given regions is home to the  Gale skirts ?"
     r = extract_row(s, "Association", "Arunachal_Pradesh")
-    assert r["entity"] == "Gale skirts" and s[r["span_start"]:r["span_end"]] == "Gale skirts"
+    assert r["entity"] == "Gale skirts" and s[r["span_start"] : r["span_end"]] == "Gale skirts"
     assert r["extraction_rule"] == "assoc_regions_home_to" and r["confidence"] == "high"
     r = extract_row("The Muga silk is associated to which country?", "Country Prediction", "India")
     assert r["entity"] == "Muga silk"
@@ -33,13 +34,20 @@ def test_quoted_and_lexicon():
 
 
 def test_extract_end_to_end_and_state_flag():
-    df = pd.DataFrame({
-        "qid": ["a", "b", "c"], "state": ["Jharkhand", "Jharkhand", "Andhra_Pradesh"],
-        "question_type": ["State Prediction", "Association", "State Prediction"],
-        "stem": ["Which state is famous for Hundru Falls?", "Tourists like the Hundru Falls in winter.",
-                 "Which state is famous for Eluru carpets Andhra?"],
-        "options": [["Jharkhand", "b", "c", "d"]] * 3, "gold_idx": [0, 0, 0],
-    })
+    df = pd.DataFrame(
+        {
+            "qid": ["a", "b", "c"],
+            "state": ["Jharkhand", "Jharkhand", "Andhra_Pradesh"],
+            "question_type": ["State Prediction", "Association", "State Prediction"],
+            "stem": [
+                "Which state is famous for Hundru Falls?",
+                "Tourists like the Hundru Falls in winter.",
+                "Which state is famous for Eluru carpets Andhra?",
+            ],
+            "options": [["Jharkhand", "b", "c", "d"]] * 3,
+            "gold_idx": [0, 0, 0],
+        }
+    )
     e = extract(df).set_index("qid")
     assert e.loc["b", "extraction_rule"] == "lexicon" and e.loc["b", "entity"] == "Hundru Falls"
     assert not e.loc["a", "entity_mentions_state"] and e.loc["c", "entity_mentions_state"]
@@ -65,8 +73,13 @@ def test_log_freq_and_tier():
 
     from data.frequency import add_log_freq, median_tier
 
-    df = pd.DataFrame({"corpus_count": [0, 10, None, None], "wiki_pageviews_en": [5, None, 99, None],
-                       "attribute": ["a", "a", "a", "a"]})
+    df = pd.DataFrame(
+        {
+            "corpus_count": [0, 10, None, None],
+            "wiki_pageviews_en": [5, None, 99, None],
+            "attribute": ["a", "a", "a", "a"],
+        }
+    )
     df = add_log_freq(df)
     assert df.log_freq_source.tolist() == ["corpus_count", "corpus_count", "pageviews", None]
     assert np.isclose(df.log_freq[1], np.log1p(10)) and np.isnan(df.log_freq[3])
@@ -92,7 +105,7 @@ def test_client_caches_only_answers(tmp_path, monkeypatch):
     assert c.throttled == {"s": 1}
     assert c.request("s", "POST", "u", body={"q": "b"}) == (404, {})
     assert c.request("s", "POST", "u", body={"q": "c"}) == (400, {"e": 1})
-    assert len(list((tmp_path / "s").glob("*.json"))) == 2          # a and b only
+    assert len(list((tmp_path / "s").glob("*.json"))) == 2  # a and b only
     assert c.request("s", "POST", "u", body={"q": "a"}) == (200, {"count": 3}) and c.hits == 1
     assert c.request("s", "POST", "u", body={"q": "x"}, cache_only=True) == (None, None)
 
@@ -105,10 +118,15 @@ def test_length_adjusted_frequency():
 
     n_tok = np.array([1, 2, 3, 4, 6, 8, 2, 3])
     count = np.round(np.expm1(10 - 2 * np.log(n_tok) + np.array([0, 0, 0, 0, 0, 0, 1, -1])))
-    fe = pd.DataFrame({"entity": ["a", "a b", "a b c", "w x y z", "a b c d e f", "a b c d e f g h", "p q", "r s t"],
-                       "corpus_count": count, "corpus_n_tokens": n_tok})
+    fe = pd.DataFrame(
+        {
+            "entity": ["a", "a b", "a b c", "w x y z", "a b c d e f", "a b c d e f g h", "p q", "r s t"],
+            "corpus_count": count,
+            "corpus_n_tokens": n_tok,
+        }
+    )
     out, fit = add_length_adjusted(fe)
     assert fit["slope"] < 0 and fit["n"] == 8
-    assert out.log_freq_lenadj.iloc[6] > 0 > out.log_freq_lenadj.iloc[7]        # above / below the length trend
-    assert abs(np.corrcoef(np.log(n_tok), out.log_freq_lenadj)[0, 1]) < 1e-6      # orthogonal to log length
+    assert out.log_freq_lenadj.iloc[6] > 0 > out.log_freq_lenadj.iloc[7]  # above / below the length trend
+    assert abs(np.corrcoef(np.log(n_tok), out.log_freq_lenadj)[0, 1]) < 1e-6  # orthogonal to log length
     assert out.entity_n_words.tolist() == [1, 2, 3, 4, 6, 8, 2, 3]

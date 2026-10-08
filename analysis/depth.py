@@ -29,9 +29,8 @@ option probabilities aligned by answer content, not letter:
   d_soft      expected layer (as above) on the across-variant mean gold content prob
 Columns named l_* / d_* hold layers; the d_frac_* columns divide by L.
 
-Caveat (pilot finding): uncalibrated early layers rank one default letter first for
-every question, so single-order l_star is early for questions whose gold is that
-letter. Use the 4-rotation aggregate.
+Uncalibrated early layers rank one letter first for nearly every question, so single-order
+l_star is early whenever gold sits at that letter; use the four-rotation aggregate.
 
   python -m analysis.depth table --model llama31_8b --variant cyc0 [--cpu-layers 0]
   python -m analysis.depth aggregate --model llama31_8b --variants cyc0 cyc1 cyc2 cyc3
@@ -39,10 +38,12 @@ letter. Use the 4-rotation aggregate.
   python -m analysis.depth reliability --model llama31_8b --variants orig perm   # orig = cyc{gold_idx}
   python -m analysis.depth split-half --model llama31_8b      # cyc0+cyc2 vs cyc1+cyc3
 """
+
 from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 
 import numpy as np
@@ -50,21 +51,29 @@ import pandas as pd
 import torch
 from scipy.stats import spearmanr
 
-from crystal.io import (load_acts, load_prompts, load_run_config, model_config, resolve, set_seed,
-                        variant_columns)
+from crystal.io import load_acts, load_prompts, load_run_config, model_config, resolve, set_seed, variant_columns
 from crystal.lens import crystallization_layer, gold_rank, lens_option_logits
+from crystal.log import setup_logging
+from data.prep import option_order
 
+log = logging.getLogger(__name__)
 
-# ------------------------------------------------------------------ primitives
-
-MAX_GOLD_LETTER_SHARE = 0.4   # a table's own letter prior is used only if gold letters are this balanced
+_CFG = load_run_config()
+SEED = _CFG["seed"]
+MAX_GOLD_LETTER_SHARE = _CFG["depth"]["max_gold_letter_share"]
+N_BOOT = _CFG["depth"]["n_boot"]
+LENS_BATCH = _CFG["depth"]["lens_batch"]
+PRIMARY_DEFAULT = _CFG["primary_metric"]["default"]
+PRIMARY_CHALLENGERS = tuple(_CFG["primary_metric"]["challengers"])
+PRIMARY_MARGIN = _CFG["primary_metric"]["margin"]
 
 
 def letter_prior(*prob_arrays: np.ndarray) -> np.ndarray:
     """Per-layer mean log-prob of each letter, pooled over all rows given: [L+1, 4].
-    Must be estimated on rows whose gold letters are balanced (e.g. the 4 cyclic
-    rotations pooled); otherwise it absorbs the answer signal itself (in cyc1 every
-    gold is B, so B's mean includes the gold boost)."""
+
+    The rows must have balanced gold letters (e.g. the four rotations pooled); in cyc1 alone
+    every gold is B, so the prior would absorb the answer signal itself.
+    """
     lp = np.concatenate([np.log(p + 1e-12) for p in prob_arrays])
     return lp.mean(0)
 
@@ -74,8 +83,7 @@ def gold_letters_balanced(gold: np.ndarray) -> bool:
 
 
 def calibrate(probs: np.ndarray, prior: np.ndarray | None = None) -> np.ndarray:
-    """probs [n, L+1, 4] -> calibrated log-probs (log-prob minus the letter prior,
-    default: the prior of these rows)."""
+    """Log-probs minus the letter prior (default: these rows' own): [n, L+1, 4] -> [n, L+1, 4]."""
     lp = np.log(probs + 1e-12)
     return lp - (lp.mean(0) if prior is None else prior)[None]
 
@@ -91,8 +99,7 @@ def first_stays(flags_2d: np.ndarray) -> list:
 
 
 def soft_layer(p_gold: np.ndarray) -> np.ndarray:
-    """p_gold [n, L+1] -> expected layer under the normalised positive increments
-    p[l] - p[l-1] (l = 1..L); NaN when the gold probability never increases."""
+    """Expected layer under the normalised positive increments of p_gold [n, L+1]; NaN if it never rises."""
     inc = np.clip(np.diff(p_gold, axis=1), 0, None)
     tot = inc.sum(1)
     layers = np.arange(1, p_gold.shape[1])
@@ -111,25 +118,27 @@ def to_int_array(xs) -> pd.arrays.IntegerArray:
     return pd.array(xs, dtype="Int64")
 
 
-# ------------------------------------------------------------------ per variant
-
 @torch.no_grad()
-def option_probs(model, acts: np.ndarray, option_ids, translator=None, batch: int = 256) -> np.ndarray:
-    """acts [n, L+1, d] -> restricted A-D probabilities [n, L+1, 4]."""
+def option_probs(model, acts: np.ndarray, option_ids, translator=None, batch: int = LENS_BATCH) -> np.ndarray:
+    """Restricted A-D probabilities [n, L+1, 4] from stored activations [n, L+1, d]."""
     n, n_read, _ = acts.shape
     probs = np.empty((n, n_read, 4), dtype=np.float32)
     for s in range(0, n, batch):
-        a = torch.from_numpy(acts[s:s + batch])
-        for l in range(n_read):
-            probs[s:s + batch, l] = torch.softmax(
-                lens_option_logits(model, a[:, l], l, option_ids, translator=translator).float(), -1).cpu().numpy()
+        a = torch.from_numpy(acts[s : s + batch])
+        for layer in range(n_read):
+            logits = lens_option_logits(model, a[:, layer], layer, option_ids, translator=translator)
+            probs[s : s + batch, layer] = torch.softmax(logits.float(), -1).cpu().numpy()
     return probs
 
 
 def table_from_probs(qids, probs: np.ndarray, gold: np.ndarray, prior: np.ndarray | None = None) -> pd.DataFrame:
-    """prior: pooled letter prior [L+1, 4]. If None, the table's own prior is used when
-    its gold letters are balanced; otherwise (e.g. a single cyclic variant, where every
-    gold is the same letter) the calibrated columns are left null."""
+    """Per-question metrics for one option order.
+
+    Args:
+        prior: pooled letter prior [L+1, 4]. Without one, the table's own prior is used if its
+            gold letters are balanced; otherwise (a single cyclic variant) the calibrated
+            columns are left null.
+    """
     n, n_read, _ = probs.shape
     L = n_read - 1
     gold = gold.astype(np.int64)
@@ -146,25 +155,28 @@ def table_from_probs(qids, probs: np.ndarray, gold: np.ndarray, prior: np.ndarra
         lstar_cal, top_cal_final = first_stays(top_cal), top_cal[:, -1]
         p_cal_gold = np.take_along_axis(softmax_last(cal), gold[:, None, None], -1)[..., 0]
         soft = soft_layer(p_cal_gold)
-    return pd.DataFrame({
-        "qid": list(qids),
-        "L": L,
-        "l_star": to_int_array(lstar),
-        "d": [None if x is None else x / L for x in lstar],
-        "correct_final": ranks[:, -1] == 0,
-        "l_star_cal": to_int_array(lstar_cal),
-        "d_cal": [None if x is None else x / L for x in lstar_cal],
-        "correct_final_cal": top_cal_final,
-        "d_soft_cal": soft,
-        "gold_prob_final": gold_p[:, -1],
-        "gold_prob_by_layer": list(gold_p.astype(np.float32)),
-        "gold_rank_by_layer": list(ranks.astype(np.int8)),
-        # restricted option probabilities per layer, flattened [(L+1)*4] (A..D per layer)
-        "option_probs_by_layer": list(probs.reshape(n, -1)),
-    })
+    return pd.DataFrame(
+        {
+            "qid": list(qids),
+            "L": L,
+            "l_star": to_int_array(lstar),
+            "d": [None if x is None else x / L for x in lstar],
+            "correct_final": ranks[:, -1] == 0,
+            "l_star_cal": to_int_array(lstar_cal),
+            "d_cal": [None if x is None else x / L for x in lstar_cal],
+            "correct_final_cal": top_cal_final,
+            "d_soft_cal": soft,
+            "gold_prob_final": gold_p[:, -1],
+            "gold_prob_by_layer": list(gold_p.astype(np.float32)),
+            "gold_rank_by_layer": list(ranks.astype(np.int8)),
+            "option_probs_by_layer": list(probs.reshape(n, -1)),
+        }
+    )
 
 
-def depth_table(model, qids, acts: np.ndarray, gold: np.ndarray, option_ids, translator=None, prior=None) -> pd.DataFrame:
+def depth_table(
+    model, qids, acts: np.ndarray, gold: np.ndarray, option_ids, translator=None, prior=None
+) -> pd.DataFrame:
     return table_from_probs(qids, option_probs(model, acts, option_ids, translator), gold, prior)
 
 
@@ -174,8 +186,7 @@ def probs_of(tab: pd.DataFrame) -> np.ndarray:
 
 
 def recompute_from_probs(tab: pd.DataFrame, gold: np.ndarray, prior=None) -> pd.DataFrame:
-    """Rebuild the per-variant metrics of a stored table (e.g. one written before a
-    metric was added) from its option_probs_by_layer, without the model."""
+    """Recompute a stored table's metrics from its option_probs_by_layer, without the model."""
     keep = [c for c in ("state", "attribute", "question_type") if c in tab.columns]
     new = table_from_probs(tab.qid.tolist(), probs_of(tab), gold, prior)
     for i, c in enumerate(keep):
@@ -183,46 +194,40 @@ def recompute_from_probs(tab: pd.DataFrame, gold: np.ndarray, prior=None) -> pd.
     return new
 
 
-# ------------------------------------------------------------------ across variants
-
 def content_aligned(tab: pd.DataFrame, variant: str, prompts: pd.DataFrame, base_seed: int) -> np.ndarray:
-    """[n, L+1, 4] with the last axis indexed by original option index (content)."""
-    from data.prep import option_order
-
+    """Option probabilities [n, L+1, 4] reindexed from letters to original option (content)."""
     P = probs_of(tab)
     out = np.empty_like(P)
     pr = prompts.loc[tab.qid]
     for i, (qid, g) in enumerate(zip(tab.qid, pr.gold_idx)):
-        order = option_order(variant, int(g), qid, base_seed)   # letter j shows content order[j]
+        order = option_order(variant, int(g), qid, base_seed)  # letter j shows content order[j]
         out[i][:, order] = P[i]
     return out
 
 
 def aggregate(tables: dict, prompts: pd.DataFrame, base_seed: int) -> pd.DataFrame:
-    """tables: variant -> per-variant table (same model). Inner join on qid."""
+    """Across-variant metrics from {variant: per-variant table} of one model, on the shared qids."""
     variants = list(tables)
     qids = sorted(set.intersection(*[set(t.qid) for t in tables.values()]))
     T = {v: t.set_index("qid").loc[qids].reset_index() for v, t in tables.items()}
     L = int(T[variants[0]].L.iloc[0]) if "L" in T[variants[0]] else probs_of(T[variants[0]]).shape[1] - 1
     gold = prompts.loc[qids, "gold_idx"].to_numpy().astype(np.int64)
-    prior = letter_prior(*[probs_of(T[v]) for v in variants])                              # pooled, balanced
-    from data.prep import option_order
-    for v in variants:                                                                     # per-variant cal metrics, pooled prior
+    prior = letter_prior(*[probs_of(T[v]) for v in variants])  # pooled over variants, so balanced
+    for v in variants:
         g_v = np.array([option_order(v, int(g), q, base_seed).index(int(g)) for q, g in zip(qids, gold)])
         T[v] = recompute_from_probs(T[v], g_v, prior)
-    Pc = np.stack([content_aligned(T[v], v, prompts, base_seed) for v in variants])        # [V, n, L+1, 4]
-    cal = np.stack([calibrate(probs_of(T[v]), prior) for v in variants])                   # letter space
-    calc = np.empty_like(cal)
-    for k, v in enumerate(variants):                                                       # -> content space
+    Pc = np.stack([content_aligned(T[v], v, prompts, base_seed) for v in variants])  # [V, n, L+1, 4]
+    cal = np.stack([calibrate(probs_of(T[v]), prior) for v in variants])  # letter space
+    calc = np.empty_like(cal)  # content space
+    for k, v in enumerate(variants):
         for i, (qid, g) in enumerate(zip(qids, gold)):
             calc[k, i][:, option_order(v, int(g), qid, base_seed)] = cal[k, i]
-    n = len(qids)
     mean_p = Pc.mean(0)
     top_cyc = mean_p.argmax(-1) == gold[:, None]
     gold_c = np.take_along_axis(calc, gold[None, :, None, None].repeat(len(variants), 0), -1)[..., 0]
     other = calc.copy()
     np.put_along_axis(other, gold[None, :, None, None].repeat(len(variants), 0), -np.inf, -1)
-    margin = (gold_c - other.max(-1)).mean(0)                                              # [n, L+1]
+    margin = (gold_c - other.max(-1)).mean(0)  # [n, L+1]
     p_gold_mean = np.take_along_axis(mean_p, gold[:, None, None], -1)[..., 0]
 
     def mean_or_null(col):
@@ -232,53 +237,72 @@ def aggregate(tables: dict, prompts: pd.DataFrame, base_seed: int) -> pd.DataFra
     lcyc = first_stays(top_cyc)
     lmar = first_stays(margin > 0)
     soft = soft_layer(p_gold_mean)
-    out = pd.DataFrame({
-        "qid": qids, "L": L, "n_variants": len(variants), "variants": ",".join(variants),
-        "acc": np.mean([T[v].correct_final.to_numpy() for v in variants], 0),
-        "correct_all": np.all([T[v].correct_final.to_numpy() for v in variants], 0),
-        "correct_cyc_final": top_cyc[:, -1],
-        "l_star_mean": mean_or_null("l_star"),
-        "l_star_cal_mean": mean_or_null("l_star_cal"),
-        "l_star_cyc": to_int_array(lcyc),
-        "d_margin": to_int_array(lmar),
-        "d_soft": soft,
-        "gold_prob_mean_final": p_gold_mean[:, -1],
-    })
-    for c in ("l_star_mean", "l_star_cal_mean", "l_star_cyc", "d_margin", "d_soft"):
+    out = pd.DataFrame(
+        {
+            "qid": qids,
+            "L": L,
+            "n_variants": len(variants),
+            "variants": ",".join(variants),
+            "acc": np.mean([T[v].correct_final.to_numpy() for v in variants], 0),
+            "correct_all": np.all([T[v].correct_final.to_numpy() for v in variants], 0),
+            "correct_cyc_final": top_cyc[:, -1],
+            "l_star_mean": mean_or_null("l_star"),
+            "l_star_cal_mean": mean_or_null("l_star_cal"),
+            "l_star_cyc": to_int_array(lcyc),
+            "d_margin": to_int_array(lmar),
+            "d_soft": soft,
+            "gold_prob_mean_final": p_gold_mean[:, -1],
+        }
+    )
+    for c in AGG_METRICS:
         out[f"d_frac_{c}"] = out[c].astype("Float64") / L
     return out
 
 
-# ------------------------------------------------------------------ reliability
-
 SINGLE_ORDER_METRICS = ("l_star", "l_star_cal", "d_soft_cal")
+AGG_METRICS = ("l_star_mean", "l_star_cal_mean", "l_star_cyc", "d_margin", "d_soft")
 
 
-def reliability(a: pd.DataFrame, b: pd.DataFrame, metrics=SINGLE_ORDER_METRICS, subset: str = "correct_both") -> pd.DataFrame:
-    """Test-retest between two orders of the same questions. subset: 'correct_both'
-    (questions correct at layer L in both orders; same rows for every metric) or 'defined'."""
+def _paired(j: pd.DataFrame, metric: str) -> tuple[np.ndarray, np.ndarray]:
+    """The metric's _a and _b columns as floats, rows where either is missing dropped."""
+    x = j[f"{metric}_a"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
+    y = j[f"{metric}_b"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
+    ok = ~(np.isnan(x) | np.isnan(y))
+    return x[ok], y[ok]
+
+
+def reliability(
+    a: pd.DataFrame, b: pd.DataFrame, metrics=SINGLE_ORDER_METRICS, subset: str = "correct_both"
+) -> pd.DataFrame:
+    """Test-retest between two option orders of the same questions.
+
+    Args:
+        subset: "correct_both" (correct at layer L in both orders, the same rows for every
+            metric) or "defined" (every row where both values exist).
+    """
     j = a.merge(b, on="qid", suffixes=("_a", "_b"))
     if subset == "correct_both":
         j = j[j.correct_final_a & j.correct_final_b]
     rows = []
     for m in metrics:
-        x = j[f"{m}_a"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
-        y = j[f"{m}_b"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
-        ok = ~(np.isnan(x) | np.isnan(y))
-        x, y = x[ok], y[ok]
+        x, y = _paired(j, m)
         rho = spearmanr(x, y)[0] if len(x) > 2 else np.nan
-        rows.append({"metric": m, "subset": subset, "n": int(ok.sum()), "spearman": rho,
-                     "within_1_layer": float(np.mean(np.abs(x - y) <= 1)) if len(x) else np.nan,
-                     "identical": float(np.mean(x == y)) if len(x) else np.nan,
-                     "mean_abs_diff_layers": float(np.mean(np.abs(x - y))) if len(x) else np.nan,
-                     "sd_layers": float(np.std(np.r_[x, y])) if len(x) else np.nan})
+        rows.append(
+            {
+                "metric": m,
+                "subset": subset,
+                "n": len(x),
+                "spearman": rho,
+                "within_1_layer": float(np.mean(np.abs(x - y) <= 1)) if len(x) else np.nan,
+                "identical": float(np.mean(x == y)) if len(x) else np.nan,
+                "mean_abs_diff_layers": float(np.mean(np.abs(x - y))) if len(x) else np.nan,
+                "sd_layers": float(np.std(np.r_[x, y])) if len(x) else np.nan,
+            }
+        )
     return pd.DataFrame(rows)
 
 
-AGG_METRICS = ("l_star_mean", "l_star_cal_mean", "l_star_cyc", "d_margin", "d_soft")
-
-
-def bootstrap_spearman_ci(x: np.ndarray, y: np.ndarray, n_boot: int = 1000, seed: int = 1234):
+def bootstrap_spearman_ci(x: np.ndarray, y: np.ndarray, n_boot: int = N_BOOT, seed: int = SEED):
     rng = np.random.default_rng(seed)
     n = len(x)
     rs = []
@@ -288,13 +312,19 @@ def bootstrap_spearman_ci(x: np.ndarray, y: np.ndarray, n_boot: int = 1000, seed
     return float(np.nanquantile(rs, 0.025)), float(np.nanquantile(rs, 0.975))
 
 
-def split_half(tables: dict, prompts: pd.DataFrame, base_seed: int, halves=(("cyc0", "cyc2"), ("cyc1", "cyc3")),
-               n_boot: int = 1000) -> pd.DataFrame:
-    """Reliability of the across-variant metrics: aggregate each half of the rotations
-    separately, correlate per question (correct in both halves), and project to the
-    full set of rotations with Spearman-Brown (k = 2). Each half holds 2 rotations, so
-    the letter prior cancels only partly within a half: the estimate is conservative
-    for metrics on raw probabilities (l_star_cyc, d_soft)."""
+def split_half(
+    tables: dict,
+    prompts: pd.DataFrame,
+    base_seed: int,
+    halves=(("cyc0", "cyc2"), ("cyc1", "cyc3")),
+    n_boot: int = N_BOOT,
+) -> pd.DataFrame:
+    """Reliability of the across-variant metrics: each half of the rotations aggregated on its
+    own, correlated over questions correct in both, projected to all four with Spearman-Brown.
+
+    Within a half of two rotations the letter prior cancels only partly, so the estimate is
+    conservative for the metrics on raw probabilities (l_star_cyc, d_soft).
+    """
     a = aggregate({v: tables[v] for v in halves[0]}, prompts, base_seed)
     b = aggregate({v: tables[v] for v in halves[1]}, prompts, base_seed)
     a = a.assign(correct_final=a.correct_cyc_final)
@@ -306,11 +336,9 @@ def split_half(tables: dict, prompts: pd.DataFrame, base_seed: int, halves=(("cy
     j = j[j.correct_final_a & j.correct_final_b]
     lo, hi = [], []
     for m in r.metric:
-        x = j[f"{m}_a"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
-        y = j[f"{m}_b"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
-        ok = ~(np.isnan(x) | np.isnan(y))
-        if ok.sum() > 10 and n_boot:
-            c = bootstrap_spearman_ci(x[ok], y[ok], n_boot)
+        x, y = _paired(j, m)
+        if len(x) > 10 and n_boot:
+            c = bootstrap_spearman_ci(x, y, n_boot)
             lo.append(spearman_brown(c[0], 2))
             hi.append(spearman_brown(c[1], 2))
         else:
@@ -320,35 +348,37 @@ def split_half(tables: dict, prompts: pd.DataFrame, base_seed: int, halves=(("cy
     return r
 
 
-PRIMARY_DEFAULT = "d_soft"
-PRIMARY_CHALLENGERS = ("l_star_cyc", "d_margin")
-PRIMARY_MARGIN = 0.10
-
-
 def choose_primary(splithalf: dict) -> tuple[str, str]:
-    """Pre-registered decision rule (ANALYSIS_PLAN.md). splithalf: model -> split_half()
-    table (logit lens). d_soft stays primary unless a challenger (l_star_cyc, d_margin)
-    has a Spearman-Brown split-half reliability at least 0.10 higher than d_soft in at
-    least two of the models, with its 95% CI lower bound above d_soft's CI upper bound in
-    those models. If both challengers qualify, the one with the higher mean reliability
-    wins. Returns (metric, reason)."""
+    """The pre-registered primary-metric rule (ANALYSIS_PLAN.md section 2).
+
+    A challenger replaces the default only if, in at least two models, its corrected split-half
+    reliability beats the default's by PRIMARY_MARGIN and its CI lower bound is above the
+    default's upper bound; between two qualifying challengers the higher mean reliability wins.
+
+    Args:
+        splithalf: model -> split_half() table (logit lens).
+
+    Returns:
+        (metric, reason)
+    """
     wins = {}
     for c in PRIMARY_CHALLENGERS:
         k = 0
-        for m, tab in splithalf.items():
+        for tab in splithalf.values():
             t = tab.set_index("metric")
             if c not in t.index or PRIMARY_DEFAULT not in t.index:
                 continue
             d, x = t.loc[PRIMARY_DEFAULT], t.loc[c]
-            if (x.spearman_brown_full - d.spearman_brown_full >= PRIMARY_MARGIN
-                    and x.sb_full_ci_low > d.sb_full_ci_high):
+            if x.spearman_brown_full - d.spearman_brown_full >= PRIMARY_MARGIN and x.sb_full_ci_low > d.sb_full_ci_high:
                 k += 1
         wins[c] = k
     qualified = [c for c, k in wins.items() if k >= 2]
     if not qualified:
         return PRIMARY_DEFAULT, f"no challenger clearly more reliable (wins per challenger: {wins})"
-    best = max(qualified, key=lambda c: np.mean([tab.set_index("metric").loc[c].spearman_brown_full
-                                                  for tab in splithalf.values()]))
+    best = max(
+        qualified,
+        key=lambda c: np.mean([tab.set_index("metric").loc[c].spearman_brown_full for tab in splithalf.values()]),
+    )
     return best, f"{best} clearly more reliable in {wins[best]} models (wins: {wins})"
 
 
@@ -357,12 +387,8 @@ def spearman_brown(r: float, k: int) -> float:
     return k * r / (1 + (k - 1) * r)
 
 
-# ------------------------------------------------------------------ CLI
-
 def orig_from_cyclic(tables: dict, prompts: pd.DataFrame) -> pd.DataFrame:
-    """The original option order is the rotation that puts gold at its original letter,
-    i.e. cyc{gold_idx}. Assemble that per-question table from the four cyclic tables
-    (no extra forward pass needed)."""
+    """The original-order table, assembled from the four rotations: the original order is cyc{gold_idx}."""
     T = {v: t.set_index("qid") for v, t in tables.items()}
     qids = sorted(set.intersection(*[set(t.index) for t in T.values()]))
     rows = [T[f"cyc{int(prompts.loc[q, 'gold_idx'])}"].loc[[q]] for q in qids]
@@ -372,13 +398,14 @@ def orig_from_cyclic(tables: dict, prompts: pd.DataFrame) -> pd.DataFrame:
 def _load_table(out, model, variant, readout):
     if variant == "orig":
         prompts = load_prompts().set_index("qid")
-        return orig_from_cyclic({v: _load_table(out, model, v, readout) for v in ("cyc0", "cyc1", "cyc2", "cyc3")},
-                                prompts)
+        return orig_from_cyclic(
+            {v: _load_table(out, model, v, readout) for v in ("cyc0", "cyc1", "cyc2", "cyc3")}, prompts
+        )
     return pd.read_parquet(out / f"depth_{model}_{variant}_{readout}.parquet")
 
 
 def cmd_table(args, cfg):
-    from run.forward import load_model_and_tokenizer
+    from crystal.models import load_model_and_tokenizer
 
     mcfg = model_config(args.model)
     if mcfg.get("proxy") and not args.allow_proxy:
@@ -392,6 +419,7 @@ def cmd_table(args, cfg):
     translator = None
     if args.readout == "tuned":
         from run.tune_lens import load_tuned_lens
+
         translator = load_tuned_lens(args.lens or resolve("lenses") / f"{args.model}.pt", device=args.device)
     tab = depth_table(model, qids, acts, prompts[gold_col].to_numpy(), meta["option_ids"], translator)
     for i, c in enumerate(("state", "attribute", "question_type")):
@@ -403,10 +431,12 @@ def cmd_table(args, cfg):
     (out / f"{stem}.meta.json").write_text(json.dumps({**meta, "readout": args.readout}, indent=2))
     L = int(tab.L.iloc[0])
     c = tab[tab.correct_final]
-    print(f"{args.model} [{args.variant}, {args.readout}] n={len(tab)} L={L} accuracy {tab.correct_final.mean():.3f}; "
-          f"correct: l_star median {c.l_star.median()}, l_star_cal median {c.l_star_cal.median()}, "
-          f"d_soft_cal median {np.nanmedian(c.d_soft_cal):.2f}")
-    print(f"wrote {out / stem}.parquet")
+    log.info(
+        f"{args.model} [{args.variant}, {args.readout}] n={len(tab)} L={L} accuracy {tab.correct_final.mean():.3f}; "
+        f"correct: l_star median {c.l_star.median()}, l_star_cal median {c.l_star_cal.median()}, "
+        f"d_soft_cal median {np.nanmedian(c.d_soft_cal):.2f}"
+    )
+    log.info(f"wrote {out / stem}.parquet")
 
 
 def cmd_aggregate(args, cfg):
@@ -420,31 +450,38 @@ def cmd_aggregate(args, cfg):
     path = out / f"depth_{args.model}_{name}_{args.readout}_agg.parquet"
     agg.to_parquet(path, index=False)
     c = agg[agg.correct_cyc_final]
-    print(f"{args.model} aggregate over {args.variants} ({args.readout}): n={len(agg)}, content-averaged "
-          f"accuracy {agg.correct_cyc_final.mean():.3f}")
-    for m in ("l_star_mean", "l_star_cal_mean", "l_star_cyc", "d_margin", "d_soft"):
+    log.info(
+        f"{args.model} aggregate over {args.variants} ({args.readout}): n={len(agg)}, content-averaged "
+        f"accuracy {agg.correct_cyc_final.mean():.3f}"
+    )
+    for m in AGG_METRICS:
         v = c[m].astype("Float64").dropna().astype(float)
-        print(f"  {m:<16} n={len(v):5d} median {v.median():.2f}  mean {v.mean():.2f}  (layers, of L={int(agg.L.iloc[0])})")
-    print(f"wrote {path}")
+        log.info(
+            f"  {m:<16} n={len(v):5d} median {v.median():.2f}  mean {v.mean():.2f}  (layers, of L={int(agg.L.iloc[0])})"
+        )
+    log.info(f"wrote {path}")
 
 
 def cmd_reliability(args, cfg):
     out = resolve(args.out)
     a, b = (_load_table(out, args.model, v, args.readout) for v in args.variants)
     prompts = load_prompts().set_index("qid")
-    # rebuild per-variant metrics from stored probabilities so older tables get every metric
-    prior = letter_prior(probs_of(a), probs_of(b))   # pooled over both orders
-    gcol = lambda v: variant_columns("prompt" if v == "orig" else v)[1]   # noqa: E731
-    a = recompute_from_probs(a, prompts.loc[a.qid, gcol(args.variants[0])].to_numpy(), prior)
-    b = recompute_from_probs(b, prompts.loc[b.qid, gcol(args.variants[1])].to_numpy(), prior)
+    # Recomputed with the prior pooled over both orders, which balances the gold letters.
+    prior = letter_prior(probs_of(a), probs_of(b))
+
+    def gold_col(v):
+        return variant_columns("prompt" if v == "orig" else v)[1]
+
+    a = recompute_from_probs(a, prompts.loc[a.qid, gold_col(args.variants[0])].to_numpy(), prior)
+    b = recompute_from_probs(b, prompts.loc[b.qid, gold_col(args.variants[1])].to_numpy(), prior)
     res = pd.concat([reliability(a, b, subset=s) for s in ("correct_both", "defined")])
     res.insert(0, "model", args.model)
     res.insert(1, "orders", " vs ".join(args.variants))
     res["spearman_brown_4_orders"] = [spearman_brown(r, 4) for r in res.spearman]
     path = out / f"reliability_{args.model}_{'_vs_'.join(args.variants)}_{args.readout}.csv"
     res.to_csv(path, index=False)
-    print(res.round(3).to_string(index=False))
-    print(f"wrote {path}")
+    log.info(res.round(3).to_string(index=False))
+    log.info(f"wrote {path}")
 
 
 def cmd_split_half(args, cfg):
@@ -455,25 +492,32 @@ def cmd_split_half(args, cfg):
     res.insert(0, "model", args.model)
     path = out / f"reliability_{args.model}_splithalf_{args.readout}.csv"
     res.to_csv(path, index=False)
-    print(res.round(3).to_string(index=False))
-    print(f"wrote {path}")
+    log.info(res.round(3).to_string(index=False))
+    log.info(f"wrote {path}")
 
 
 def cmd_choose_primary(args, cfg):
     out = resolve(args.out)
     tabs = {m: pd.read_csv(out / f"reliability_{m}_splithalf_logit.csv") for m in args.models}
     metric, reason = choose_primary(tabs)
-    rec = {"primary_metric": metric, "reason": reason, "rule": "ANALYSIS_PLAN.md section 2",
-           "reliability": {m: t[["metric", "spearman_brown_full", "sb_full_ci_low", "sb_full_ci_high"]]
-                           .to_dict("records") for m, t in tabs.items()}}
+    rec = {
+        "primary_metric": metric,
+        "reason": reason,
+        "rule": "ANALYSIS_PLAN.md section 2",
+        "reliability": {
+            m: t[["metric", "spearman_brown_full", "sb_full_ci_low", "sb_full_ci_high"]].to_dict("records")
+            for m, t in tabs.items()
+        },
+    }
     (out / "primary_metric.json").write_text(json.dumps(rec, indent=2))
-    print(f"primary metric: {metric} ({reason})")
+    log.info(f"primary metric: {metric} ({reason})")
 
 
 def main(argv=None):
+    setup_logging()
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0].startswith("-"):
-        argv = ["table"] + argv            # backward compatible: no subcommand = table
+        argv = ["table", *argv]  # no subcommand means `table`, as before subcommands existed
     ap = argparse.ArgumentParser(description="stage 4a: crystallization depth")
     sub = ap.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("table")
@@ -502,8 +546,13 @@ def main(argv=None):
     args = ap.parse_args(argv)
     cfg = load_run_config()
     set_seed(cfg["seed"])
-    {"table": cmd_table, "aggregate": cmd_aggregate, "reliability": cmd_reliability,
-     "split-half": cmd_split_half, "choose-primary": cmd_choose_primary}[args.cmd](args, cfg)
+    {
+        "table": cmd_table,
+        "aggregate": cmd_aggregate,
+        "reliability": cmd_reliability,
+        "split-half": cmd_split_half,
+        "choose-primary": cmd_choose_primary,
+    }[args.cmd](args, cfg)
 
 
 if __name__ == "__main__":

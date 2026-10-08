@@ -1,44 +1,33 @@
-"""Stage 1b: documentation / frequency scores per entity and per state.
+"""Stage 1b: documentation scores per entity and per state.
 
-Per distinct entity string (from entities.parquet):
-  wiki_exists_en      an en.wikipedia article exists under the exact entity string
-                      as title (MediaWiki title normalisation + redirects resolved).
-                      Disambiguation pages count as NOT existing (wiki_disambig_en).
-  wiki_title_en       the resolved title
-  redirect_changed_concept  the resolved title differs from the entity beyond case,
-                      punctuation and plural (e.g. "Hemis Festival" -> "Hemis
-                      Monastery"); null when there is no article
-  wiki_exists_hi      the en article has a Hindi interlanguage link. Null when there
-                      is no en article (entities are English strings; a Hindi title
-                      cannot be looked up directly).
-  wiki_bytes_en       page length in bytes of the resolved en article
-  wiki_pageviews_en   2024 total pageviews (Wikimedia REST, all-access, agent=user)
-                      of the resolved title. Null when the API has no data (404).
-  corpus_count        infini-gram exact count of the entity string on the index in
-                      config/run.yaml (frequency.infinigram_index)
-  log_freq            log1p(corpus_count); falls back to log1p(pageviews) when
-                      corpus_count is unavailable (log_freq_source says which)
-  entity_n_tokens     entity length in the index tokenizer (from the infini-gram response)
-  entity_n_words      whitespace word count
-  log_freq_lenadj     residual of log1p(corpus_count) on log(entity_n_tokens), OLS over
-                      distinct entities: frequency relative to entities of the same length
-                      (exact-string counts fall with length; secondary measure)
-  tier                low / high: median split of log_freq within attribute
-                      (> median -> high), over questions
-State level: the same scores for each state's own en article (title map below).
+Per distinct entity string:
+  wiki_exists_en         an en.wikipedia article under that title, after normalisation and
+                         redirects; disambiguation pages count as missing (wiki_disambig_en)
+  wiki_title_en          the resolved title
+  redirect_changed_concept  the title differs beyond case, punctuation and plural
+                         ("Hemis Festival" -> "Hemis Monastery"); null without an article
+  wiki_exists_hi         the en article has a Hindi interlanguage link (null without one)
+  wiki_bytes_en          article length in bytes
+  wiki_pageviews_en      2024 total views (agent=user); null when the API has no data
+  corpus_count           infini-gram exact count on frequency.infinigram_index
+  log_freq               log1p(corpus_count), else log1p(pageviews) (log_freq_source says which)
+  entity_n_tokens        length in the index tokenizer; entity_n_words: word count
+  log_freq_lenadj        residual of log1p(corpus_count) on log(entity_n_tokens): exact-string
+                         counts fall with length, so this is frequency among same-length entities
+  tier                   high when log_freq is above its median within the attribute
+States get the same scores for their own article (STATE_TITLES).
 
-Every 2xx/404 response is cached in data/cache/{service}/{sha256(request)}.json and
-never requested again (reruns resume). 403/429/5xx and network errors are retried
-with backoff (honouring Retry-After) and never cached.
-
-Outputs: data/processed/freq.parquet (per qid), data/processed/freq_entities.parquet
-(per entity), data/processed/freq_state.parquet (per state).
+2xx and 404 responses are cached in data/cache/{service}/ and never requested again, so a
+rerun resumes. 403/429/5xx and network errors are retried with backoff and never cached.
+Outputs: data/processed/freq.parquet (per qid), freq_entities.parquet, freq_state.parquet.
 """
+
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import logging
 import math
 import re
 import time
@@ -51,8 +40,11 @@ import requests
 from scipy.stats import spearmanr
 
 from crystal.io import load_analysis_set, load_entities, load_prompts, load_run_config, resolve, set_seed
+from crystal.log import setup_logging
 
-# state column value -> (en.wikipedia title of the state's article, string counted in the corpus)
+log = logging.getLogger(__name__)
+
+# state -> (en.wikipedia title of its article, string counted in the corpus)
 STATE_TITLES = {
     "Andaman_and_Nicobar": ("Andaman and Nicobar Islands", "Andaman and Nicobar"),
     "Andhra_Pradesh": ("Andhra Pradesh", "Andhra Pradesh"),
@@ -61,8 +53,10 @@ STATE_TITLES = {
     "Bihar": ("Bihar", "Bihar"),
     "Chandigarh": ("Chandigarh", "Chandigarh"),
     "Chhattisgarh": ("Chhattisgarh", "Chhattisgarh"),
-    "Dadra_and_Nagar_Haveli_and_Daman_and_Diu": ("Dadra and Nagar Haveli and Daman and Diu",
-                                                 "Dadra and Nagar Haveli and Daman and Diu"),
+    "Dadra_and_Nagar_Haveli_and_Daman_and_Diu": (
+        "Dadra and Nagar Haveli and Daman and Diu",
+        "Dadra and Nagar Haveli and Daman and Diu",
+    ),
     "Delhi": ("Delhi", "Delhi"),
     "Goa": ("Goa", "Goa"),
     "Gujarat": ("Gujarat", "Gujarat"),
@@ -102,8 +96,15 @@ TRANSIENT = {403, 429}
 
 
 class CachedClient:
-    def __init__(self, cache_dir: Path, user_agent: str, min_interval: float, max_retries: int = 8,
-                 service_intervals: dict | None = None, max_retry_after: float = 300):
+    def __init__(
+        self,
+        cache_dir: Path,
+        user_agent: str,
+        min_interval: float,
+        max_retries: int = 8,
+        service_intervals: dict | None = None,
+        max_retry_after: float = 300,
+    ):
         self.cache_dir = cache_dir
         self.session = requests.Session()
         self.session.headers["User-Agent"] = user_agent
@@ -120,11 +121,10 @@ class CachedClient:
         h = hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()
         return self.cache_dir / service / f"{h}.json"
 
-    def request(self, service: str, method: str, url: str, params=None, body=None,
-                cache_only: bool = False) -> tuple[int | None, object]:
-        """(status, parsed JSON or None). 2xx and 404 answers are cached; anything
-        already cached is never requested again, so a rerun resumes where the last
-        one stopped. cache_only=True returns (None, None) instead of requesting."""
+    def request(
+        self, service: str, method: str, url: str, params=None, body=None, cache_only: bool = False
+    ) -> tuple[int | None, object]:
+        """(status, parsed JSON or None). cache_only returns (None, None) for anything not cached."""
         key = {"method": method, "url": url, "params": params, "body": body}
         path = self._path(service, key)
         if path.exists():
@@ -141,15 +141,14 @@ class CachedClient:
             if wait > 0:
                 time.sleep(wait)
             self._last[service] = time.monotonic()
-            backoff = min(2 ** attempt, 60)
+            backoff = min(2**attempt, 60)
             try:
                 r = self.session.request(method, url, params=params, json=body, timeout=60)
             except requests.RequestException as e:
                 err = f"{type(e).__name__}: {e}"
             else:
-                # Only 2xx and 404 are answers about the query; 403/429/5xx from an API
-                # gateway are throttling or outages (infini-gram returns 403 "Forbidden"
-                # under load) and are retried, never cached.
+                # Only 2xx and 404 are answers about the query. infini-gram's gateway answers
+                # 403 under load, so 403/429/5xx are treated as throttling and never cached.
                 if r.status_code in TRANSIENT or r.status_code >= 500:
                     err = f"HTTP {r.status_code}"
                     self.throttled[service] = self.throttled.get(service, 0) + 1
@@ -172,17 +171,22 @@ class CachedClient:
         raise RuntimeError(f"{service}: giving up on {url} {params or body}: {err}")
 
 
-# ---------------------------------------------------------------- Wikipedia
-
-
 def mw_lookup(client: CachedClient, titles: list[str]) -> dict:
     """{input string: dict(wiki_exists_en, wiki_title_en, wiki_disambig_en, wiki_bytes_en, wiki_exists_hi)}"""
     out = {}
     for i in range(0, len(titles), MW_BATCH):
-        batch = titles[i:i + MW_BATCH]
-        params = {"action": "query", "format": "json", "formatversion": "2", "redirects": "1",
-                  "prop": "info|langlinks|pageprops", "lllang": "hi", "lllimit": "max",
-                  "ppprop": "disambiguation", "titles": "|".join(batch)}
+        batch = titles[i : i + MW_BATCH]
+        params = {
+            "action": "query",
+            "format": "json",
+            "formatversion": "2",
+            "redirects": "1",
+            "prop": "info|langlinks|pageprops",
+            "lllang": "hi",
+            "lllimit": "max",
+            "ppprop": "disambiguation",
+            "titles": "|".join(batch),
+        }
         pages, norm, redir = {}, {}, {}
         cont = {}
         while True:
@@ -218,12 +222,11 @@ def mw_lookup(client: CachedClient, titles: list[str]) -> dict:
 
 
 def pageviews(client: CachedClient, title: str, year: int, cache_only: bool = False):
-    """(total views or None, status): status is fetched | no_data (API 404) |
-    not_fetched (cache_only and not cached)."""
+    """(total views or None, status), status one of fetched, no_data (404), not_fetched."""
     t = urllib.parse.quote(title.replace(" ", "_"), safe="")
-    status, js = client.request("pageviews", "GET",
-                                PV_API.format(title=t, start=f"{year}0101", end=f"{year}1231"),
-                                cache_only=cache_only)
+    status, js = client.request(
+        "pageviews", "GET", PV_API.format(title=t, start=f"{year}0101", end=f"{year}1231"), cache_only=cache_only
+    )
     if status is None:
         return None, "not_fetched"
     if status == 404:
@@ -233,49 +236,58 @@ def pageviews(client: CachedClient, title: str, year: int, cache_only: bool = Fa
     return int(sum(it["views"] for it in js.get("items", []))), "fetched"
 
 
-# ---------------------------------------------------------------- infini-gram
-
-
 def corpus_count(client: CachedClient, index: str, text: str):
-    """(count or None, approx flag, n_tokens or None). n_tokens is the length of the
-    query in the index's tokenizer (Llama-2 for v4_dolma-v1_7_llama), from the response."""
-    status, js = client.request("infinigram", "POST", IG_API,
-                                body={"index": index, "query_type": "count", "query": text})
+    """(count, approx flag, query length in the index tokenizer); Nones when unavailable."""
+    status, js = client.request(
+        "infinigram", "POST", IG_API, body={"index": index, "query_type": "count", "query": text}
+    )
     if status != 200 or js is None or "error" in js or "count" not in js:
         return None, None, None
     toks = js.get("token_ids")
     return int(js["count"]), bool(js.get("approx")), (len(toks) if toks is not None else None)
 
 
-# ---------------------------------------------------------------- scoring
+def score_strings(
+    client, strings_wiki: list[str], strings_corpus: list[str], cfg: dict, pageviews_cache_only: bool = False
+) -> pd.DataFrame:
+    """Scores aligned with the inputs: strings_wiki looked up as titles, strings_corpus counted.
 
-
-def score_strings(client, strings_wiki: list[str], strings_corpus: list[str], cfg: dict, log=print,
-                  pageviews_cache_only: bool = False) -> pd.DataFrame:
-    """Rows aligned with the inputs. strings_wiki are looked up as titles, strings_corpus counted.
-    Three passes (Wikipedia metadata, corpus counts, pageviews) so a throttled service
-    does not hold up the others."""
+    One pass per service, so a throttled service does not hold up the others.
+    """
     fcfg = cfg["frequency"]
     wiki = mw_lookup(client, sorted(set(strings_wiki)))
     rows = [dict(wiki[w]) for w in strings_wiki]
-    log(f"  wikipedia metadata done ({client.misses} requests, {client.hits} cached)")
+    log.info(f"  wikipedia metadata done ({client.misses} requests, {client.hits} cached)")
     for n, (r, c) in enumerate(zip(rows, strings_corpus)):
         r["corpus_count"], r["corpus_count_approx"], r["corpus_n_tokens"] = corpus_count(
-            client, fcfg["infinigram_index"], c)
+            client, fcfg["infinigram_index"], c
+        )
         if (n + 1) % 250 == 0:
-            log(f"  corpus counts {n + 1}/{len(rows)}")
+            log.info(f"  corpus counts {n + 1}/{len(rows)}")
     todo = [r for r in rows if r["wiki_exists_en"]]
     for n, r in enumerate(todo):
         r["wiki_pageviews_en"], r["pageviews_status"] = pageviews(
-            client, r["wiki_title_en"], fcfg["pageviews_year"], cache_only=pageviews_cache_only)
+            client, r["wiki_title_en"], fcfg["pageviews_year"], cache_only=pageviews_cache_only
+        )
         if (n + 1) % 50 == 0 and not pageviews_cache_only:
-            log(f"  pageviews {n + 1}/{len(todo)} (429s so far: {client.throttled.get('pageviews', 0)})")
+            log.info(f"  pageviews {n + 1}/{len(todo)} (429s so far: {client.throttled.get('pageviews', 0)})")
     for r in rows:
         r.setdefault("wiki_pageviews_en", None)
         r.setdefault("pageviews_status", "no_article")
-    return pd.DataFrame(rows)[["wiki_exists_en", "wiki_title_en", "wiki_disambig_en", "wiki_bytes_en",
-                                "wiki_exists_hi", "wiki_pageviews_en", "pageviews_status",
-                                "corpus_count", "corpus_count_approx", "corpus_n_tokens"]]
+    return pd.DataFrame(rows)[
+        [
+            "wiki_exists_en",
+            "wiki_title_en",
+            "wiki_disambig_en",
+            "wiki_bytes_en",
+            "wiki_exists_hi",
+            "wiki_pageviews_en",
+            "pageviews_status",
+            "corpus_count",
+            "corpus_count_approx",
+            "corpus_n_tokens",
+        ]
+    ]
 
 
 def _concept_key(s: str) -> str:
@@ -299,9 +311,11 @@ def redirect_changed_concept(entity: str, title) -> bool | None:
 
 
 def add_length_adjusted(fe: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """Exact-string counts fall with entity length. Adds entity_n_tokens (index tokenizer),
-    entity_n_words, and log_freq_lenadj = residual of log1p(corpus_count) on
-    log(entity_n_tokens), fitted by OLS over the distinct entities. Returns (fe, fit)."""
+    """Add entity_n_tokens, entity_n_words and log_freq_lenadj (OLS over distinct entities).
+
+    Returns:
+        (fe with the new columns, fit summary: slope, intercept, r, n)
+    """
     fe = fe.copy()
     fe["entity_n_tokens"] = pd.to_numeric(fe["corpus_n_tokens"], errors="coerce")
     fe["entity_n_words"] = fe["entity"].str.split().str.len()
@@ -331,59 +345,95 @@ def median_tier(df: pd.DataFrame, by="attribute") -> pd.Series:
 
 
 def main(argv=None):
+    setup_logging()
     ap = argparse.ArgumentParser(description="stage 1b: frequency scores (resumable from data/cache/)")
-    ap.add_argument("--pageviews", choices=["fetch", "cached-only"], default="fetch",
-                    help="cached-only: make no pageview requests; uncached pageviews stay null")
+    ap.add_argument(
+        "--pageviews",
+        choices=["fetch", "cached-only"],
+        default="fetch",
+        help="cached-only: make no pageview requests; uncached pageviews stay null",
+    )
     args = ap.parse_args(argv)
     pv_cache_only = args.pageviews == "cached-only"
     cfg = load_run_config()
     set_seed(cfg["seed"])
     if "CHANGE_ME" in cfg["frequency"]["user_agent"]:
         raise SystemExit("set frequency.user_agent contact in config/run.yaml first")
-    client = CachedClient(resolve(cfg["paths"]["cache"]), cfg["frequency"]["user_agent"],
-                          cfg["frequency"]["min_interval_s"],
-                          service_intervals=cfg["frequency"].get("service_intervals_s"))
+    client = CachedClient(
+        resolve(cfg["paths"]["cache"]),
+        cfg["frequency"]["user_agent"],
+        cfg["frequency"]["min_interval_s"],
+        service_intervals=cfg["frequency"].get("service_intervals_s"),
+    )
     out = resolve(cfg["paths"]["processed"])
     prompts = load_prompts()
     ent = load_entities()
 
-    # ---- entities
     ents = sorted(ent.entity.dropna().unique())
-    print(f"scoring {len(ents)} distinct entity strings (index {cfg['frequency']['infinigram_index']})")
-    fe = pd.concat([pd.DataFrame({"entity": ents}), score_strings(client, ents, ents, cfg,
-                                                                           pageviews_cache_only=pv_cache_only)], axis=1)
+    log.info(f"scoring {len(ents)} distinct entity strings (index {cfg['frequency']['infinigram_index']})")
+    fe = pd.concat(
+        [pd.DataFrame({"entity": ents}), score_strings(client, ents, ents, cfg, pageviews_cache_only=pv_cache_only)],
+        axis=1,
+    )
     fe["redirect_changed_concept"] = [redirect_changed_concept(e, t) for e, t in zip(fe.entity, fe.wiki_title_en)]
     fe = add_log_freq(fe)
     fe, lenfit = add_length_adjusted(fe)
     fe.to_parquet(out / "freq_entities.parquet", index=False)
 
-    # ---- states
     keys = sorted(prompts.state.unique())
     missing = set(keys) - set(STATE_TITLES)
     if missing:
         raise SystemExit(f"no title mapping for states {missing}")
-    fs = pd.concat([pd.DataFrame({"state": keys,
-                                  "state_title": [STATE_TITLES[k][0] for k in keys],
-                                  "state_corpus_string": [STATE_TITLES[k][1] for k in keys]}),
-                    score_strings(client, [STATE_TITLES[k][0] for k in keys],
-                                  [STATE_TITLES[k][1] for k in keys], cfg,
-                                  pageviews_cache_only=pv_cache_only)], axis=1)
+    fs = pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "state": keys,
+                    "state_title": [STATE_TITLES[k][0] for k in keys],
+                    "state_corpus_string": [STATE_TITLES[k][1] for k in keys],
+                }
+            ),
+            score_strings(
+                client,
+                [STATE_TITLES[k][0] for k in keys],
+                [STATE_TITLES[k][1] for k in keys],
+                cfg,
+                pageviews_cache_only=pv_cache_only,
+            ),
+        ],
+        axis=1,
+    )
     fs = add_log_freq(fs)
     bad = fs[~fs.wiki_exists_en.astype(bool)]
     if len(bad):
         raise SystemExit(f"state titles not resolving to an article: {bad.state_title.tolist()}")
     fs.to_parquet(out / "freq_state.parquet", index=False)
 
-    # ---- per question
-    q = prompts[["qid", "state", "attribute", "question_type"]].merge(
-        ent[["qid", "entity"]], on="qid")
+    q = prompts[["qid", "state", "attribute", "question_type"]].merge(ent[["qid", "entity"]], on="qid")
     q = q.merge(fe, on="entity", how="left")
     q["tier"] = median_tier(q)
     q = q.merge(fs[["state", "log_freq"]].rename(columns={"log_freq": "state_log_freq"}), on="state")
-    cols = ["qid", "entity", "wiki_exists_en", "wiki_exists_hi", "wiki_bytes_en", "wiki_pageviews_en",
-            "pageviews_status", "corpus_count", "corpus_count_approx", "wiki_title_en", "wiki_disambig_en",
-            "redirect_changed_concept", "entity_n_tokens", "entity_n_words",
-            "log_freq", "log_freq_source", "log_freq_lenadj", "tier", "state_log_freq"]
+    cols = [
+        "qid",
+        "entity",
+        "wiki_exists_en",
+        "wiki_exists_hi",
+        "wiki_bytes_en",
+        "wiki_pageviews_en",
+        "pageviews_status",
+        "corpus_count",
+        "corpus_count_approx",
+        "wiki_title_en",
+        "wiki_disambig_en",
+        "redirect_changed_concept",
+        "entity_n_tokens",
+        "entity_n_words",
+        "log_freq",
+        "log_freq_source",
+        "log_freq_lenadj",
+        "tier",
+        "state_log_freq",
+    ]
     q[cols].to_parquet(resolve(cfg["paths"]["freq"]), index=False)
 
     pv_needed = int(fe.wiki_exists_en.sum() + fs.wiki_exists_en.sum())
@@ -395,60 +445,92 @@ def main(argv=None):
         "pageviews_complete": pv_missing == 0,
         "pageviews_needed": pv_needed,
         "pageviews_not_fetched": pv_missing,
-        "n_entities": len(fe), "n_states": len(fs),
-        "log_freq_primary": "corpus_count", "log_freq_fallback": "wiki_pageviews_en",
+        "n_entities": len(fe),
+        "n_states": len(fs),
+        "log_freq_primary": "corpus_count",
+        "log_freq_fallback": "wiki_pageviews_en",
         "length_adjustment": {"model": "log1p(corpus_count) ~ log(entity_n_tokens)", **lenfit},
         "written": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
     (out / "freq_meta.json").write_text(json.dumps(meta, indent=2))
-    print(f"\nrun metadata: {meta}")
-
-    # ---- report
-    print(f"\nHTTP: {client.misses} requests, {client.hits} cache hits, throttled (429/5xx): {client.throttled}, "
-          f"not fetched (cache-only): {client.not_fetched}")
-    an = q[q.qid.isin(set(load_analysis_set().qid))]  # default: no ambiguous_gold, no leaks
+    log.info(f"\nrun metadata: {meta}")
+    log.info(
+        f"\nHTTP: {client.misses} requests, {client.hits} cache hits, throttled (429/5xx): {client.throttled}, "
+        f"not fetched (cache-only): {client.not_fetched}"
+    )
+    an = q[q.qid.isin(set(load_analysis_set().qid))]
     has_ent = an[an.entity.notna()]
-    print(f"\n== missing rate per column (analysis set excl. ambiguous + leaks, {len(an)} questions; "
-          f"{len(has_ent)} with an entity)")
-    for c in ["entity", "wiki_exists_en", "wiki_exists_hi", "wiki_bytes_en", "wiki_pageviews_en",
-              "corpus_count", "log_freq", "tier"]:
+    log.info(
+        f"\nmissing rate per column (analysis set excl. ambiguous + leaks, {len(an)} questions; "
+        f"{len(has_ent)} with an entity)"
+    )
+    for c in [
+        "entity",
+        "wiki_exists_en",
+        "wiki_exists_hi",
+        "wiki_bytes_en",
+        "wiki_pageviews_en",
+        "corpus_count",
+        "log_freq",
+        "tier",
+    ]:
         base = an if c == "entity" else has_ent
-        print(f"  {c:<20} {base[c].isna().mean():6.1%} missing"
-              + (f"   (True: {(base[c] == True).mean():.1%})" if c.startswith("wiki_exists") else ""))
-    print(f"  log_freq_source: {has_ent.log_freq_source.value_counts(dropna=False).to_dict()} "
-          f"(pageviews fallback rows: {(has_ent.log_freq_source == 'pageviews').sum()})")
+        log.info(
+            f"  {c:<20} {base[c].isna().mean():6.1%} missing"
+            + (f"   (True: {base[c].eq(True).mean():.1%})" if c.startswith("wiki_exists") else "")
+        )
+    log.info(
+        f"  log_freq_source: {has_ent.log_freq_source.value_counts(dropna=False).to_dict()} "
+        f"(pageviews fallback rows: {(has_ent.log_freq_source == 'pageviews').sum()})"
+    )
     rc = fe[fe.wiki_exists_en.astype(bool)]
-    print(f"  redirect_changed_concept: {int(rc.redirect_changed_concept.sum())} of {len(rc)} entities with an en "
-          f"article ({(has_ent.redirect_changed_concept == True).sum()} analysis questions)")
-    print("\n== per distinct entity")
-    print(f"  wiki_exists_en {fe.wiki_exists_en.mean():.1%}, disambiguation {fe.wiki_disambig_en.mean():.1%}, "
-          f"wiki_exists_hi True {(fe.wiki_exists_hi == True).mean():.1%}, "
-          f"corpus_count==0 {(fe.corpus_count == 0).mean():.1%}, approx {fe.corpus_count_approx.fillna(False).mean():.1%}")
-    print(f"  pageviews_status: {fe.pageviews_status.value_counts().to_dict()}")
+    log.info(
+        f"  redirect_changed_concept: {int(rc.redirect_changed_concept.sum())} of {len(rc)} entities with an en "
+        f"article ({has_ent.redirect_changed_concept.eq(True).sum()} analysis questions)"
+    )
+    log.info("\nper distinct entity")
+    log.info(
+        f"  wiki_exists_en {fe.wiki_exists_en.mean():.1%}, disambiguation {fe.wiki_disambig_en.mean():.1%}, "
+        f"wiki_exists_hi True {fe.wiki_exists_hi.eq(True).mean():.1%}, "
+        f"corpus_count==0 {(fe.corpus_count == 0).mean():.1%}, approx {fe.corpus_count_approx.fillna(False).mean():.1%}"
+    )
+    log.info(f"  pageviews_status: {fe.pageviews_status.value_counts().to_dict()}")
     if meta["pageviews_complete"]:
         both = fe.dropna(subset=["corpus_count", "wiki_pageviews_en"])
         rho, p = spearmanr(both.corpus_count, both.wiki_pageviews_en)
-        print(f"  Spearman(corpus_count, wiki_pageviews_en) = {rho:.3f} (p = {p:.2g}, n = {len(both)} entities)")
+        log.info(f"  Spearman(corpus_count, wiki_pageviews_en) = {rho:.3f} (p = {p:.2g}, n = {len(both)} entities)")
     else:
-        print(f"  Spearman(corpus_count, wiki_pageviews_en): PENDING (pageviews incomplete: "
-              f"{pv_missing}/{pv_needed} not fetched)")
+        log.info(
+            f"  Spearman(corpus_count, wiki_pageviews_en): PENDING (pageviews incomplete: "
+            f"{pv_missing}/{pv_needed} not fetched)"
+        )
 
     med = an.groupby("state").log_freq.median().sort_values()
     st = fs.set_index("state")
-    tab = pd.DataFrame({"median_entity_log_freq": med, "n_with_score": an.groupby("state").log_freq.count(),
-                        "state_log_freq": st.log_freq, "state_corpus_count": st.corpus_count,
-                        "state_bytes": st.wiki_bytes_en}).loc[med.index]
-    print("\n== median entity log_freq per state (analysis set), sorted\n" + tab.to_string(float_format=lambda x: f"{x:.2f}"))
+    tab = pd.DataFrame(
+        {
+            "median_entity_log_freq": med,
+            "n_with_score": an.groupby("state").log_freq.count(),
+            "state_log_freq": st.log_freq,
+            "state_corpus_count": st.corpus_count,
+            "state_bytes": st.wiki_bytes_en,
+        }
+    ).loc[med.index]
+    log.info(
+        "\nmedian entity log_freq per state (analysis set), sorted\n" + tab.to_string(float_format=lambda x: f"{x:.2f}")
+    )
     ne = ["Arunachal_Pradesh", "Assam", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"]
-    low, high = ne + ["Bihar", "Jharkhand"], ["Delhi", "Maharashtra"]
+    low, high = [*ne, "Bihar", "Jharkhand"], ["Delhi", "Maharashtra"]
     hmin = med[high].min()
-    print(f"\n== sanity: NE states + Bihar + Jharkhand vs Delhi, Maharashtra (entity median log_freq)")
-    print(f"  Delhi {med['Delhi']:.2f}, Maharashtra {med['Maharashtra']:.2f}")
+    log.info("\nsanity: NE states + Bihar + Jharkhand vs Delhi, Maharashtra (entity median log_freq)")
+    log.info(f"  Delhi {med['Delhi']:.2f}, Maharashtra {med['Maharashtra']:.2f}")
     for s in low:
-        print(f"  {s:<20} {med[s]:.2f}  {'below both' if med[s] < hmin else 'NOT below both'}")
-    print(f"  {sum(med[s] < hmin for s in low)}/{len(low)} below both")
-    print(f"  state-article log_freq: low group median {fs.set_index('state').log_freq[low].median():.2f} "
-          f"vs Delhi {st.log_freq['Delhi']:.2f}, Maharashtra {st.log_freq['Maharashtra']:.2f}")
+        log.info(f"  {s:<20} {med[s]:.2f}  {'below both' if med[s] < hmin else 'NOT below both'}")
+    log.info(f"  {sum(med[s] < hmin for s in low)}/{len(low)} below both")
+    log.info(
+        f"  state-article log_freq: low group median {fs.set_index('state').log_freq[low].median():.2f} "
+        f"vs Delhi {st.log_freq['Delhi']:.2f}, Maharashtra {st.log_freq['Maharashtra']:.2f}"
+    )
 
 
 if __name__ == "__main__":

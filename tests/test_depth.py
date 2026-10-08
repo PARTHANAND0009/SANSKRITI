@@ -1,4 +1,5 @@
 """Depth metrics on synthetic probabilities (no model)."""
+
 import numpy as np
 import pandas as pd
 
@@ -24,12 +25,12 @@ def _variant_probs(prompts, variant, cryst, bias_letter=1, bias=4.0):
     n = len(prompts)
     P = np.empty((n, L + 1, 4))
     for i, (qid, g) in enumerate(zip(prompts.index, prompts.gold_idx)):
-        order = option_order(variant, int(g), qid, SEED)          # letter j shows content order[j]
+        order = option_order(variant, int(g), qid, SEED)  # letter j shows content order[j]
         content = np.zeros((L + 1, 4))
-        content[:cryst[i], (g + 1) % 4] += 1.0                  # a distractor leads before cryst
-        content[cryst[i]:, g] += 6.0
+        content[: cryst[i], (g + 1) % 4] += 1.0  # a distractor leads before cryst
+        content[cryst[i] :, g] += 6.0
         letters = content[:, order]
-        letters[:, bias_letter] += bias                     # constant letter prior at every layer
+        letters[:, bias_letter] += bias  # constant letter prior at every layer
         P[i] = _softmax(letters)
     return P
 
@@ -45,8 +46,10 @@ def test_aggregate_cancels_letter_bias():
     pr = _prompts(40, rng)
     cryst = rng.integers(3, 7, len(pr))
     variants = ["cyc0", "cyc1", "cyc2", "cyc3"]
-    tables = {v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst), pr.gold_idx.to_numpy() * 0 + int(v[3]))
-              for v in variants}
+    tables = {
+        v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst), pr.gold_idx.to_numpy() * 0 + int(v[3]))
+        for v in variants
+    }
     # raw single-order l_star is fooled for gold-at-B (bias letter) rows in cyc1: crystallizes at 0
     assert (tables["cyc1"].l_star.astype(float) == 0).all()
     agg = aggregate(tables, pr, SEED)
@@ -62,8 +65,12 @@ def test_aggregate_with_original_and_permuted_orders():
     pr = _prompts(30, rng)
     cryst = rng.integers(3, 7, len(pr))
     perm_gold = np.array([option_order("perm", int(g), q, SEED).index(int(g)) for q, g in zip(pr.index, pr.gold_idx)])
-    tables = {"prompt": table_from_probs(pr.index.tolist(), _variant_probs(pr, "prompt", cryst, bias=0.0), pr.gold_idx.to_numpy()),
-              "perm": table_from_probs(pr.index.tolist(), _variant_probs(pr, "perm", cryst, bias=0.0), perm_gold)}
+    tables = {
+        "prompt": table_from_probs(
+            pr.index.tolist(), _variant_probs(pr, "prompt", cryst, bias=0.0), pr.gold_idx.to_numpy()
+        ),
+        "perm": table_from_probs(pr.index.tolist(), _variant_probs(pr, "perm", cryst, bias=0.0), perm_gold),
+    }
     agg = aggregate(tables, pr, SEED)
     np.testing.assert_array_equal(agg.l_star_cyc.astype(int).to_numpy(), cryst)
 
@@ -91,8 +98,10 @@ def test_split_half_runs_and_is_high_for_noiseless_data():
     rng = np.random.default_rng(4)
     pr = _prompts(60, rng)
     cryst = rng.integers(2, 9, len(pr))
-    tables = {v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst, bias=0.0), np.full(len(pr), int(v[3])))
-              for v in ["cyc0", "cyc1", "cyc2", "cyc3"]}
+    tables = {
+        v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst, bias=0.0), np.full(len(pr), int(v[3])))
+        for v in ["cyc0", "cyc1", "cyc2", "cyc3"]
+    }
     r = split_half(tables, pr, SEED).set_index("metric")
     assert r.loc["d_soft", "spearman"] > 0.95 and r.loc["l_star_cyc", "within_1_layer"] == 1.0
 
@@ -103,23 +112,38 @@ def test_orig_from_cyclic_matches_original_order():
     rng = np.random.default_rng(5)
     pr = _prompts(30, rng)
     cryst = rng.integers(2, 8, len(pr))
-    cyc = {v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst), np.full(len(pr), int(v[3])))
-           for v in ["cyc0", "cyc1", "cyc2", "cyc3"]}
+    cyc = {
+        v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst), np.full(len(pr), int(v[3])))
+        for v in ["cyc0", "cyc1", "cyc2", "cyc3"]
+    }
     orig = table_from_probs(pr.index.tolist(), _variant_probs(pr, "prompt", cryst), pr.gold_idx.to_numpy())
     got = orig_from_cyclic(cyc, pr).set_index("qid").loc[orig.qid]
-    np.testing.assert_allclose(np.stack(got.option_probs_by_layer.to_numpy()), np.stack(orig.option_probs_by_layer.to_numpy()))
+    np.testing.assert_allclose(
+        np.stack(got.option_probs_by_layer.to_numpy()), np.stack(orig.option_probs_by_layer.to_numpy())
+    )
 
 
 def test_choose_primary_rule():
     from analysis.depth import choose_primary
 
     def tab(ds, lc, dm, w=0.02):
-        return pd.DataFrame({"metric": ["d_soft", "l_star_cyc", "d_margin"],
-                             "spearman_brown_full": [ds, lc, dm],
-                             "sb_full_ci_low": [ds - w, lc - w, dm - w], "sb_full_ci_high": [ds + w, lc + w, dm + w]})
+        return pd.DataFrame(
+            {
+                "metric": ["d_soft", "l_star_cyc", "d_margin"],
+                "spearman_brown_full": [ds, lc, dm],
+                "sb_full_ci_low": [ds - w, lc - w, dm - w],
+                "sb_full_ci_high": [ds + w, lc + w, dm + w],
+            }
+        )
+
     # d_soft stays: challengers better by < 0.10
     assert choose_primary({"a": tab(0.7, 0.75, 0.6), "b": tab(0.7, 0.78, 0.6), "c": tab(0.7, 0.6, 0.6)})[0] == "d_soft"
     # l_star_cyc better by >= 0.10 with separated CIs in 2 of 3 models
-    assert choose_primary({"a": tab(0.6, 0.75, 0.6), "b": tab(0.6, 0.72, 0.6), "c": tab(0.7, 0.6, 0.6)})[0] == "l_star_cyc"
+    assert (
+        choose_primary({"a": tab(0.6, 0.75, 0.6), "b": tab(0.6, 0.72, 0.6), "c": tab(0.7, 0.6, 0.6)})[0] == "l_star_cyc"
+    )
     # better by 0.10 but CIs overlap -> stays
-    assert choose_primary({"a": tab(0.6, 0.72, 0.6, w=0.1), "b": tab(0.6, 0.72, 0.6, w=0.1), "c": tab(0.7, 0.6, 0.6)})[0] == "d_soft"
+    assert (
+        choose_primary({"a": tab(0.6, 0.72, 0.6, w=0.1), "b": tab(0.6, 0.72, 0.6, w=0.1), "c": tab(0.7, 0.6, 0.6)})[0]
+        == "d_soft"
+    )

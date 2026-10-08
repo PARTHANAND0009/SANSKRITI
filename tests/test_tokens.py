@@ -4,6 +4,7 @@ The per-model tests load each real tokenizer (small download, no weights). If a
 tokenizer is unreachable (network policy, gated without token) the test is
 skipped and the model stays `pending` in config/models.yaml.
 """
+
 import pytest
 
 from crystal.io import load_models_config
@@ -22,8 +23,7 @@ class _FakeTok:
 
 
 def test_check_logic():
-    t = _FakeTok({" A": [10], " B": [11], " C": [12], " D": [13],
-                  "A": [1], "B": [2], "C": [3, 4], "D": [5]})
+    t = _FakeTok({" A": [10], " B": [11], " C": [12], " D": [13], "A": [1], "B": [2], "C": [3, 4], "D": [5]})
     r = check_tokenizer(t)
     assert r == {"space": [10, 11, 12, 13], "bare": None}
     assert choose_variant(r) == "space"
@@ -44,7 +44,7 @@ def test_model_option_tokens(key):
     m = MODELS[key]
     try:
         tok = AutoTokenizer.from_pretrained(m["id"])
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  (gated or offline: skip)
         pytest.skip(f"{m['id']} tokenizer unavailable -> pending ({type(e).__name__})")
     r = check_tokenizer(tok)
     v = choose_variant(r)

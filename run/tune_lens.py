@@ -1,48 +1,51 @@
 """Stage 3a: tuned lens (Belrose et al. 2023).
 
-One affine translator per readout layer l in 0..L:  T_l(h) = h + A_l (h / s_l) + b_l, with
-A_l and b_l initialised to zero (identity). s_l is a fixed per-layer input scale (mean token
-norm of h_l on a calibration batch, stored with the lens): residual norms grow by orders of
-magnitude with depth (hundreds at Qwen2.5-0.5B's last layers), so without it one SGD step
-size is too small early and unstable late (at lr 1 the layer-L translator diverged from
-identity, growing ~3x per step from round-off gradients). It is trained so that the lens distribution
-lens_logits(model, T_l(h_l), l) matches the model's own final output distribution:
-loss = sum over layers of mean_tokens KL(p_final || p_lens_l). The model is frozen.
+One translator per readout layer, T_l(h) = h + A_l (h / s_l) + b_l, initialised to the
+identity and trained on the frozen model to minimise the summed per-layer
+KL(p_final || p_lens_l) on WikiText-103 (held out from SANSKRITI).
 
-Training text is generic and held out from SANSKRITI: WikiText-103 (train split for
-training, validation split for evaluation). As in the paper the optimiser is SGD with
-Nesterov momentum. (Adam would rescale the near-zero round-off gradients at layer L,
-where the identity already reproduces the output, into full-size steps.)
+s_l is a fixed input scale per layer (mean residual norm on a calibration batch). Residual
+norms grow by orders of magnitude with depth, and without the scale a single step size is too
+small early and unstable late: at lr 1 the layer-L translator diverged from round-off
+gradients. SGD with Nesterov momentum follows the paper; Adam would rescale the round-off
+gradients at layer L, where the identity is already exact, into full-size steps.
 
-Outputs: lenses/{model}.pt (translator weights + metadata) and lenses/{model}.eval.json
-(per-layer held-out KL to the final output, logit lens vs tuned lens).
+Outputs: lenses/{model}.pt and lenses/{model}.eval.json (held-out KL per layer, logit vs tuned).
 
-  python -m run.tune_lens --model qwen25_05b_proxy --device cpu --steps 150
-  python -m run.tune_lens --model llama31_8b --device cuda          # defaults for GPU
+  python -m run.tune_lens --model llama31_8b --device cuda
 """
+
 from __future__ import annotations
 
 import argparse
 import json
+import logging
 import time
-from pathlib import Path
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
+from crystal.hooks import record_residuals, stacked
 from crystal.io import load_run_config, model_config, resolve, set_seed
 from crystal.lens import decoder_layers, lens_logits, n_readout_layers
+from crystal.log import setup_logging
+from crystal.models import load_model_and_tokenizer
+
+log = logging.getLogger(__name__)
+
+CALIBRATION_SEED_OFFSET = 7  # calibration batch drawn independently of the training batches
+EVAL_SEED_OFFSET = 1
 
 
 class TunedLens(torch.nn.Module):
     """Callable (h, layer) -> translated h, as crystal.lens.lens_logits expects."""
 
-    def __init__(self, n_layers_readout: int, d_model: int):
+    def __init__(self, n_readout: int, d_model: int):
         super().__init__()
-        self.A = torch.nn.Parameter(torch.zeros(n_layers_readout, d_model, d_model))
-        self.b = torch.nn.Parameter(torch.zeros(n_layers_readout, d_model))
-        self.register_buffer("scale", torch.ones(n_layers_readout))
+        self.A = torch.nn.Parameter(torch.zeros(n_readout, d_model, d_model))
+        self.b = torch.nn.Parameter(torch.zeros(n_readout, d_model))
+        self.register_buffer("scale", torch.ones(n_readout))
 
     def forward(self, h: torch.Tensor, layer: int) -> torch.Tensor:
         x = h.to(self.A.dtype)
@@ -50,15 +53,15 @@ class TunedLens(torch.nn.Module):
 
     @torch.no_grad()
     def set_scale(self, resid) -> None:
-        """resid: [L+1] list of [..., d] residuals from a calibration batch."""
+        """resid: per-layer residuals [..., d] from a calibration batch."""
         self.scale.copy_(torch.stack([r.float().norm(dim=-1).mean() for r in resid]).to(self.scale))
 
     def deviation_from_identity(self) -> np.ndarray:
-        """Per layer: ||A_l / s_l||_F (operator size relative to the input scale; 0 = identity)
-        and ||b_l|| / s_l (bias relative to the typical residual norm)."""
+        """Per layer [L+1, 2]: ||A_l||_F / s_l and ||b_l|| / s_l (both 0 at the identity)."""
         s = self.scale.detach().cpu().numpy()
-        return np.stack([self.A.detach().flatten(1).norm(dim=1).cpu().numpy() / s,
-                         self.b.detach().norm(dim=1).cpu().numpy() / s], 1)
+        return np.stack(
+            [self.A.detach().flatten(1).norm(dim=1).cpu().numpy() / s, self.b.detach().norm(dim=1).cpu().numpy() / s], 1
+        )
 
 
 def load_tuned_lens(path, device="cpu") -> TunedLens:
@@ -70,55 +73,36 @@ def load_tuned_lens(path, device="cpu") -> TunedLens:
 
 @torch.no_grad()
 def residuals_all_positions(model, input_ids, attention_mask):
-    """[L+1] list of [B, T, d] (0 = embedding output, k = block k output) and the
-    model's final logits [B, T, V]."""
-    layers = decoder_layers(model)
-    store = {}
-
-    def pre(mod, args, kwargs):
-        store[0] = (args[0] if args else kwargs["hidden_states"]).detach()
-
-    def post(i):
-        def f(mod, inp, out):
-            store[i] = (out[0] if isinstance(out, tuple) else out).detach()
-        return f
-
-    hs = [layers[0].register_forward_pre_hook(pre, with_kwargs=True)]
-    hs += [l.register_forward_hook(post(i + 1)) for i, l in enumerate(layers)]
-    try:
+    """Per-layer residuals [B, T, d] for layers 0..L, and the final logits [B, T, V]."""
+    with record_residuals(model, lambda h: h.detach()) as store:
         out = model(input_ids=input_ids, attention_mask=attention_mask, use_cache=False)
-    finally:
-        for h in hs:
-            h.remove()
-    return [store[i] for i in range(len(layers) + 1)], out.logits
+    return stacked(store, len(decoder_layers(model))), out.logits
 
 
-def text_batches(tok, split: str, seq_len: int, n_tokens: int, seed: int):
-    """Token chunks of WikiText-103 (raw), [n_chunks, seq_len]. BOS prepended when the
-    tokenizer uses one, as the model sees in use."""
+def text_batches(tok, split: str, seq_len: int, n_tokens: int, seed: int, min_doc_chars: int = 200):
+    """WikiText-103 token chunks [n_chunks, seq_len], each starting with BOS if the tokenizer has one."""
     from datasets import load_dataset
 
-    ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1", split=split,
-                      cache_dir=str(resolve("data/raw/hf")))
-    text, ids = [], []
+    ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1", split=split, cache_dir=str(resolve("data/raw/hf")))
+    ids = []
     rng = np.random.default_rng(seed)
     order = rng.permutation(len(ds))
     body = seq_len - (1 if tok.bos_token_id is not None else 0)
     for i in order:
         t = ds[int(i)]["text"].strip()
-        if len(t) < 200:
+        if len(t) < min_doc_chars:
             continue
         ids.extend(tok(t, add_special_tokens=False)["input_ids"])
         if len(ids) >= n_tokens:
             break
-    chunks = [ids[s:s + body] for s in range(0, len(ids) - body + 1, body)]
+    chunks = [ids[s : s + body] for s in range(0, len(ids) - body + 1, body)]
     if tok.bos_token_id is not None:
-        chunks = [[tok.bos_token_id] + c for c in chunks]
+        chunks = [[tok.bos_token_id, *c] for c in chunks]
     return torch.tensor(chunks)
 
 
 def kl_final_vs_lens(model, lens, resid, final_logp, layer, positions):
-    """Mean over the selected tokens of KL(p_final || p_lens) at `layer`."""
+    """Mean KL(p_final || p_lens) at `layer` over the selected positions."""
     h = resid[layer][positions]
     logits = lens_logits(model, h, layer, translator=lens).float()
     lp = F.log_softmax(logits, -1)
@@ -128,27 +112,40 @@ def kl_final_vs_lens(model, lens, resid, final_logp, layer, positions):
 
 @torch.no_grad()
 def evaluate(model, lens, chunks, batch, device, max_tokens_per_seq=None):
-    """Per-layer held-out KL to the final output for the logit lens and the tuned lens."""
+    """Held-out KL to the final output per layer: (logit lens, tuned lens)."""
     L1 = n_readout_layers(model)
     tot_raw, tot_tuned, n = np.zeros(L1), np.zeros(L1), 0
     for s in range(0, len(chunks), batch):
-        ids = chunks[s:s + batch].to(device)
+        ids = chunks[s : s + batch].to(device)
         resid, logits = residuals_all_positions(model, ids, torch.ones_like(ids))
         final_logp = F.log_softmax(logits.float(), -1)
-        pos = (slice(None), slice(1, max_tokens_per_seq))   # skip BOS position
+        pos = (slice(None), slice(1, max_tokens_per_seq))  # skip the BOS position
         k = final_logp[pos].shape[0] * final_logp[pos].shape[1]
-        for l in range(L1):
-            tot_raw[l] += kl_final_vs_lens(model, None, resid, final_logp, l, pos).item() * k
-            tot_tuned[l] += kl_final_vs_lens(model, lens, resid, final_logp, l, pos).item() * k
+        for layer in range(L1):
+            tot_raw[layer] += kl_final_vs_lens(model, None, resid, final_logp, layer, pos).item() * k
+            tot_tuned[layer] += kl_final_vs_lens(model, lens, resid, final_logp, layer, pos).item() * k
         n += k
     return tot_raw / n, tot_tuned / n
 
 
-def train(model, chunks, d_model, device, steps, batch, tokens_per_seq, lr, momentum, weight_decay,
-          warmup, seed, log=print):
+def train(
+    model,
+    chunks,
+    d_model,
+    device,
+    steps,
+    batch,
+    tokens_per_seq,
+    lr,
+    momentum,
+    weight_decay,
+    warmup,
+    seed,
+    grad_clip=1.0,
+):
     L1 = n_readout_layers(model)
     lens = TunedLens(L1, d_model).to(device)
-    g0 = torch.Generator().manual_seed(seed + 7)
+    g0 = torch.Generator().manual_seed(seed + CALIBRATION_SEED_OFFSET)
     calib = chunks[torch.randint(0, len(chunks), (min(batch, len(chunks)),), generator=g0)].to(device)
     lens.set_scale(residuals_all_positions(model, calib, torch.ones_like(calib))[0])
     opt = torch.optim.SGD(lens.parameters(), lr=lr, momentum=momentum, nesterov=True, weight_decay=weight_decay)
@@ -165,68 +162,105 @@ def train(model, chunks, d_model, device, steps, batch, tokens_per_seq, lr, mome
         pos = (torch.arange(batch)[:, None].expand_as(pos_t), pos_t)
         opt.zero_grad(set_to_none=True)
         total = 0.0
-        for l in range(L1):                                  # per-layer backward keeps memory flat
-            loss = kl_final_vs_lens(model, lens, resid, final_logp, l, pos)
+        for layer in range(L1):  # backward per layer keeps memory flat
+            loss = kl_final_vs_lens(model, lens, resid, final_logp, layer, pos)
             loss.backward()
             total += loss.item()
-        torch.nn.utils.clip_grad_norm_(lens.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(lens.parameters(), grad_clip)
         opt.step()
         sched.step()
         if step % max(1, steps // 10) == 0 or step == steps - 1:
-            log(f"  step {step + 1}/{steps}  mean KL over layers {total / L1:.4f}  ({time.time() - t0:.0f}s)")
+            log.info(f"  step {step + 1}/{steps}  mean KL over layers {total / L1:.4f}  ({time.time() - t0:.0f}s)")
     return lens
 
 
 def main(argv=None):
+    setup_logging()
+    cfg = load_run_config()
+    tl = cfg["tuned_lens"]
     ap = argparse.ArgumentParser(description="stage 3a: train a tuned lens")
     ap.add_argument("--model", required=True)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    ap.add_argument("--steps", type=int, default=250)
-    ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--seq-len", type=int, default=512)
-    ap.add_argument("--tokens-per-seq", type=int, default=128, help="positions per sequence used in the loss")
-    ap.add_argument("--train-tokens", type=int, default=4_000_000)
-    ap.add_argument("--eval-tokens", type=int, default=100_000)
-    ap.add_argument("--lr", type=float, default=1.0)
-    ap.add_argument("--momentum", type=float, default=0.9)
-    ap.add_argument("--weight-decay", type=float, default=1e-3)
-    ap.add_argument("--warmup", type=int, default=25)
+    ap.add_argument("--steps", type=int, default=tl["steps"])
+    ap.add_argument("--batch", type=int, default=tl["batch"])
+    ap.add_argument("--seq-len", type=int, default=tl["seq_len"])
+    ap.add_argument(
+        "--tokens-per-seq", type=int, default=tl["tokens_per_seq"], help="positions per sequence in the loss"
+    )
+    ap.add_argument("--train-tokens", type=int, default=tl["train_tokens"])
+    ap.add_argument("--eval-tokens", type=int, default=tl["eval_tokens"])
+    ap.add_argument("--lr", type=float, default=tl["lr"])
+    ap.add_argument("--momentum", type=float, default=tl["momentum"])
+    ap.add_argument("--weight-decay", type=float, default=tl["weight_decay"])
+    ap.add_argument("--warmup", type=int, default=tl["warmup"])
     ap.add_argument("--cpu-layers", type=int, default=None)
     ap.add_argument("--out", default="lenses")
     args = ap.parse_args(argv)
 
-    from run.forward import load_model_and_tokenizer
-
-    cfg = load_run_config()
     set_seed(cfg["seed"])
     mcfg = model_config(args.model)
     model, tok = load_model_and_tokenizer(mcfg, args.device, cpu_layers=args.cpu_layers)
     for p in model.parameters():
         p.requires_grad_(False)
     d_model = model.config.hidden_size
-    train_chunks = text_batches(tok, "train", args.seq_len, args.train_tokens, cfg["seed"])
-    eval_chunks = text_batches(tok, "validation", args.seq_len, args.eval_tokens, cfg["seed"] + 1)
-    print(f"{args.model}: {len(train_chunks)} train / {len(eval_chunks)} eval chunks of {args.seq_len} tokens "
-          f"(WikiText-103), {n_readout_layers(model)} readout layers")
-    lens = train(model, train_chunks, d_model, args.device, args.steps, args.batch, args.tokens_per_seq,
-                 args.lr, args.momentum, args.weight_decay, args.warmup, cfg["seed"])
+    train_chunks = text_batches(tok, "train", args.seq_len, args.train_tokens, cfg["seed"], tl["min_doc_chars"])
+    eval_chunks = text_batches(
+        tok, "validation", args.seq_len, args.eval_tokens, cfg["seed"] + EVAL_SEED_OFFSET, tl["min_doc_chars"]
+    )
+    log.info(
+        f"{args.model}: {len(train_chunks)} train / {len(eval_chunks)} eval chunks of {args.seq_len} tokens "
+        f"(WikiText-103), {n_readout_layers(model)} readout layers"
+    )
+    lens = train(
+        model,
+        train_chunks,
+        d_model,
+        args.device,
+        args.steps,
+        args.batch,
+        args.tokens_per_seq,
+        args.lr,
+        args.momentum,
+        args.weight_decay,
+        args.warmup,
+        cfg["seed"],
+        grad_clip=tl["grad_clip"],
+    )
     raw, tuned = evaluate(model, lens, eval_chunks, args.batch, args.device)
     dev = lens.deviation_from_identity()
     out = resolve(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": lens.state_dict(), "n_readout_layers": n_readout_layers(model), "d_model": d_model,
-                "model_id": mcfg["id"], "proxy": bool(mcfg.get("proxy")), "args": vars(args),
-                "train_data": "Salesforce/wikitext wikitext-103-raw-v1 train"}, out / f"{args.model}.pt")
-    report = {"model": args.model, "model_id": mcfg["id"], "proxy": bool(mcfg.get("proxy")),
-              "eval_data": "wikitext-103-raw-v1 validation", "eval_chunks": len(eval_chunks),
-              "kl_logit_lens": raw.tolist(), "kl_tuned_lens": tuned.tolist(),
-              "translator_dev_A": dev[:, 0].tolist(), "translator_dev_b": dev[:, 1].tolist(),
-              "input_scale": lens.scale.tolist(), "args": vars(args)}
+    torch.save(
+        {
+            "state_dict": lens.state_dict(),
+            "n_readout_layers": n_readout_layers(model),
+            "d_model": d_model,
+            "model_id": mcfg["id"],
+            "proxy": bool(mcfg.get("proxy")),
+            "args": vars(args),
+            "train_data": "Salesforce/wikitext wikitext-103-raw-v1 train",
+        },
+        out / f"{args.model}.pt",
+    )
+    report = {
+        "model": args.model,
+        "model_id": mcfg["id"],
+        "proxy": bool(mcfg.get("proxy")),
+        "eval_data": "wikitext-103-raw-v1 validation",
+        "eval_chunks": len(eval_chunks),
+        "kl_logit_lens": raw.tolist(),
+        "kl_tuned_lens": tuned.tolist(),
+        "translator_dev_A": dev[:, 0].tolist(),
+        "translator_dev_b": dev[:, 1].tolist(),
+        "input_scale": lens.scale.tolist(),
+        "args": vars(args),
+    }
     (out / f"{args.model}.eval.json").write_text(json.dumps(report, indent=2))
-    print("layer  KL(logit lens)  KL(tuned lens)  |A/s|   input scale s")
-    for l in range(len(raw)):
-        print(f"{l:5d}  {raw[l]:14.4f}  {tuned[l]:14.4f}  {dev[l, 0]:.5f}  {lens.scale[l].item():9.2f}")
-    print(f"wrote {out / args.model}.pt")
+    log.info("layer  KL(logit lens)  KL(tuned lens)  |A/s|   input scale s")
+    for layer in range(len(raw)):
+        scale = lens.scale[layer].item()
+        log.info(f"{layer:5d}  {raw[layer]:14.4f}  {tuned[layer]:14.4f}  {dev[layer, 0]:.5f}  {scale:9.2f}")
+    log.info(f"wrote {out / args.model}.pt")
 
 
 if __name__ == "__main__":

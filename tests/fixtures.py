@@ -2,6 +2,7 @@
 
 Nothing here is downloaded; nothing here is real data.
 """
+
 from __future__ import annotations
 
 import string
@@ -20,17 +21,26 @@ VOCAB = 128
 N_LAYERS = 4
 
 _COMMON = dict(
-    vocab_size=VOCAB, hidden_size=64, intermediate_size=128, num_hidden_layers=N_LAYERS,
-    num_attention_heads=4, num_key_value_heads=2, head_dim=16, max_position_embeddings=512,
-    pad_token_id=0, bos_token_id=1, eos_token_id=2,
+    vocab_size=VOCAB,
+    hidden_size=64,
+    intermediate_size=128,
+    num_hidden_layers=N_LAYERS,
+    num_attention_heads=4,
+    num_key_value_heads=2,
+    head_dim=16,
+    max_position_embeddings=512,
+    pad_token_id=0,
+    bos_token_id=1,
+    eos_token_id=2,
 )
 
 FAMILIES = {
     "llama": lambda tie: LlamaConfig(**_COMMON, tie_word_embeddings=tie),
     "qwen2": lambda tie: Qwen2Config(**_COMMON, tie_word_embeddings=tie),
     # small softcap so the cap actually bites on random logits
-    "gemma2": lambda tie: Gemma2Config(**_COMMON, tie_word_embeddings=tie, final_logit_softcapping=0.5,
-                                       sliding_window=8),
+    "gemma2": lambda tie: Gemma2Config(
+        **_COMMON, tie_word_embeddings=tie, final_logit_softcapping=0.5, sliding_window=8
+    ),
 }
 
 
@@ -55,5 +65,6 @@ def char_tokenizer() -> PreTrainedTokenizerFast:
     assert len(vocab) <= VOCAB
     t = Tokenizer(models.WordLevel(vocab, unk_token="<unk>"))
     t.pre_tokenizer = pre_tokenizers.Split(Regex(r"[\s\S]"), behavior="isolated")
-    return PreTrainedTokenizerFast(tokenizer_object=t, pad_token="<pad>", bos_token="<s>",
-                                   eos_token="</s>", unk_token="<unk>")
+    return PreTrainedTokenizerFast(
+        tokenizer_object=t, pad_token="<pad>", bos_token="<s>", eos_token="</s>", unk_token="<unk>"
+    )

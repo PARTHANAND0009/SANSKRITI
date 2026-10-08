@@ -1,26 +1,23 @@
-"""Make a bf16 local copy of a checkpoint published in fp32, without ever
-holding an fp32 shard on disk.
+"""Make a local bf16 copy of a checkpoint published in fp32, without an fp32 shard on disk.
 
-For machines whose disk cannot hold the fp32 download (google/gemma-2-9b ships
-8 fp32 shards, 36.97 GB; bf16 is ~18.5 GB). For each shard the safetensors
-header is fetched, then every tensor is fetched with an HTTP range request,
-cast with torch's round-to-nearest .to(bfloat16) - the same cast
-from_pretrained(dtype=bfloat16) applies at load time - and the bf16 shard is
-written. Peak disk use is the bf16 output; peak RAM is one bf16 shard plus one
-fp32 tensor. Config, tokenizer and the shard index are copied as is.
-
-Auth uses the token huggingface_hub already has (HF_TOKEN or the saved login).
+For disks that cannot hold the fp32 download (google/gemma-2-9b: 36.97 GB fp32, ~18.5 GB
+bf16). Each tensor is fetched with an HTTP range request and cast with .to(bfloat16), the
+same round-to-nearest cast from_pretrained(dtype=bfloat16) applies at load time. Peak RAM is
+one bf16 shard plus one fp32 tensor. Auth uses the token huggingface_hub already has.
 
   python scripts/convert_bf16.py google/gemma-2-9b models/gemma-2-9b-bf16
 Then set `local_path: models/gemma-2-9b-bf16` for the model in config/models.yaml.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import shutil
 import struct
+import sys
 import time
 from pathlib import Path
 
@@ -29,6 +26,8 @@ import requests
 import torch
 from huggingface_hub import get_token, hf_hub_download, hf_hub_url, list_repo_files
 from safetensors.torch import save_file
+
+log = logging.getLogger(__name__)
 
 NP = {"F32": np.float32, "F16": np.float16, "I64": np.int64, "I32": np.int32}
 
@@ -43,7 +42,7 @@ def fetch(session, url: str, start: int, end: int, tries: int = 6) -> bytes:
             err = f"HTTP {r.status_code}, {len(r.content)} bytes"
         except requests.RequestException as e:
             err = str(e)
-        time.sleep(min(2 ** k, 30))
+        time.sleep(min(2**k, 30))
     raise RuntimeError(f"range {start}-{end} of {url}: {err}")
 
 
@@ -73,6 +72,7 @@ def convert_shard(session, url: str, dst: Path) -> int:
 
 
 def main(argv=None):
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
     ap = argparse.ArgumentParser()
     ap.add_argument("repo_id")
     ap.add_argument("out_dir")
@@ -91,11 +91,11 @@ def main(argv=None):
     for s in shards:
         dst = out / s
         if dst.exists():
-            print(f"{s}: exists, skipped", flush=True)
+            log.info(f"{s}: exists, skipped")
             continue
         t0 = time.time()
         k = convert_shard(session, hf_hub_url(args.repo_id, s), dst)
-        print(f"{s}: {k} tensors -> bf16 ({dst.stat().st_size / 1e9:.2f} GB, {time.time() - t0:.0f}s)", flush=True)
+        log.info(f"{s}: {k} tensors -> bf16 ({dst.stat().st_size / 1e9:.2f} GB, {time.time() - t0:.0f}s)")
     idx = out / "model.safetensors.index.json"
     if idx.exists():
         d = json.loads(idx.read_text())
@@ -105,7 +105,7 @@ def main(argv=None):
     c = json.loads(cfg.read_text())
     c["torch_dtype"] = c["dtype"] = "bfloat16"
     cfg.write_text(json.dumps(c, indent=2))
-    print(f"done: {out}", flush=True)
+    log.info(f"wrote {out}")
 
 
 if __name__ == "__main__":
