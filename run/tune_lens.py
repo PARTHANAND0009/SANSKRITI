@@ -1,7 +1,11 @@
 """Stage 3a: tuned lens (Belrose et al. 2023).
 
-One affine translator per readout layer l in 0..L:  T_l(h) = h + A_l h + b_l, with A_l and
-b_l initialised to zero (identity). It is trained so that the lens distribution
+One affine translator per readout layer l in 0..L:  T_l(h) = h + A_l (h / s_l) + b_l, with
+A_l and b_l initialised to zero (identity). s_l is a fixed per-layer input scale (mean token
+norm of h_l on a calibration batch, stored with the lens): residual norms grow by orders of
+magnitude with depth (hundreds at Qwen2.5-0.5B's last layers), so without it one SGD step
+size is too small early and unstable late (at lr 1 the layer-L translator diverged from
+identity, growing ~3x per step from round-off gradients). It is trained so that the lens distribution
 lens_logits(model, T_l(h_l), l) matches the model's own final output distribution:
 loss = sum over layers of mean_tokens KL(p_final || p_lens_l). The model is frozen.
 
@@ -38,16 +42,23 @@ class TunedLens(torch.nn.Module):
         super().__init__()
         self.A = torch.nn.Parameter(torch.zeros(n_layers_readout, d_model, d_model))
         self.b = torch.nn.Parameter(torch.zeros(n_layers_readout, d_model))
+        self.register_buffer("scale", torch.ones(n_layers_readout))
 
     def forward(self, h: torch.Tensor, layer: int) -> torch.Tensor:
         x = h.to(self.A.dtype)
-        return (x + x @ self.A[layer].T + self.b[layer]).to(h.dtype)
+        return (x + (x / self.scale[layer]) @ self.A[layer].T + self.b[layer]).to(h.dtype)
+
+    @torch.no_grad()
+    def set_scale(self, resid) -> None:
+        """resid: [L+1] list of [..., d] residuals from a calibration batch."""
+        self.scale.copy_(torch.stack([r.float().norm(dim=-1).mean() for r in resid]).to(self.scale))
 
     def deviation_from_identity(self) -> np.ndarray:
-        """Per layer: ||A_l||_F / sqrt(d) and ||b_l|| / sqrt(d)."""
-        d = self.A.shape[-1]
-        return np.stack([self.A.detach().flatten(1).norm(dim=1).cpu().numpy() / d ** 0.5,
-                         self.b.detach().norm(dim=1).cpu().numpy() / d ** 0.5], 1)
+        """Per layer: ||A_l / s_l||_F (operator size relative to the input scale; 0 = identity)
+        and ||b_l|| / s_l (bias relative to the typical residual norm)."""
+        s = self.scale.detach().cpu().numpy()
+        return np.stack([self.A.detach().flatten(1).norm(dim=1).cpu().numpy() / s,
+                         self.b.detach().norm(dim=1).cpu().numpy() / s], 1)
 
 
 def load_tuned_lens(path, device="cpu") -> TunedLens:
@@ -137,6 +148,9 @@ def train(model, chunks, d_model, device, steps, batch, tokens_per_seq, lr, mome
           warmup, seed, log=print):
     L1 = n_readout_layers(model)
     lens = TunedLens(L1, d_model).to(device)
+    g0 = torch.Generator().manual_seed(seed + 7)
+    calib = chunks[torch.randint(0, len(chunks), (min(batch, len(chunks)),), generator=g0)].to(device)
+    lens.set_scale(residuals_all_positions(model, calib, torch.ones_like(calib))[0])
     opt = torch.optim.SGD(lens.parameters(), lr=lr, momentum=momentum, nesterov=True, weight_decay=weight_decay)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / max(1, warmup)))
     g = torch.Generator().manual_seed(seed)
@@ -206,11 +220,12 @@ def main(argv=None):
     report = {"model": args.model, "model_id": mcfg["id"], "proxy": bool(mcfg.get("proxy")),
               "eval_data": "wikitext-103-raw-v1 validation", "eval_chunks": len(eval_chunks),
               "kl_logit_lens": raw.tolist(), "kl_tuned_lens": tuned.tolist(),
-              "translator_dev_A": dev[:, 0].tolist(), "translator_dev_b": dev[:, 1].tolist(), "args": vars(args)}
+              "translator_dev_A": dev[:, 0].tolist(), "translator_dev_b": dev[:, 1].tolist(),
+              "input_scale": lens.scale.tolist(), "args": vars(args)}
     (out / f"{args.model}.eval.json").write_text(json.dumps(report, indent=2))
-    print("layer  KL(logit lens)  KL(tuned lens)  |A|/sqrt(d)")
+    print("layer  KL(logit lens)  KL(tuned lens)  |A/s|   input scale s")
     for l in range(len(raw)):
-        print(f"{l:5d}  {raw[l]:14.4f}  {tuned[l]:14.4f}  {dev[l, 0]:.4f}")
+        print(f"{l:5d}  {raw[l]:14.4f}  {tuned[l]:14.4f}  {dev[l, 0]:.5f}  {lens.scale[l].item():9.2f}")
     print(f"wrote {out / args.model}.pt")
 
 
