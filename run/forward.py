@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from crystal.io import load_run_config, model_config, resolve, select_rows, set_seed
+from crystal.io import VARIANTS, load_run_config, model_config, resolve, select_rows, set_seed, variant_columns
 from crystal.lens import decoder_layers
 from crystal.tokens import option_ids as tokenizer_option_ids
 
@@ -207,7 +207,8 @@ def main(argv=None):
     ap.add_argument("--split", choices=["analysis", "all"], default="analysis")
     ap.add_argument("--include-leaks", action="store_true",
                     help="keep leaks_answer rows in the analysis split (excluded by default)")
-    ap.add_argument("--variant", choices=["prompt", "prompt_permuted"], default="prompt")
+    ap.add_argument("--variant", choices=list(VARIANTS), default="cyc0",
+                    help="cyc0..cyc3: gold at A..D (main design); perm: seeded shuffle")
     ap.add_argument("--out", default=None, help="default: {acts}/{model}/{variant}")
     ap.add_argument("--sample", type=int, default=None,
                     help="seeded random sample of N rows from the split (seed: run.yaml)")
@@ -235,7 +236,7 @@ def main(argv=None):
         "option_ids": opt_ids, "torch": torch.__version__, "transformers": transformers.__version__,
         "python": platform.python_version(), "device": args.device,
     }
-    run_forward(model, tok, df, out_dir, opt_ids, prompt_field=args.variant,
+    run_forward(model, tok, df, out_dir, opt_ids, prompt_field=variant_columns(args.variant)[0],
                 shard_size=args.shard_size, batch_size=args.batch_size or mcfg["batch_size"], meta=meta)
 
 

@@ -22,7 +22,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from crystal.io import load_run_config, model_config, resolve, select_rows, set_seed  # noqa: E402
+from crystal.io import VARIANTS, load_run_config, model_config, resolve, select_rows, set_seed, variant_columns  # noqa: E402
 from crystal.lens import crystallization_layer, decoder_layers, gold_rank, lens_logits, lens_option_logits  # noqa: E402
 
 
@@ -120,7 +120,7 @@ def main(argv=None):
     ap.add_argument("--split", choices=["analysis", "all"], default="analysis")
     ap.add_argument("--include-leaks", action="store_true",
                     help="keep leaks_answer rows in the analysis split (excluded by default)")
-    ap.add_argument("--variant", choices=["prompt", "prompt_permuted"], default="prompt")
+    ap.add_argument("--variant", choices=list(VARIANTS), default="cyc0")
     ap.add_argument("--n-examples", type=int, default=None)
     ap.add_argument("--sample", type=int, default=None)
     ap.add_argument("--cpu-layers", type=int, default=None)
@@ -140,10 +140,10 @@ def main(argv=None):
         raise SystemExit("stored shards do not hold the same rows as --split/--limit")
     n = len(df)
     model, tok = load_model_and_tokenizer(mcfg, args.device, cpu_layers=args.cpu_layers)
-    gold_col = "gold_idx" if args.variant == "prompt" else "gold_idx_permuted"
+    prompt_col, gold_col = variant_columns(args.variant)
     smoke(model, tok, df, qids[:n], acts[:n], out_opt[:n], meta["option_ids"],
           n_examples=args.n_examples or cfg["sample_sizes"]["smoke_rank_examples"],
-          gold_col=gold_col, prompt_col=args.variant)
+          gold_col=gold_col, prompt_col=prompt_col)
     if mcfg.get("proxy"):
         print("\n(proxy model: smoke test only, never used in analysis)")
 
