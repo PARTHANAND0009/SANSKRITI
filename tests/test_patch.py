@@ -30,3 +30,11 @@ def test_helpers():
     assert logit_diff(torch.tensor([1.0, 3.0, 2.0, 0.0]), 1).item() == 1.0
     assert first_at_least(np.array([0, 0.2, 0.6, 1.0]), 0.5) == 2
     assert first_at_least(np.array([0, 0.2]), 0.5) is None
+
+
+def test_allocate_water_filling():
+    from run.patch import allocate
+
+    a = allocate({"x": 5, "y": 100, "z": 100}, 90)
+    assert a == {"x": 5, "y": 43, "z": 42} or sum(a.values()) == 90 and a["x"] == 5
+    assert sum(allocate({"x": 3, "y": 4}, 50).values()) == 7
