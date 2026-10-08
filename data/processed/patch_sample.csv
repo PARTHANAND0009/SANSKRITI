@@ -1,0 +1,1249 @@
+qid,state,attribute,question_type,tier,log_freq,entity,span_start,span_end,n_swap_candidates
+sk00870,Assam,Festivals,Association,high,8.121183242078828,Ambubachi Mela,13,27,201
+sk00871,Assam,Festivals,Association,high,5.3471075307174685,Majuli Festival,0,15,201
+sk00874,Assam,Festivals,Association,high,5.2832037287379885,Karam Puja,42,52,201
+sk00879,Assam,Festivals,Association,high,6.129050210060545,Jonbeel Mela,0,12,201
+sk00882,Assam,Festivals,Association,high,5.3471075307174685,Majuli Festival,13,28,201
+sk00883,Assam,Festivals,Association,low,2.5649493574615367,Ali Ai Ligang festival,13,35,201
+sk00884,Assam,Festivals,Association,low,2.5649493574615367,Ali Ai Ligang festival,42,64,201
+sk00887,Assam,Festivals,Association,low,2.5649493574615367,Ali Ai Ligang festival,0,22,201
+sk00888,Assam,History,Association,high,7.207118856207756,Talatal Ghar,42,54,228
+sk00889,Assam,History,Association,high,7.207118856207756,Talatal Ghar,0,12,228
+sk00895,Assam,History,Association,high,7.207118856207756,Talatal Ghar,13,25,228
+sk00899,Assam,History,Association,low,0.0,Dubi Copper Plate Inscriptions,0,30,228
+sk00900,Assam,History,Association,high,6.530877627725885,Deopahar,13,21,228
+sk00902,Assam,History,Association,low,0.0,Dubi Copper Plate Inscriptions,14,44,228
+sk00903,Assam,History,Association,low,5.389071729816501,Kamarupa Kingdom,42,58,228
+sk00905,Assam,History,Association,high,7.418180822726788,Rang Ghar,0,9,228
+sk00906,Assam,History,Association,high,7.418180822726788,Rang Ghar,13,22,228
+sk00908,Assam,History,Association,low,0.0,Dubi Copper Plate Inscriptions,43,73,228
+sk00915,Assam,Tourism,Association,high,7.628517626575055,Assam State Museum,42,60,334
+sk00916,Assam,Tourism,Association,high,10.968439639711603,Kaziranga National Park,42,65,334
+sk00917,Assam,Tourism,Association,high,7.805882040228621,Majuli island,0,13,334
+sk00918,Assam,Tourism,Association,high,10.968439639711603,Kaziranga National Park,13,36,334
+sk00919,Assam,Tourism,Association,high,7.628517626575055,Assam State Museum,0,18,334
+sk00920,Assam,Tourism,Association,high,7.805882040228621,Majuli island,13,26,334
+sk00921,Assam,Tourism,Association,low,5.3612921657094255,Majuli River Island,0,19,334
+sk00922,Assam,Tourism,Association,low,5.3612921657094255,Majuli River Island,42,61,334
+sk00923,Assam,Tourism,Association,low,5.948034989180646,Tea tourism,42,53,334
+sk00925,Assam,Tourism,Association,high,7.805882040228621,Majuli island,42,55,334
+sk00926,Assam,Tourism,Association,low,5.3612921657094255,Majuli River Island,13,32,334
+sk00927,Assam,Tourism,Association,low,5.948034989180646,Tea tourism,13,24,334
+sk00928,Assam,Tourism,Association,high,7.628517626575055,Assam State Museum,13,31,334
+sk00929,Assam,Tourism,Association,low,5.948034989180646,Tea tourism,0,11,334
+sk01539,Delhi,Festivals,Association,low,3.6109179126442243,Bhakti Sangeet Festival,0,23,198
+sk01541,Delhi,Festivals,Association,low,4.330733340286331,Annual Republic Day,42,61,198
+sk01543,Delhi,Festivals,Association,high,9.521568058002977,World Book Fair,0,15,198
+sk01544,Delhi,Festivals,Association,high,5.438079308923196,Phool Walon Ki Sair,42,61,198
+sk01547,Delhi,Festivals,Association,high,14.645634501537884,Independence Day,42,58,198
+sk01548,Delhi,Festivals,Association,low,3.6109179126442243,Bhakti Sangeet Festival,13,36,198
+sk01550,Delhi,Festivals,Association,low,3.6109179126442243,Bhakti Sangeet Festival,42,65,198
+sk01555,Delhi,Festivals,Association,low,4.174387269895637,Ananya Festival,42,57,198
+sk01558,Delhi,Festivals,Association,high,6.068425588244111,Garden Tourism Festival,42,65,198
+sk01571,Delhi,History,Association,low,0.0,Mamluk  Dynasty,0,15,221
+sk01573,Delhi,History,Association,low,0.0,Mamluk  Dynasty,42,57,221
+sk01574,Delhi,History,Association,low,0.0,Mamluk  Dynasty,13,28,221
+sk01575,Delhi,History,Association,low,1.9459101490553132,Architect Ratish Nanda,42,64,221
+sk01579,Delhi,History,Association,high,9.487896348128954,Dental Council of India,13,36,221
+sk01582,Delhi,History,Association,low,5.834810737062605,Ashokan Rock Edict,42,60,221
+sk01583,Delhi,History,Association,high,9.020510699691906,King of Bollywood,42,59,221
+sk01585,Delhi,History,Association,high,11.407042590684664,Indraprastha,0,12,221
+sk01590,Delhi,History,Association,low,5.834810737062605,Ashokan Rock Edict,13,31,221
+sk01593,Delhi,History,Association,high,12.356400312662284,Pandavas,0,8,221
+sk01595,Delhi,History,Association,low,5.834810737062605,Ashokan Rock Edict,0,18,221
+sk01684,Delhi,Tourism,Association,low,6.320768294250582,National Handicrafts and Handlooms Museum,42,83,312
+sk01700,Delhi,Tourism,Association,low,6.1224928095143865,Cathedral Church of the Redemption,13,47,312
+sk01701,Delhi,Tourism,Association,low,6.1224928095143865,Cathedral Church of the Redemption,42,76,312
+sk01707,Delhi,Tourism,Association,low,0.0,Shalimar  Garden,42,58,312
+sk01743,Delhi,Tourism,Association,high,10.545788707090159,Lotus Temple,0,12,312
+sk01746,Delhi,Tourism,Association,high,9.85087760226383,Akshardham Temple,42,59,312
+sk01753,Delhi,Tourism,Association,low,6.1224928095143865,Cathedral Church of the Redemption,0,34,312
+sk02026,Haryana,History,Association,high,9.57637141083894,Narnaul,0,7,225
+sk02027,Haryana,History,Association,low,0.0,Mahabharata in haryana,0,22,225
+sk02028,Haryana,History,Association,low,1.0986122886681098,Tosham Rock,0,11,225
+sk02030,Haryana,History,Association,high,6.943122422819428,Archaeological artifacts,0,24,225
+sk02032,Haryana,History,Association,low,2.5649493574615367,Raja Harsh Ka Tila,13,31,225
+sk02033,Haryana,History,Association,high,8.808219665118408,Harappan culture,0,16,225
+sk02035,Haryana,History,Association,low,0.0,Mahabharata in haryana,42,64,225
+sk02037,Haryana,History,Association,low,2.5649493574615367,Raja Harsh Ka Tila,0,18,225
+sk02038,Haryana,History,Association,low,2.5649493574615367,Raja Harsh Ka Tila,42,60,225
+sk02041,Haryana,History,Association,high,11.89354444870569,Nuh,0,3,225
+sk02044,Haryana,History,Association,low,1.0986122886681098,Tosham Rock,42,53,225
+sk02048,Haryana,History,Association,high,8.808219665118408,Harappan culture,13,29,225
+sk02049,Haryana,History,Association,low,1.0986122886681098,Tosham Rock,13,24,225
+sk02051,Haryana,History,Association,high,9.57637141083894,Narnaul,42,49,225
+sk02092,Haryana,Tourism,Association,low,2.6390573296152584,Hodal City,0,10,330
+sk02097,Haryana,Tourism,Association,low,2.772588722239781,Kalesar national park,0,21,330
+sk02098,Haryana,Tourism,Association,low,2.772588722239781,Kalesar national park,42,63,330
+sk02101,Haryana,Tourism,Association,high,6.584791392385716,Badkhal Lake,0,12,330
+sk02102,Haryana,Tourism,Association,low,2.772588722239781,Kalesar national park,13,34,330
+sk02104,Haryana,Tourism,Association,low,2.6390573296152584,Hodal City,42,52,330
+sk02105,Haryana,Tourism,Association,high,6.8308742346461795,Yadavindra Gardens,13,31,330
+sk02106,Haryana,Tourism,Association,high,6.8308742346461795,Yadavindra Gardens,0,18,330
+sk02107,Haryana,Tourism,Association,high,8.219864741912652,Scenic beauty,42,55,330
+sk02109,Haryana,Tourism,Association,high,10.963670814584455,Sohna,42,47,330
+sk02113,Haryana,Tourism,Association,low,2.6390573296152584,Hodal City,13,23,330
+sk02202,Himachal_Pradesh,Festivals,Association,low,3.4339872044851463,Shivratri of Mandi,0,18,194
+sk02207,Himachal_Pradesh,Festivals,Association,low,2.5649493574615367,Faguli festival,13,28,194
+sk02210,Himachal_Pradesh,Festivals,Association,high,5.003946305945459,Halda festival,42,56,194
+sk02213,Himachal_Pradesh,Festivals,Association,high,10.588249676561633,Losar,42,47,194
+sk02214,Himachal_Pradesh,Festivals,Association,low,4.276666119016055,Sair Festival,0,13,194
+sk02217,Himachal_Pradesh,Festivals,Association,high,4.499809670330265,Minjar Festival,42,57,194
+sk02218,Himachal_Pradesh,Festivals,Association,high,4.499809670330265,La Darcha,42,51,194
+sk02219,Himachal_Pradesh,Festivals,Association,low,0.0,Temple fairs (Jatras),42,63,194
+sk02221,Himachal_Pradesh,Festivals,Association,high,5.003946305945459,Halda festival,0,14,194
+sk02226,Himachal_Pradesh,Festivals,Association,low,4.382026634673881,Fagli festival,14,28,194
+sk02234,Himachal_Pradesh,Festivals,Association,high,4.499809670330265,Minjar Festival,13,28,194
+sk02235,Himachal_Pradesh,Festivals,Association,low,4.276666119016055,Sair Festival,13,26,194
+sk02236,Himachal_Pradesh,History,Association,high,6.089044875446846,Kardang Monastery,0,17,227
+sk02238,Himachal_Pradesh,History,Association,high,7.035268599281097,Manimahesh Kailash,0,18,227
+sk02239,Himachal_Pradesh,History,Association,high,8.11701408773731,Hidimbi,13,20,227
+sk02240,Himachal_Pradesh,History,Association,high,8.11701408773731,Hidimbi,0,7,227
+sk02241,Himachal_Pradesh,History,Association,low,4.394449154672439,Bushahr kingdom,42,57,227
+sk02242,Himachal_Pradesh,History,Association,low,2.70805020110221,Kath-Kuni architecture,13,35,227
+sk02243,Himachal_Pradesh,History,Association,low,5.717027701406222,1905 Kangra Earthquake,0,22,227
+sk02244,Himachal_Pradesh,History,Association,low,0.0,Princely hill states,42,62,227
+sk02245,Himachal_Pradesh,History,Association,high,8.335191583433202,Naggar Castle,42,55,227
+sk02246,Himachal_Pradesh,History,Association,low,5.717027701406222,1905 Kangra Earthquake,13,35,227
+sk02248,Himachal_Pradesh,History,Association,high,7.035268599281097,Manimahesh Kailash,42,60,227
+sk02249,Himachal_Pradesh,History,Association,high,6.089044875446846,Kardang Monastery,42,59,227
+sk02250,Himachal_Pradesh,History,Association,high,8.11701408773731,Hidimbi,42,49,227
+sk02252,Himachal_Pradesh,History,Association,low,4.394449154672439,Bushahr kingdom,0,15,227
+sk02253,Himachal_Pradesh,History,Association,low,2.70805020110221,Kath-Kuni architecture,0,22,227
+sk02256,Himachal_Pradesh,History,Association,low,5.717027701406222,1905 Kangra Earthquake,42,64,227
+sk02257,Himachal_Pradesh,History,Association,high,7.035268599281097,Manimahesh Kailash,13,31,227
+sk02281,Himachal_Pradesh,Tourism,Association,high,8.231642179973411,Hidimba Devi Temple,42,61,331
+sk02282,Himachal_Pradesh,Tourism,Association,low,6.542471960506805,Manimahesh Yatra,13,29,331
+sk02283,Himachal_Pradesh,Tourism,Association,high,9.301551252029567,Great Himalayan National Park,42,71,331
+sk02284,Himachal_Pradesh,Tourism,Association,high,7.417580402414544,Kangra fort,42,53,331
+sk02285,Himachal_Pradesh,Tourism,Association,high,8.231642179973411,Hidimba Devi Temple,0,19,331
+sk02286,Himachal_Pradesh,Tourism,Association,high,8.231642179973411,Hidimba Devi Temple,13,32,331
+sk02287,Himachal_Pradesh,Tourism,Association,low,6.542471960506805,Manimahesh Yatra,0,16,331
+sk02288,Himachal_Pradesh,Tourism,Association,low,0.6931471805599453,Bathu Ki Ladi Temple,42,62,331
+sk02289,Himachal_Pradesh,Tourism,Association,low,0.6931471805599453,Bathu Ki Ladi Temple,0,20,331
+sk02290,Himachal_Pradesh,Tourism,Association,high,7.417580402414544,Kangra fort,0,11,331
+sk02292,Himachal_Pradesh,Tourism,Association,high,7.417580402414544,Kangra fort,13,24,331
+sk02293,Himachal_Pradesh,Tourism,Association,low,6.542471960506805,Manimahesh Yatra,42,58,331
+sk02294,Himachal_Pradesh,Tourism,Association,low,0.6931471805599453,Bathu Ki Ladi Temple,13,33,331
+sk02295,Himachal_Pradesh,Tourism,Association,high,9.301551252029567,Great Himalayan National Park,13,42,331
+sk02467,Jharkhand,Festivals,Association,high,7.652070746116482,Sarhul,42,48,200
+sk02468,Jharkhand,Festivals,Association,low,3.1780538303479458,Baha parab,42,52,200
+sk02469,Jharkhand,Festivals,Association,low,3.784189633918261,Bhagta Parab,13,25,200
+sk02472,Jharkhand,Festivals,Association,low,0.0,Karma festival primarily celebrated in,0,38,200
+sk02473,Jharkhand,Festivals,Association,low,3.1780538303479458,Baha parab,13,23,200
+sk02474,Jharkhand,Festivals,Association,low,0.0,Karma festival primarily celebrated in,42,80,200
+sk02476,Jharkhand,Festivals,Association,low,3.1780538303479458,Baha parab,0,10,200
+sk02478,Jharkhand,Festivals,Association,low,0.0,Karma festival primarily celebrated in,13,51,200
+sk02480,Jharkhand,Festivals,Association,low,3.784189633918261,Bhagta Parab,0,12,200
+sk02485,Jharkhand,Festivals,Association,high,6.054439346269371,Sarhul festival,42,57,200
+sk02486,Jharkhand,Festivals,Association,low,0.0,Jani Shikar tribal mythology festival,42,79,200
+sk02488,Jharkhand,History,Association,high,7.888334500738654,Pathalgadi,42,52,221
+sk02489,Jharkhand,History,Association,low,0.0,Kol Rebellion ruling power opposed,13,47,221
+sk02494,Jharkhand,History,Association,low,0.0,British policy triggering Kol Rebellion,42,81,221
+sk02496,Jharkhand,History,Association,low,0.0,Tribal communities supporting Kol Rebellion,13,56,221
+sk02502,Jharkhand,History,Association,high,5.976350909297934,Santhal Rebellion,42,59,221
+sk02506,Jharkhand,History,Association,high,7.888334500738654,Pathalgadi,0,10,221
+sk02513,Jharkhand,History,Association,high,5.976350909297934,Santhal Rebellion,0,17,221
+sk02514,Jharkhand,History,Association,high,7.888334500738654,Pathalgadi,13,23,221
+sk02519,Jharkhand,History,Association,low,0.0,Pathalgadi associated tribal community,0,38,221
+sk02521,Jharkhand,History,Association,low,0.0,Pathalgadi districts in Jharkhand,0,33,221
+sk02522,Jharkhand,History,Association,high,5.976350909297934,Santhal Rebellion,13,30,221
+sk02550,Jharkhand,Tourism,Association,low,5.648974238161206,Patratu Valley,0,14,336
+sk02551,Jharkhand,Tourism,Association,high,7.356918242356021,Betla National Park,42,61,336
+sk02552,Jharkhand,Tourism,Association,high,6.628041376179533,Hundru Falls,0,12,336
+sk02553,Jharkhand,Tourism,Association,low,5.648974238161206,Patratu Valley,42,56,336
+sk02554,Jharkhand,Tourism,Association,low,4.174387269895637,Netarhat Hills,42,56,336
+sk02555,Jharkhand,Tourism,Association,high,6.628041376179533,Hundru Falls,42,54,336
+sk02556,Jharkhand,Tourism,Association,low,5.648974238161206,Patratu Valley,13,27,336
+sk02557,Jharkhand,Tourism,Association,high,7.356918242356021,Betla National Park,13,32,336
+sk02558,Jharkhand,Tourism,Association,low,4.174387269895637,Netarhat Hills,0,14,336
+sk02559,Jharkhand,Tourism,Association,low,4.174387269895637,Netarhat Hills,13,27,336
+sk02560,Jharkhand,Tourism,Association,high,7.356918242356021,Betla National Park,0,19,336
+sk02561,Jharkhand,Tourism,Association,high,6.628041376179533,Hundru Falls,13,25,336
+sk02730,Karnataka,Festivals,Association,low,0.0,Male Mahadeshwara Jatre,42,65,176
+sk02731,Karnataka,Festivals,Association,low,0.0,Gajapayana elephant procession tradition in,42,85,176
+sk02732,Karnataka,Festivals,Association,low,0.0,Mylara Lingeshwara Jaatre,13,38,176
+sk02745,Karnataka,Festivals,Association,high,6.021023349349527,Huttari,13,20,176
+sk02762,Karnataka,Festivals,Association,low,0.0,Prasada on Sharana Basava Jayanti,0,33,176
+sk02763,Karnataka,Festivals,Association,high,6.021023349349527,Huttari,42,49,176
+sk02764,Karnataka,Festivals,Association,low,2.3978952727983707,Pattadakal Festival,42,61,176
+sk02792,Karnataka,Festivals,Association,low,0.0,Jumbo Savari features which idol,42,74,176
+sk02793,Karnataka,Festivals,Association,low,0.0,Kadalekai Parishe city,13,35,176
+sk02802,Karnataka,Festivals,Association,high,5.214935757608986,Karaga Festival,42,57,176
+sk02812,Karnataka,Festivals,Association,high,6.021023349349527,Huttari,0,7,176
+sk02815,Karnataka,Festivals,Association,low,1.0986122886681098,Huttari harvest festival,0,24,176
+sk02818,Karnataka,History,Association,low,0.0,Sharana Movement state,13,35,222
+sk02819,Karnataka,History,Association,high,11.583290727630791,Tipu Sultan,13,24,222
+sk02827,Karnataka,History,Association,low,0.0,Sharana Movement center city,42,70,222
+sk02838,Karnataka,History,Association,high,11.583290727630791,Tipu Sultan,0,11,222
+sk02843,Karnataka,History,Association,high,11.583290727630791,Tipu Sultan,42,53,222
+sk02849,Karnataka,History,Association,low,0.0,Badami Chalukyas' ruling region,42,73,222
+sk02937,Karnataka,Tourism,Association,low,1.3862943611198906,Kudalasangama temple,13,33,336
+sk02938,Karnataka,Tourism,Association,low,1.3862943611198906,Kudalasangama temple,42,62,336
+sk02939,Karnataka,Tourism,Association,high,8.889859587773016,M. Chinnaswamy Stadium,42,64,336
+sk02940,Karnataka,Tourism,Association,low,1.0986122886681098,Jog Falls location,13,31,336
+sk02941,Karnataka,Tourism,Association,low,1.0986122886681098,Jog Falls location,0,18,336
+sk02942,Karnataka,Tourism,Association,low,1.0986122886681098,Jog Falls location,42,60,336
+sk02943,Karnataka,Tourism,Association,high,8.889859587773016,M. Chinnaswamy Stadium,13,35,336
+sk02944,Karnataka,Tourism,Association,low,1.3862943611198906,Kudalasangama temple,0,20,336
+sk02945,Karnataka,Tourism,Association,high,8.889859587773016,M. Chinnaswamy Stadium,0,22,336
+sk03167,Madhya_Pradesh,Festivals,Association,low,0.0,Hingot Mela,0,11,174
+sk03168,Madhya_Pradesh,Festivals,Association,low,0.0,Hingot Mela,13,24,174
+sk03169,Madhya_Pradesh,Festivals,Association,high,4.90527477843843,Malwa Utsav,42,53,174
+sk03170,Madhya_Pradesh,Festivals,Association,low,4.290459441148391,Gotmar Mela,42,53,174
+sk03171,Madhya_Pradesh,Festivals,Association,low,0.0,Dussehra Vidhi,13,27,174
+sk03172,Madhya_Pradesh,Festivals,Association,low,0.0,Dussehra Vidhi,0,14,174
+sk03173,Madhya_Pradesh,Festivals,Association,high,4.820281565605037,Lokrang Festival,13,29,174
+sk03174,Madhya_Pradesh,Festivals,Association,high,4.820281565605037,Lokrang Festival,42,58,174
+sk03175,Madhya_Pradesh,Festivals,Association,high,4.820281565605037,Lokrang Festival,0,16,174
+sk03177,Madhya_Pradesh,Festivals,Association,low,4.290459441148391,Gotmar Mela,13,24,174
+sk03178,Madhya_Pradesh,Festivals,Association,low,0.0,Hingot Mela,42,53,174
+sk03179,Madhya_Pradesh,Festivals,Association,low,4.290459441148391,Gotmar Mela,0,11,174
+sk03182,Madhya_Pradesh,History,Association,low,2.6390573296152584,Bell Metal Ware,42,57,222
+sk03183,Madhya_Pradesh,History,Association,high,6.773080375655535,Paramara dynasty,42,58,222
+sk03184,Madhya_Pradesh,History,Association,low,0.0,Buddhist caves near Udayagiri,0,29,222
+sk03185,Madhya_Pradesh,History,Association,low,5.351858133476067,Holkar and Scindia,42,60,222
+sk03187,Madhya_Pradesh,History,Association,low,0.0,Buddhist caves near Udayagiri,42,71,222
+sk03188,Madhya_Pradesh,History,Association,high,6.329720905522696,Malwa Sultanate,42,57,222
+sk03189,Madhya_Pradesh,History,Association,low,2.6390573296152584,Bell Metal Ware,13,28,222
+sk03191,Madhya_Pradesh,History,Association,low,2.6390573296152584,Bell Metal Ware,0,15,222
+sk03194,Madhya_Pradesh,History,Association,low,0.0,Chandela Dynasty in madhya pradesh,13,47,222
+sk03196,Madhya_Pradesh,History,Association,low,0.0,Chandela Dynasty in madhya pradesh,42,76,222
+sk03201,Madhya_Pradesh,Tourism,Association,high,10.82013821962583,Orchha,0,6,319
+sk03202,Madhya_Pradesh,Tourism,Association,high,10.82013821962583,Orchha,42,48,319
+sk03203,Madhya_Pradesh,Tourism,Association,low,5.945420608606575,Great Stupa of Sanchi,13,34,319
+sk03204,Madhya_Pradesh,Tourism,Association,low,5.945420608606575,Great Stupa of Sanchi,42,63,319
+sk03206,Madhya_Pradesh,Tourism,Association,high,10.82013821962583,Orchha,13,19,319
+sk03207,Madhya_Pradesh,Tourism,Association,high,10.22868214924768,Kanha National Park,42,61,319
+sk03208,Madhya_Pradesh,Tourism,Association,low,2.9444389791664403,Marble Rocks and Dhuandhar Falls,0,32,319
+sk03209,Madhya_Pradesh,Tourism,Association,low,2.9444389791664403,Marble Rocks and Dhuandhar Falls,42,74,319
+sk03211,Madhya_Pradesh,Tourism,Association,high,6.900730664045173,Narmada Parikrama,42,59,319
+sk03213,Madhya_Pradesh,Tourism,Association,low,5.945420608606575,Great Stupa of Sanchi,0,21,319
+sk03214,Madhya_Pradesh,Tourism,Association,low,2.9444389791664403,Marble Rocks and Dhuandhar Falls,13,45,319
+sk03216,Madhya_Pradesh,Tourism,Association,high,10.28755876795662,Pachmarhi,42,51,319
+sk03218,Madhya_Pradesh,Tourism,Association,high,10.28755876795662,Pachmarhi,13,22,319
+sk03350,Manipur,Festivals,Association,high,4.543294782270004,Kang festival,13,26,200
+sk03352,Manipur,Festivals,Association,high,7.535830462798367,Cheiraoba,42,51,200
+sk03354,Manipur,Festivals,Association,high,6.326149473155099,Chumpha,0,7,200
+sk03355,Manipur,Festivals,Association,high,11.667815871132486,Eid al-Fitr,42,53,200
+sk03358,Manipur,Festivals,Association,high,7.535830462798367,Cheiraoba,13,22,200
+sk03362,Manipur,Festivals,Association,high,6.532334292222349,Yaosang,13,20,200
+sk03363,Manipur,History,Association,high,5.993961427306569,Kangla Palace,0,13,232
+sk03364,Manipur,History,Association,low,3.9318256327243257,Nupi Lal Memorial Complex,42,67,232
+sk03365,Manipur,History,Association,low,0.6931471805599453,Khogjom War Park,42,58,232
+sk03366,Manipur,History,Association,high,5.993961427306569,Kangla Palace,42,55,232
+sk03367,Manipur,History,Association,low,0.6931471805599453,Khogjom War Park,0,16,232
+sk03368,Manipur,History,Association,high,5.993961427306569,Kangla Palace,13,26,232
+sk03369,Manipur,History,Association,low,0.6931471805599453,Khogjom War Park,13,29,232
+sk03370,Manipur,History,Association,low,3.9318256327243257,Nupi Lal Memorial Complex,13,38,232
+sk03371,Manipur,History,Association,low,3.9318256327243257,Nupi Lal Memorial Complex,0,25,232
+sk03420,Manipur,Tourism,Association,high,10.205257424305527,Sangai,42,48,329
+sk03421,Manipur,Tourism,Association,high,12.734551529533482,State Museum,0,12,329
+sk03424,Manipur,Tourism,Association,low,0.0,Jeweled town,42,54,329
+sk03425,Manipur,Tourism,Association,low,0.0,Jeweled town,0,12,329
+sk03426,Manipur,Tourism,Association,high,8.422662707570003,Dzukou Valley,13,26,329
+sk03432,Manipur,Tourism,Association,low,0.0,Keibul Lamjao National Gardens,0,30,329
+sk03436,Manipur,Tourism,Association,low,0.6931471805599453,Kenya Tourist Accommodation,42,69,329
+sk03438,Manipur,Tourism,Association,low,4.624972813284271,Shirui Hill,13,24,329
+sk03439,Manipur,Tourism,Association,high,8.305978210967302,Keibul Lamjao National Park,0,27,329
+sk03444,Manipur,Tourism,Association,low,4.624972813284271,Shirui Hill,0,11,329
+sk03445,Manipur,Tourism,Association,high,8.422662707570003,Dzukou Valley,42,55,329
+sk03446,Manipur,Tourism,Association,low,1.0986122886681098,Khogampatt Gardens,13,31,329
+sk03574,Nagaland,Festivals,Association,high,9.583075655461428,Hornbill Festival,13,30,199
+sk03576,Nagaland,Festivals,Association,high,9.583075655461428,Hornbill Festival,42,59,199
+sk03577,Nagaland,Festivals,Association,high,5.484796933490655,Moatsu Festival,42,57,199
+sk03578,Nagaland,Festivals,Association,high,6.3818160174060985,Aoleang,0,7,199
+sk03579,Nagaland,Festivals,Association,high,6.86484777797086,Sekrenyi,42,50,199
+sk03582,Nagaland,Festivals,Association,high,6.3818160174060985,Aoleang,13,20,199
+sk03584,Nagaland,Festivals,Association,low,0.0,TokhÃÂ¼ Emong,42,56,199
+sk03586,Nagaland,Festivals,Association,high,9.583075655461428,Hornbill Festival,0,17,199
+sk03589,Nagaland,Festivals,Association,low,4.1588830833596715,Tuluni Festival,42,57,199
+sk03591,Nagaland,History,Association,low,1.3862943611198906,Ruins of Kachari Rajbari,0,24,229
+sk03593,Nagaland,History,Association,low,1.3862943611198906,Ruins of Kachari Rajbari,13,37,229
+sk03594,Nagaland,History,Association,low,1.3862943611198906,Ruins of Kachari Rajbari,42,66,229
+sk03604,Nagaland,Tourism,Association,high,10.25393313422352,Mokokchung,42,52,332
+sk03608,Nagaland,Tourism,Association,low,4.1588830833596715,Lake Shilloi,0,12,332
+sk03610,Nagaland,Tourism,Association,high,18.65799107883159,Mon,13,16,332
+sk03611,Nagaland,Tourism,Association,low,4.23410650459726,Pulie Badze Wildlife Sanctuary,0,30,332
+sk03612,Nagaland,Tourism,Association,low,5.545177444479562,Ntangki National Park,0,21,332
+sk03613,Nagaland,Tourism,Association,high,18.65799107883159,Mon,0,3,332
+sk03614,Nagaland,Tourism,Association,low,5.771441123130016,Fakim Wildlife Sanctuary,13,37,332
+sk03615,Nagaland,Tourism,Association,high,10.25393313422352,Mokokchung,13,23,332
+sk03617,Nagaland,Tourism,Association,low,5.771441123130016,Fakim Wildlife Sanctuary,0,24,332
+sk03620,Nagaland,Tourism,Association,low,4.23410650459726,Pulie Badze Wildlife Sanctuary,13,43,332
+sk03621,Nagaland,Tourism,Association,low,4.1588830833596715,Lake Shilloi,42,54,332
+sk03624,Nagaland,Tourism,Association,low,0.0,Mount JapfÃÂ¼,0,14,332
+sk03625,Nagaland,Tourism,Association,high,18.65799107883159,Mon,42,45,332
+sk03626,Nagaland,Tourism,Association,high,10.25393313422352,Mokokchung,0,10,332
+sk03627,Nagaland,Tourism,Association,low,4.1588830833596715,Lake Shilloi,13,25,332
+sk03629,Nagaland,Tourism,Association,low,5.66988092298052,Nagaland State Museum,42,63,332
+sk04216,Tamil_Nadu,Festivals,Association,low,3.044522437723423,Thaipusam kavadi,0,16,197
+sk04217,Tamil_Nadu,Festivals,Association,high,6.7661917146603505,Chithirai Festival,42,60,197
+sk04224,Tamil_Nadu,Festivals,Association,high,5.0238805208462765,Aadi Perukku festival,0,21,197
+sk04229,Tamil_Nadu,Festivals,Association,low,3.044522437723423,Thaipusam kavadi,42,58,197
+sk04233,Tamil_Nadu,Festivals,Association,low,3.044522437723423,Thaipusam kavadi,13,29,197
+sk04236,Tamil_Nadu,Festivals,Association,high,5.0238805208462765,Aadi Perukku festival,42,63,197
+sk04240,Tamil_Nadu,Festivals,Association,high,7.343426229147367,Aadi Perukku,0,12,197
+sk04242,Tamil_Nadu,History,Association,high,7.496097345175956,Kanchi Kamakoti Peetham,0,23,229
+sk04243,Tamil_Nadu,History,Association,high,8.612503371220562,Chola Dynasty,13,26,229
+sk04244,Tamil_Nadu,History,Association,low,3.8501476017100584,Tamil palm-leaf manuscripts,42,69,229
+sk04245,Tamil_Nadu,History,Association,high,7.43543801981455,Great Living Chola Temples,42,68,229
+sk04246,Tamil_Nadu,History,Association,low,3.8501476017100584,Tamil palm-leaf manuscripts,13,40,229
+sk04247,Tamil_Nadu,History,Association,high,8.612503371220562,Chola Dynasty,0,13,229
+sk04248,Tamil_Nadu,History,Association,low,3.8501476017100584,Tamil palm-leaf manuscripts,0,27,229
+sk04249,Tamil_Nadu,History,Association,high,7.496097345175956,Kanchi Kamakoti Peetham,13,36,229
+sk04251,Tamil_Nadu,History,Association,high,10.080168229439996,Vijayanagara Empire,13,32,229
+sk04252,Tamil_Nadu,History,Association,high,7.43543801981455,Great Living Chola Temples,13,39,229
+sk04253,Tamil_Nadu,History,Association,high,8.612503371220562,Chola Dynasty,42,55,229
+sk04255,Tamil_Nadu,History,Association,high,10.080168229439996,Vijayanagara Empire,42,61,229
+sk04302,Tamil_Nadu,Tourism,Association,high,11.620442653336701,Mahabalipuram,42,55,335
+sk04303,Tamil_Nadu,Tourism,Association,high,11.620442653336701,Mahabalipuram,13,26,335
+sk04304,Tamil_Nadu,Tourism,Association,high,11.93865714502319,Kodaikanal,13,23,335
+sk04305,Tamil_Nadu,Tourism,Association,high,11.93865714502319,Kodaikanal,0,10,335
+sk04306,Tamil_Nadu,Tourism,Association,high,9.737255856891121,Nilgiri Hills,0,13,335
+sk04308,Tamil_Nadu,Tourism,Association,low,5.717027701406222,Chettinad mansions,0,18,335
+sk04309,Tamil_Nadu,Tourism,Association,high,8.969669103793757,Poompuhar,13,22,335
+sk04310,Tamil_Nadu,Tourism,Association,high,11.93865714502319,Kodaikanal,42,52,335
+sk04311,Tamil_Nadu,Tourism,Association,high,8.969669103793757,Poompuhar,42,51,335
+sk04312,Tamil_Nadu,Tourism,Association,low,5.717027701406222,Chettinad mansions,13,31,335
+sk04314,Tamil_Nadu,Tourism,Association,low,5.717027701406222,Chettinad mansions,42,60,335
+sk04315,Tamil_Nadu,Tourism,Association,high,11.620442653336701,Mahabalipuram,0,13,335
+sk04425,Telangana,Festivals,Association,high,9.002454823050954,Bonalu,42,48,205
+sk04430,Telangana,Festivals,Association,high,9.002454823050954,Bonalu,42,48,205
+sk04431,Telangana,Festivals,Association,high,5.932245187448011,Sammakka Saralamma Jatara,42,67,205
+sk04448,Telangana,History,Association,low,5.71042701737487,Kakatiya Kala Thoranam,13,35,201
+sk04449,Telangana,History,Association,high,7.543273346705446,Asaf Jahi dynasty,0,17,201
+sk04488,Telangana,History,Association,high,7.084226422097916,Qutb Shahi tombs,13,29,201
+sk04494,Telangana,History,Association,high,7.543273346705446,Asaf Jahi dynasty,13,30,201
+sk04499,Telangana,History,Association,low,4.174387269895637,Moula Ali hill,13,27,201
+sk04503,Telangana,History,Association,low,4.430816798843313,Kota Gullu,0,10,201
+sk04517,Telangana,History,Association,high,6.860663671448287,Nelakondapalli,42,56,201
+sk04518,Telangana,History,Association,high,6.638567789166521,Errum Manzil,13,25,201
+sk04522,Telangana,History,Association,high,7.084226422097916,Qutb Shahi tombs,42,58,201
+sk04529,Telangana,History,Association,high,6.860663671448287,Nelakondapalli,0,14,201
+sk04530,Telangana,History,Association,low,5.627621113690637,Rachakonda Fort,0,15,201
+sk04531,Telangana,History,Association,low,5.71042701737487,Kakatiya Kala Thoranam,0,22,201
+sk04533,Telangana,History,Association,high,7.313886831633462,Taramati Baradari,42,59,201
+sk04646,Telangana,Tourism,Association,low,6.269096283706261,Kuntala Waterfall,13,30,296
+sk04650,Telangana,Tourism,Association,low,6.492239835020471,Shamirpet Lake,0,14,296
+sk04651,Telangana,Tourism,Association,low,1.0986122886681098,Umda Sagar Lake,0,15,296
+sk04687,Telangana,Tourism,Association,high,7.80954132465341,Kollapur,0,8,296
+sk04688,Telangana,Tourism,Association,low,2.9444389791664403,Savatula Gundam Waterfalls,13,39,296
+sk04689,Telangana,Tourism,Association,high,8.711607995897575,Lumbini Park,13,25,296
+sk04690,Telangana,Tourism,Association,low,2.70805020110221,Khajaguda Talab,13,28,296
+sk04729,Telangana,Tourism,Association,low,6.238324625039508,Pocharam Wildlife Sanctuary,13,40,296
+sk04731,Telangana,Tourism,Association,low,4.787491742782046,Bogatha Waterfall,13,30,296
+sk04744,Telangana,Tourism,Association,high,8.76795190976342,Nehru Zoological Park,0,21,296
+sk04751,Telangana,Tourism,Association,high,6.551080335043404,Mrugavani National Park,0,23,296
+sk05122,Uttarakhand,Festivals,Association,high,13.611253773497602,Ganges,90,96,197
+sk05123,Uttarakhand,Festivals,Association,low,3.713572066704308,Ramman festival,42,57,197
+sk05124,Uttarakhand,Festivals,Association,high,5.493061443340548,Nanda Devi Raj Jaat,42,61,197
+sk05126,Uttarakhand,Festivals,Association,low,4.343805421853684,Purnagiri Mela,0,14,197
+sk05127,Uttarakhand,Festivals,Association,high,11.11161172798454,Nanda Devi,31,41,197
+sk05130,Uttarakhand,Festivals,Association,low,3.9318256327243257,Uttarayani festival,13,32,197
+sk05132,Uttarakhand,Festivals,Association,high,5.493061443340548,Nanda Devi Raj Jaat,13,32,197
+sk05135,Uttarakhand,Festivals,Association,low,3.6109179126442243,Phul Dei,13,21,197
+sk05138,Uttarakhand,Festivals,Association,low,3.6109179126442243,Phul Dei,16,24,197
+sk05141,Uttarakhand,Festivals,Association,low,3.9318256327243257,Uttarayani festival,0,19,197
+sk05143,Uttarakhand,Festivals,Association,high,8.11312710422178,Ganga Dussehra,0,14,197
+sk05145,Uttarakhand,Festivals,Association,high,5.493061443340548,Nanda Devi Raj Jaat,0,19,197
+sk05147,Uttarakhand,Festivals,Association,high,8.11312710422178,Ganga Dussehra,13,27,197
+sk05148,Uttarakhand,Festivals,Association,high,8.11312710422178,Ganga Dussehra,42,56,197
+sk05151,Uttarakhand,History,Association,low,0.0,Pandavas' birth site,42,62,221
+sk05153,Uttarakhand,History,Association,low,0.0,Surkanda Devi temple architecture,42,75,221
+sk05158,Uttarakhand,History,Association,low,0.0,Pandavas' birth site,0,20,221
+sk05159,Uttarakhand,History,Association,low,3.4011973816621555,Naina devi Temple,13,30,221
+sk05160,Uttarakhand,History,Association,low,3.4011973816621555,Naina devi Temple,42,59,221
+sk05165,Uttarakhand,History,Association,low,0.0,Surkanda Devi temple architecture,13,46,221
+sk05166,Uttarakhand,History,Association,high,11.11161172798454,Nanda Devi,0,10,221
+sk05170,Uttarakhand,History,Association,high,8.806723554725636,Alaknanda River,13,28,221
+sk05171,Uttarakhand,History,Association,high,8.806723554725636,Alaknanda River,0,15,221
+sk05173,Uttarakhand,History,Association,high,13.611253773497602,Ganges,13,19,221
+sk05174,Uttarakhand,History,Association,low,2.70805020110221,Rajula and Malushahi,56,76,221
+sk05179,Uttarakhand,History,Association,high,13.611253773497602,Ganges,0,6,221
+sk05183,Uttarakhand,History,Association,high,11.683157571291813,Gangotri,13,21,221
+sk05186,Uttarakhand,History,Association,low,0.0,Pandavas' birth site,13,33,221
+sk05190,Uttarakhand,History,Association,low,3.1780538303479458,the Hemkund Sahib Gurdwara,251,277,221
+sk05193,Uttarakhand,History,Association,high,10.114679972730583,Tungnath,13,21,221
+sk05257,Uttarakhand,Tourism,Association,low,3.091042453358316,Lakhudiyar Caves,42,58,327
+sk05263,Uttarakhand,Tourism,Association,low,3.091042453358316,Lakhudiyar Caves,0,16,327
+sk05265,Uttarakhand,Tourism,Association,high,8.17413934342947,Chota Char Dham,0,15,327
+sk05269,Uttarakhand,Tourism,Association,low,6.234410725718371,Kedarnath town,0,14,327
+sk05270,Uttarakhand,Tourism,Association,low,3.091042453358316,Lakhudiyar Caves,13,29,327
+sk05272,Uttarakhand,Tourism,Association,high,8.521185212685776,Har ki Pauri,42,54,327
+sk05275,Uttarakhand,Tourism,Association,high,8.11312710422178,Ganga Dussehra,22,36,327
+sk05276,Uttarakhand,Tourism,Association,high,9.303739636234733,Kedarnath Temple,0,16,327
+sk05278,Uttarakhand,Tourism,Association,high,12.84746063371527,Haridwar,42,50,327
+sk05282,Uttarakhand,Tourism,Association,low,3.1780538303479458,the Hemkund Sahib Gurdwara,42,68,327
+sk05286,Uttarakhand,Tourism,Association,high,8.521185212685776,Har ki Pauri,13,25,327
+sk05288,Uttarakhand,Tourism,Association,low,3.1780538303479458,the Hemkund Sahib Gurdwara,13,39,327
+sk05289,Uttarakhand,Tourism,Association,low,3.1780538303479458,the Hemkund Sahib Gurdwara,0,26,327
+sk05292,Uttarakhand,Tourism,Association,low,6.234410725718371,Kedarnath town,42,56,327
+sk05298,Uttarakhand,Tourism,Association,low,4.700480365792417,Deva Bhoomi,4,15,327
+sk05305,Uttarakhand,Tourism,Association,high,8.993799971795545,Bholanath,13,22,327
+sk06027,Assam,Festivals,Country Prediction,high,8.121183242078828,Ambubachi Mela,4,18,201
+sk06028,Assam,Festivals,Country Prediction,high,5.2832037287379885,Karam Puja,32,42,201
+sk06031,Assam,Festivals,Country Prediction,low,2.5649493574615367,Ali Ai Ligang festival,4,26,201
+sk06032,Assam,Festivals,Country Prediction,low,2.5649493574615367,Ali Ai Ligang festival,32,54,201
+sk06033,Assam,Festivals,Country Prediction,high,5.3471075307174685,Majuli Festival,4,19,201
+sk06036,Assam,Festivals,Country Prediction,high,6.129050210060545,Jonbeel Mela,4,16,201
+sk06037,Assam,Festivals,Country Prediction,high,6.129050210060545,Jonbeel Mela,32,44,201
+sk06041,Assam,Festivals,Country Prediction,low,2.5649493574615367,Ali Ai Ligang festival,29,51,201
+sk06042,Assam,Festivals,Country Prediction,high,8.121183242078828,Ambubachi Mela,29,43,201
+sk06044,Assam,Festivals,Country Prediction,high,11.317931957072364,Bihu,32,36,201
+sk06046,Assam,History,Country Prediction,high,6.530877627725885,Deopahar,29,37,228
+sk06047,Assam,History,Country Prediction,high,7.6246189861593985,Ahom dynasty,29,41,228
+sk06048,Assam,History,Country Prediction,low,0.0,Dubi Copper Plate Inscriptions,5,35,228
+sk06049,Assam,History,Country Prediction,low,0.0,Dubi Copper Plate Inscriptions,33,63,228
+sk06050,Assam,History,Country Prediction,low,5.389071729816501,Kamarupa Kingdom,32,48,228
+sk06053,Assam,History,Country Prediction,high,7.418180822726788,Rang Ghar,4,13,228
+sk06056,Assam,History,Country Prediction,low,5.389071729816501,Kamarupa Kingdom,4,20,228
+sk06057,Assam,History,Country Prediction,high,7.374001859350161,Battle of Saraighat,29,48,228
+sk06058,Assam,History,Country Prediction,high,7.207118856207756,Talatal Ghar,29,41,228
+sk06061,Assam,History,Country Prediction,low,5.389071729816501,Kamarupa Kingdom,29,45,228
+sk06062,Assam,History,Country Prediction,low,0.0,Dubi Copper Plate Inscriptions,30,60,228
+sk06064,Assam,History,Country Prediction,high,7.6246189861593985,Ahom dynasty,4,16,228
+sk06072,Assam,Tourism,Country Prediction,high,7.805882040228621,Majuli island,29,42,334
+sk06073,Assam,Tourism,Country Prediction,low,5.948034989180646,Tea tourism,29,40,334
+sk06074,Assam,Tourism,Country Prediction,high,7.805882040228621,Majuli island,4,17,334
+sk06075,Assam,Tourism,Country Prediction,low,5.948034989180646,Tea tourism,32,43,334
+sk06076,Assam,Tourism,Country Prediction,high,7.805882040228621,Majuli island,32,45,334
+sk06078,Assam,Tourism,Country Prediction,low,5.3612921657094255,Majuli River Island,29,48,334
+sk06079,Assam,Tourism,Country Prediction,high,7.628517626575055,Assam State Museum,4,22,334
+sk06080,Assam,Tourism,Country Prediction,high,10.968439639711603,Kaziranga National Park,29,52,334
+sk06082,Assam,Tourism,Country Prediction,low,5.3612921657094255,Majuli River Island,4,23,334
+sk06083,Assam,Tourism,Country Prediction,low,5.3612921657094255,Majuli River Island,32,51,334
+sk06084,Assam,Tourism,Country Prediction,high,10.968439639711603,Kaziranga National Park,32,55,334
+sk06085,Assam,Tourism,Country Prediction,low,5.948034989180646,Tea tourism,4,15,334
+sk06086,Assam,Tourism,Country Prediction,high,7.628517626575055,Assam State Museum,29,47,334
+sk06540,Delhi,Festivals,Country Prediction,high,5.438079308923196,Phool Walon Ki Sair,4,23,198
+sk06543,Delhi,Festivals,Country Prediction,high,6.745236349484363,Qutub Festival,32,46,198
+sk06544,Delhi,Festivals,Country Prediction,low,3.6109179126442243,Bhakti Sangeet Festival,32,55,198
+sk06545,Delhi,Festivals,Country Prediction,high,9.521568058002977,World Book Fair,32,47,198
+sk06547,Delhi,Festivals,Country Prediction,low,3.6109179126442243,Bhakti Sangeet Festival,29,52,198
+sk06550,Delhi,Festivals,Country Prediction,high,6.068425588244111,Garden Tourism Festival,32,55,198
+sk06551,Delhi,Festivals,Country Prediction,low,4.174387269895637,Ananya Festival,32,47,198
+sk06554,Delhi,Festivals,Country Prediction,low,4.330733340286331,Annual Republic Day,29,48,198
+sk06555,Delhi,Festivals,Country Prediction,low,4.174387269895637,Ananya Festival,29,44,198
+sk06556,Delhi,Festivals,Country Prediction,low,4.330733340286331,Annual Republic Day,32,51,198
+sk06557,Delhi,Festivals,Country Prediction,high,9.521568058002977,World Book Fair,4,19,198
+sk06558,Delhi,Festivals,Country Prediction,high,7.53955882930103,International Mango Festival,32,60,198
+sk06562,Delhi,Festivals,Country Prediction,low,3.6109179126442243,Bhakti Sangeet Festival,4,27,198
+sk06563,Delhi,Festivals,Country Prediction,high,5.438079308923196,Phool Walon Ki Sair,32,51,198
+sk06565,Delhi,Festivals,Country Prediction,low,4.330733340286331,Annual Republic Day,4,23,198
+sk06566,Delhi,Festivals,Country Prediction,high,7.53955882930103,International Mango Festival,29,57,198
+sk06568,Delhi,History,Country Prediction,high,7.295735072749282,Museum of Toilets,32,49,221
+sk06570,Delhi,History,Country Prediction,high,11.407042590684664,Indraprastha,29,41,221
+sk06571,Delhi,History,Country Prediction,low,5.834810737062605,Ashokan Rock Edict,4,22,221
+sk06573,Delhi,History,Country Prediction,low,5.834810737062605,Ashokan Rock Edict,32,50,221
+sk06575,Delhi,History,Country Prediction,high,8.667680024690174,Mughal architectural,29,49,221
+sk06576,Delhi,History,Country Prediction,high,7.295735072749282,Museum of Toilets,4,21,221
+sk06581,Delhi,History,Country Prediction,high,9.020510699691906,King of Bollywood,32,49,221
+sk06583,Delhi,History,Country Prediction,low,4.174387269895637,Dilli chalo,32,43,221
+sk06586,Delhi,History,Country Prediction,low,5.834810737062605,Ashokan Rock Edict,29,47,221
+sk06592,Delhi,History,Country Prediction,high,9.020510699691906,King of Bollywood,29,46,221
+sk06595,Delhi,History,Country Prediction,low,0.0,Mamluk  Dynasty,32,47,221
+sk06597,Delhi,History,Country Prediction,high,11.407042590684664,Indraprastha,4,16,221
+sk06599,Delhi,History,Country Prediction,high,12.356400312662284,Pandavas,4,12,221
+sk06602,Delhi,History,Country Prediction,low,4.174387269895637,Dilli chalo,29,40,221
+sk06679,Delhi,Tourism,Country Prediction,low,0.0,Shalimar  Garden,32,48,312
+sk06690,Delhi,Tourism,Country Prediction,high,7.494430215031565,National Gandhi Museum,29,51,312
+sk06693,Delhi,Tourism,Country Prediction,high,9.039196115772354,Gandhi Smriti,4,17,312
+sk06701,Delhi,Tourism,Country Prediction,high,9.458293602198967,Purana Qila,29,40,312
+sk06708,Delhi,Tourism,Country Prediction,high,9.85087760226383,Akshardham Temple,4,21,312
+sk06714,Delhi,Tourism,Country Prediction,low,0.0,Shalimar  Garden,4,20,312
+sk06717,Delhi,Tourism,Country Prediction,high,11.154391651546497,Qutub Minar,29,40,312
+sk06731,Delhi,Tourism,Country Prediction,high,8.444407421690585,Nizamuddin Dargah,29,46,312
+sk06738,Delhi,Tourism,Country Prediction,low,6.1224928095143865,Cathedral Church of the Redemption,4,38,312
+sk06739,Delhi,Tourism,Country Prediction,low,6.1224928095143865,Cathedral Church of the Redemption,32,66,312
+sk06740,Delhi,Tourism,Country Prediction,low,6.320768294250582,National Handicrafts and Handlooms Museum,32,73,312
+sk06741,Delhi,Tourism,Country Prediction,low,0.0,Shalimar  Garden,29,45,312
+sk06743,Delhi,Tourism,Country Prediction,high,9.85087760226383,Akshardham Temple,32,49,312
+sk06749,Delhi,Tourism,Country Prediction,high,11.742178316448616,Jantar Mantar,4,17,312
+sk06750,Delhi,Tourism,Country Prediction,low,6.1224928095143865,Cathedral Church of the Redemption,29,63,312
+sk06751,Delhi,Tourism,Country Prediction,high,11.742178316448616,Jantar Mantar,29,42,312
+sk06757,Delhi,Tourism,Country Prediction,high,9.85087760226383,Akshardham Temple,29,46,312
+sk06767,Delhi,Tourism,Country Prediction,low,6.320768294250582,National Handicrafts and Handlooms Museum,29,70,312
+sk07189,Haryana,Festivals,Country Prediction,high,6.919683849847411,Haryana Day,4,15,207
+sk07190,Haryana,Festivals,Country Prediction,low,0.0,Festival celebrations in haryana,32,64,207
+sk07191,Haryana,Festivals,Country Prediction,low,0.0,Festival celebrations in haryana,4,36,207
+sk07192,Haryana,Festivals,Country Prediction,low,0.0,Festival celebrations in haryana,29,61,207
+sk07193,Haryana,Festivals,Country Prediction,high,6.919683849847411,Haryana Day,29,40,207
+sk07194,Haryana,Festivals,Country Prediction,high,6.919683849847411,Haryana Day,32,43,207
+sk07195,Haryana,History,Country Prediction,high,12.244206229511077,Kurukshetra,32,43,225
+sk07196,Haryana,History,Country Prediction,high,9.57637141083894,Narnaul,4,11,225
+sk07198,Haryana,History,Country Prediction,low,0.0,Mahabharata in haryana,29,51,225
+sk07200,Haryana,History,Country Prediction,high,12.244206229511077,Kurukshetra,4,15,225
+sk07202,Haryana,History,Country Prediction,low,1.0986122886681098,Tosham Rock,4,15,225
+sk07205,Haryana,History,Country Prediction,high,8.808219665118408,Harappan culture,32,48,225
+sk07208,Haryana,History,Country Prediction,high,9.57637141083894,Narnaul,29,36,225
+sk07209,Haryana,History,Country Prediction,high,11.89354444870569,Nuh,29,32,225
+sk07211,Haryana,History,Country Prediction,low,0.0,Mahabharata in haryana,4,26,225
+sk07213,Haryana,History,Country Prediction,low,2.5649493574615367,Raja Harsh Ka Tila,4,22,225
+sk07214,Haryana,History,Country Prediction,low,0.0,Mahabharata in haryana,32,54,225
+sk07216,Haryana,History,Country Prediction,high,10.942526749669337,Indus Valley Civilization,29,54,225
+sk07221,Haryana,History,Country Prediction,high,6.943122422819428,Archaeological artifacts,32,56,225
+sk07222,Haryana,History,Country Prediction,low,1.0986122886681098,Tosham Rock,29,40,225
+sk07223,Haryana,History,Country Prediction,low,2.5649493574615367,Raja Harsh Ka Tila,29,47,225
+sk07261,Haryana,Tourism,Country Prediction,high,10.497283900839735,Palwal,32,38,330
+sk07266,Haryana,Tourism,Country Prediction,low,2.772588722239781,Kalesar national park,4,25,330
+sk07267,Haryana,Tourism,Country Prediction,high,6.584791392385716,Badkhal Lake,4,16,330
+sk07269,Haryana,Tourism,Country Prediction,high,8.219864741912652,Scenic beauty,29,42,330
+sk07270,Haryana,Tourism,Country Prediction,high,8.961366060627451,Ambala City,29,40,330
+sk07271,Haryana,Tourism,Country Prediction,low,2.6390573296152584,Hodal City,32,42,330
+sk07272,Haryana,Tourism,Country Prediction,high,6.8308742346461795,Yadavindra Gardens,29,47,330
+sk07274,Haryana,Tourism,Country Prediction,low,2.772588722239781,Kalesar national park,32,53,330
+sk07276,Haryana,Tourism,Country Prediction,low,2.772588722239781,Kalesar national park,29,50,330
+sk07278,Haryana,Tourism,Country Prediction,low,2.6390573296152584,Hodal City,29,39,330
+sk07280,Haryana,Tourism,Country Prediction,high,8.219864741912652,Scenic beauty,4,17,330
+sk07282,Haryana,Tourism,Country Prediction,high,10.963670814584455,Sohna,29,34,330
+sk07284,Haryana,Tourism,Country Prediction,high,6.584791392385716,Badkhal Lake,29,41,330
+sk07286,Haryana,Tourism,Country Prediction,low,2.6390573296152584,Hodal City,4,14,330
+sk07287,Haryana,Tourism,Country Prediction,high,6.8308742346461795,Yadavindra Gardens,32,50,330
+sk07369,Himachal_Pradesh,Festivals,Country Prediction,high,4.499809670330265,Minjar Festival,29,44,194
+sk07372,Himachal_Pradesh,Festivals,Country Prediction,low,3.4339872044851463,Shivratri of Mandi,32,50,194
+sk07374,Himachal_Pradesh,Festivals,Country Prediction,low,4.276666119016055,Sair Festival,4,17,194
+sk07375,Himachal_Pradesh,Festivals,Country Prediction,high,4.499809670330265,Minjar Festival,4,19,194
+sk07376,Himachal_Pradesh,Festivals,Country Prediction,low,2.0794415416798357,Dakhraini festival,29,47,194
+sk07380,Himachal_Pradesh,Festivals,Country Prediction,high,5.003946305945459,Halda festival,32,46,194
+sk07383,Himachal_Pradesh,Festivals,Country Prediction,high,5.003946305945459,Halda festival,4,18,194
+sk07384,Himachal_Pradesh,Festivals,Country Prediction,high,4.499809670330265,La Darcha,4,13,194
+sk07386,Himachal_Pradesh,Festivals,Country Prediction,low,2.5649493574615367,Faguli festival,32,47,194
+sk07392,Himachal_Pradesh,Festivals,Country Prediction,high,8.13593277200489,Kullu Dussehra,4,18,194
+sk07395,Himachal_Pradesh,Festivals,Country Prediction,low,2.5649493574615367,Faguli festival,4,19,194
+sk07396,Himachal_Pradesh,Festivals,Country Prediction,low,3.871201010907891,Phulaich festival,29,46,194
+sk07405,Himachal_Pradesh,Festivals,Country Prediction,high,10.588249676561633,Losar,29,34,194
+sk07408,Himachal_Pradesh,History,Country Prediction,low,2.70805020110221,Kath-Kuni architecture,29,51,227
+sk07411,Himachal_Pradesh,History,Country Prediction,high,8.335191583433202,Naggar Castle,29,42,227
+sk07412,Himachal_Pradesh,History,Country Prediction,high,8.335191583433202,Naggar Castle,32,45,227
+sk07415,Himachal_Pradesh,History,Country Prediction,low,5.717027701406222,1905 Kangra Earthquake,32,54,227
+sk07417,Himachal_Pradesh,History,Country Prediction,low,2.70805020110221,Kath-Kuni architecture,32,54,227
+sk07420,Himachal_Pradesh,History,Country Prediction,high,8.11701408773731,Hidimbi,32,39,227
+sk07423,Himachal_Pradesh,History,Country Prediction,low,0.0,Princely hill states,32,52,227
+sk07425,Himachal_Pradesh,History,Country Prediction,high,6.089044875446846,Kardang Monastery,29,46,227
+sk07427,Himachal_Pradesh,History,Country Prediction,high,7.035268599281097,Manimahesh Kailash,29,47,227
+sk07429,Himachal_Pradesh,History,Country Prediction,low,2.70805020110221,Kath-Kuni architecture,4,26,227
+sk07453,Himachal_Pradesh,Tourism,Country Prediction,low,6.542471960506805,Manimahesh Yatra,4,20,331
+sk07454,Himachal_Pradesh,Tourism,Country Prediction,low,6.542471960506805,Manimahesh Yatra,32,48,331
+sk07455,Himachal_Pradesh,Tourism,Country Prediction,high,8.231642179973411,Hidimba Devi Temple,32,51,331
+sk07456,Himachal_Pradesh,Tourism,Country Prediction,high,9.301551252029567,Great Himalayan National Park,4,33,331
+sk07457,Himachal_Pradesh,Tourism,Country Prediction,high,7.417580402414544,Kangra fort,4,15,331
+sk07459,Himachal_Pradesh,Tourism,Country Prediction,high,8.231642179973411,Hidimba Devi Temple,4,23,331
+sk07460,Himachal_Pradesh,Tourism,Country Prediction,low,6.542471960506805,Manimahesh Yatra,29,45,331
+sk07461,Himachal_Pradesh,Tourism,Country Prediction,low,0.6931471805599453,Bathu Ki Ladi Temple,29,49,331
+sk07462,Himachal_Pradesh,Tourism,Country Prediction,low,0.6931471805599453,Bathu Ki Ladi Temple,4,24,331
+sk07463,Himachal_Pradesh,Tourism,Country Prediction,high,7.417580402414544,Kangra fort,29,40,331
+sk07465,Himachal_Pradesh,Tourism,Country Prediction,high,9.301551252029567,Great Himalayan National Park,32,61,331
+sk07466,Himachal_Pradesh,Tourism,Country Prediction,low,0.6931471805599453,Bathu Ki Ladi Temple,32,52,331
+sk07618,Jharkhand,Festivals,Country Prediction,high,6.054439346269371,Sarhul festival,29,44,200
+sk07619,Jharkhand,Festivals,Country Prediction,low,0.0,Jani Shikar tribal mythology festival,4,41,200
+sk07621,Jharkhand,Festivals,Country Prediction,low,3.1780538303479458,Baha parab,32,42,200
+sk07622,Jharkhand,Festivals,Country Prediction,high,6.054439346269371,Sarhul festival,32,47,200
+sk07623,Jharkhand,Festivals,Country Prediction,high,6.054439346269371,Sarhul festival,4,19,200
+sk07624,Jharkhand,Festivals,Country Prediction,low,4.127134385045092,Hal Punhya,4,14,200
+sk07627,Jharkhand,Festivals,Country Prediction,low,4.127134385045092,Hal Punhya,32,42,200
+sk07630,Jharkhand,Festivals,Country Prediction,low,3.784189633918261,Bhagta Parab,32,44,200
+sk07631,Jharkhand,Festivals,Country Prediction,low,3.784189633918261,Bhagta Parab,29,41,200
+sk07636,Jharkhand,Festivals,Country Prediction,high,7.652070746116482,Sarhul,4,10,200
+sk07637,Jharkhand,Festivals,Country Prediction,high,7.652070746116482,Sarhul,32,38,200
+sk07638,Jharkhand,Festivals,Country Prediction,high,7.652070746116482,Sarhul,29,35,200
+sk07642,Jharkhand,History,Country Prediction,low,0.0,Tribal communities supporting Kol Rebellion,29,72,221
+sk07646,Jharkhand,History,Country Prediction,high,5.976350909297934,Santhal Rebellion,4,21,221
+sk07649,Jharkhand,History,Country Prediction,low,0.0,Pathalgadi constitutional provision,29,64,221
+sk07653,Jharkhand,History,Country Prediction,low,0.0,Kol Rebellion primary method,32,60,221
+sk07658,Jharkhand,History,Country Prediction,high,7.888334500738654,Pathalgadi,29,39,221
+sk07661,Jharkhand,History,Country Prediction,low,0.0,Pathalgadi tradition state,29,55,221
+sk07663,Jharkhand,History,Country Prediction,high,5.976350909297934,Santhal Rebellion,29,46,221
+sk07666,Jharkhand,History,Country Prediction,low,5.402677381872279,Megalithic Structures,4,25,221
+sk07672,Jharkhand,History,Country Prediction,high,5.976350909297934,Santhal Rebellion,32,49,221
+sk07676,Jharkhand,History,Country Prediction,low,0.0,Tribal communities supporting Kol Rebellion,4,47,221
+sk07681,Jharkhand,History,Country Prediction,high,7.888334500738654,Pathalgadi,4,14,221
+sk07683,Jharkhand,History,Country Prediction,high,7.888334500738654,Pathalgadi,32,42,221
+sk07702,Jharkhand,Tourism,Country Prediction,low,4.174387269895637,Netarhat Hills,32,46,336
+sk07703,Jharkhand,Tourism,Country Prediction,high,6.628041376179533,Hundru Falls,32,44,336
+sk07704,Jharkhand,Tourism,Country Prediction,high,7.356918242356021,Betla National Park,4,23,336
+sk07705,Jharkhand,Tourism,Country Prediction,high,6.628041376179533,Hundru Falls,4,16,336
+sk07706,Jharkhand,Tourism,Country Prediction,high,7.356918242356021,Betla National Park,32,51,336
+sk07707,Jharkhand,Tourism,Country Prediction,low,4.174387269895637,Netarhat Hills,29,43,336
+sk07708,Jharkhand,Tourism,Country Prediction,low,5.648974238161206,Patratu Valley,29,43,336
+sk07709,Jharkhand,Tourism,Country Prediction,low,4.174387269895637,Netarhat Hills,4,18,336
+sk07710,Jharkhand,Tourism,Country Prediction,low,5.648974238161206,Patratu Valley,32,46,336
+sk07711,Jharkhand,Tourism,Country Prediction,high,7.356918242356021,Betla National Park,29,48,336
+sk07712,Jharkhand,Tourism,Country Prediction,high,6.628041376179533,Hundru Falls,29,41,336
+sk07713,Jharkhand,Tourism,Country Prediction,low,5.648974238161206,Patratu Valley,4,18,336
+sk07876,Karnataka,Festivals,Country Prediction,low,2.772588722239781,Kaveri Sankramana festival,4,30,176
+sk07878,Karnataka,Festivals,Country Prediction,high,6.021023349349527,Huttari,4,11,176
+sk07899,Karnataka,Festivals,Country Prediction,low,0.0,Huttari festival district,29,54,176
+sk07933,Karnataka,Festivals,Country Prediction,high,5.214935757608986,Karaga Festival,4,19,176
+sk07936,Karnataka,Festivals,Country Prediction,low,0.0,Banashankari Devi Rath Yatra,29,57,176
+sk07939,Karnataka,Festivals,Country Prediction,low,0.0,Mysore Dasara first celebrated under,32,68,176
+sk07940,Karnataka,Festivals,Country Prediction,high,6.021023349349527,Huttari,32,39,176
+sk07947,Karnataka,Festivals,Country Prediction,high,5.214935757608986,Karaga Festival,32,47,176
+sk07952,Karnataka,Festivals,Country Prediction,high,5.214935757608986,Karaga Festival,29,44,176
+sk07955,Karnataka,Festivals,Country Prediction,low,0.0,Kadalekai Parishe festival city,4,35,176
+sk07965,Karnataka,Festivals,Country Prediction,high,6.021023349349527,Huttari,29,36,176
+sk07966,Karnataka,Festivals,Country Prediction,low,0.0,Jumbo Savari features which idol,4,36,176
+sk07970,Karnataka,History,Country Prediction,high,11.583290727630791,Tipu Sultan,29,40,222
+sk07972,Karnataka,History,Country Prediction,low,0.0,Badami Chalukyas' ruling region,29,60,222
+sk07973,Karnataka,History,Country Prediction,high,11.583290727630791,Tipu Sultan,4,15,222
+sk07975,Karnataka,History,Country Prediction,low,0.0,Sharana movement origin,4,27,222
+sk07980,Karnataka,History,Country Prediction,low,0.0,Royal dynasty associated with Bisi Bele Bath,4,48,222
+sk07987,Karnataka,History,Country Prediction,high,11.583290727630791,Tipu Sultan,32,43,222
+sk07995,Karnataka,History,Country Prediction,low,0.0,Hindu epics in Yakshagana stories,29,62,222
+sk07996,Karnataka,History,Country Prediction,low,0.0,Capital city of Vijayanagara Empire,32,67,222
+sk07997,Karnataka,History,Country Prediction,low,0.0,Vijayanagara Empire response to,32,63,222
+sk08000,Karnataka,History,Country Prediction,low,0.0,Capital city of Vijayanagara Empire,29,64,222
+sk08002,Karnataka,History,Country Prediction,low,0.0,Modern-day state with Vijayanagara remnants,4,47,222
+sk08004,Karnataka,History,Country Prediction,low,0.0,Kodava weapon during Huttari,32,60,222
+sk08089,Karnataka,Tourism,Country Prediction,high,8.889859587773016,M. Chinnaswamy Stadium,4,26,336
+sk08090,Karnataka,Tourism,Country Prediction,low,1.3862943611198906,Kudalasangama temple,32,52,336
+sk08091,Karnataka,Tourism,Country Prediction,low,1.0986122886681098,Jog Falls location,4,22,336
+sk08092,Karnataka,Tourism,Country Prediction,low,1.3862943611198906,Kudalasangama temple,4,24,336
+sk08093,Karnataka,Tourism,Country Prediction,high,8.889859587773016,M. Chinnaswamy Stadium,32,54,336
+sk08094,Karnataka,Tourism,Country Prediction,high,8.889859587773016,M. Chinnaswamy Stadium,29,51,336
+sk08095,Karnataka,Tourism,Country Prediction,low,1.0986122886681098,Jog Falls location,29,47,336
+sk08096,Karnataka,Tourism,Country Prediction,low,1.3862943611198906,Kudalasangama temple,29,49,336
+sk08097,Karnataka,Tourism,Country Prediction,low,1.0986122886681098,Jog Falls location,32,50,336
+sk08424,Madhya_Pradesh,Festivals,Country Prediction,high,4.90527477843843,Malwa Utsav,4,15,174
+sk08426,Madhya_Pradesh,Festivals,Country Prediction,low,0.0,Dussehra Vidhi,32,46,174
+sk08427,Madhya_Pradesh,Festivals,Country Prediction,low,2.6390573296152584,Nagaji Fair,5,16,174
+sk08430,Madhya_Pradesh,Festivals,Country Prediction,low,0.0,Baidya System of Ayurveda,5,30,174
+sk08431,Madhya_Pradesh,Festivals,Country Prediction,low,0.0,Tikamgarh Glass Painting,5,29,174
+sk08434,Madhya_Pradesh,Festivals,Country Prediction,low,3.332204510175204,Bheel Community,5,20,174
+sk08436,Madhya_Pradesh,Festivals,Country Prediction,high,4.553876891600541,Bhagoria Festival,5,22,174
+sk08438,Madhya_Pradesh,Festivals,Country Prediction,low,0.0,Hingot Mela,4,15,174
+sk08439,Madhya_Pradesh,Festivals,Country Prediction,high,9.024974184996003,Sanchi Stupa,5,17,174
+sk08440,Madhya_Pradesh,Festivals,Country Prediction,high,5.241747015059643,Mawa Bati,5,14,174
+sk08442,Madhya_Pradesh,Festivals,Country Prediction,high,6.315358001522335,Tansen Music Festival,5,26,174
+sk08444,Madhya_Pradesh,Festivals,Country Prediction,low,3.8066624897703196,Matki Dance,5,16,174
+sk08448,Madhya_Pradesh,Festivals,Country Prediction,high,6.900730664045173,Narmada Parikrama,5,22,174
+sk08450,Madhya_Pradesh,Festivals,Country Prediction,high,4.90527477843843,Malwa Utsav,5,16,174
+sk08453,Madhya_Pradesh,Festivals,Country Prediction,low,0.0,Jeevaniya System of Ayurveda,5,33,174
+sk08457,Madhya_Pradesh,Festivals,Country Prediction,high,6.3080984415095305,Dal Bafla,5,14,174
+sk08460,Madhya_Pradesh,Festivals,Country Prediction,high,8.649448770536708,Rani Durgavati,5,19,174
+sk08462,Madhya_Pradesh,Festivals,Country Prediction,low,0.0,Nimari Language,5,20,174
+sk08466,Madhya_Pradesh,Festivals,Country Prediction,low,4.290459441148391,Gotmar Mela,29,40,174
+sk08468,Madhya_Pradesh,Festivals,Country Prediction,high,4.820281565605037,Lokrang Festival,4,20,174
+sk08470,Madhya_Pradesh,History,Country Prediction,high,6.773080375655535,Paramara dynasty,32,48,222
+sk08471,Madhya_Pradesh,History,Country Prediction,low,0.0,Chandela Dynasty in madhya pradesh,32,66,222
+sk08476,Madhya_Pradesh,History,Country Prediction,high,6.773080375655535,Paramara dynasty,29,45,222
+sk08477,Madhya_Pradesh,History,Country Prediction,low,0.0,Buddhist caves near Udayagiri,29,58,222
+sk08478,Madhya_Pradesh,History,Country Prediction,low,2.6390573296152584,Bell Metal Ware,4,19,222
+sk08486,Madhya_Pradesh,History,Country Prediction,low,5.375278407684165,Bhutte Ka Kees,5,19,222
+sk08487,Madhya_Pradesh,History,Country Prediction,low,2.6390573296152584,Bell Metal Ware,32,47,222
+sk08489,Madhya_Pradesh,History,Country Prediction,low,0.0,Buddhist caves near Udayagiri,32,61,222
+sk08491,Madhya_Pradesh,History,Country Prediction,high,6.773080375655535,Paramara dynasty,4,20,222
+sk08492,Madhya_Pradesh,History,Country Prediction,low,4.007333185232471,Karam Festival,5,19,222
+sk08493,Madhya_Pradesh,History,Country Prediction,high,6.329720905522696,Malwa Sultanate,32,47,222
+sk08497,Madhya_Pradesh,History,Country Prediction,high,7.500529485395295,Bhojshala,5,14,222
+sk08500,Madhya_Pradesh,History,Country Prediction,high,6.329720905522696,Malwa Sultanate,29,44,222
+sk08504,Madhya_Pradesh,History,Country Prediction,high,10.21005271198941,City of Joy,16,27,222
+sk08505,Madhya_Pradesh,History,Country Prediction,high,8.990192329641772,Ahilyabai Holkar,5,21,222
+sk08509,Madhya_Pradesh,History,Country Prediction,high,6.329720905522696,Malwa Sultanate,4,19,222
+sk08568,Madhya_Pradesh,Tourism,Country Prediction,high,10.22868214924768,Kanha National Park,29,48,319
+sk08571,Madhya_Pradesh,Tourism,Country Prediction,low,3.1354942159291497,Patalpani Railway Station,5,30,319
+sk08572,Madhya_Pradesh,Tourism,Country Prediction,low,0.0,Bina-Kota Rail Route,5,25,319
+sk08574,Madhya_Pradesh,Tourism,Country Prediction,low,5.945420608606575,Great Stupa of Sanchi,29,50,319
+sk08576,Madhya_Pradesh,Tourism,Country Prediction,high,6.900730664045173,Narmada Parikrama,4,21,319
+sk08580,Madhya_Pradesh,Tourism,Country Prediction,high,7.504391559161238,Madhav National Park,5,25,319
+sk08581,Madhya_Pradesh,Tourism,Country Prediction,high,10.82013821962583,Orchha,29,35,319
+sk08583,Madhya_Pradesh,Tourism,Country Prediction,low,0.0,Bastar Dhokra Jewelry,5,26,319
+sk08586,Madhya_Pradesh,Tourism,Country Prediction,high,7.0707241072602764,Chausath Yogini Temple,5,27,319
+sk08587,Madhya_Pradesh,Tourism,Country Prediction,low,6.173786103901937,Asirgarh Fort,5,18,319
+sk08588,Madhya_Pradesh,Tourism,Country Prediction,high,6.900730664045173,Narmada Parikrama,32,49,319
+sk08591,Madhya_Pradesh,Tourism,Country Prediction,high,10.28755876795662,Pachmarhi,29,38,319
+sk08592,Madhya_Pradesh,Tourism,Country Prediction,low,0.0,Amla Orchards of Burhanpur,5,31,319
+sk08594,Madhya_Pradesh,Tourism,Country Prediction,high,6.900730664045173,Narmada Parikrama,29,46,319
+sk08595,Madhya_Pradesh,Tourism,Country Prediction,low,0.0,Malkhamb Academy of Ujjain,5,31,319
+sk08602,Madhya_Pradesh,Tourism,Country Prediction,low,3.1354942159291497,Atal Progressway,5,21,319
+sk08730,Manipur,Festivals,Country Prediction,high,6.326149473155099,Chumpha,29,36,200
+sk08733,Manipur,Festivals,Country Prediction,high,6.824373670043086,Ningol Chakouba,4,19,200
+sk08734,Manipur,Festivals,Country Prediction,high,4.543294782270004,Kang festival,29,42,200
+sk08736,Manipur,Festivals,Country Prediction,high,6.532334292222349,Yaosang,29,36,200
+sk08737,Manipur,Festivals,Country Prediction,high,6.326149473155099,Chumpha,4,11,200
+sk08743,Manipur,Festivals,Country Prediction,high,6.824373670043086,Ningol Chakouba,32,47,200
+sk08747,Manipur,Festivals,Country Prediction,high,6.532334292222349,Yaosang,4,11,200
+sk08748,Manipur,History,Country Prediction,high,5.993961427306569,Kangla Palace,29,42,232
+sk08749,Manipur,History,Country Prediction,low,0.6931471805599453,Khogjom War Park,29,45,232
+sk08750,Manipur,History,Country Prediction,high,5.993961427306569,Kangla Palace,4,17,232
+sk08751,Manipur,History,Country Prediction,high,5.993961427306569,Kangla Palace,32,45,232
+sk08752,Manipur,History,Country Prediction,low,3.9318256327243257,Nupi Lal Memorial Complex,32,57,232
+sk08753,Manipur,History,Country Prediction,low,0.6931471805599453,Khogjom War Park,32,48,232
+sk08754,Manipur,History,Country Prediction,low,3.9318256327243257,Nupi Lal Memorial Complex,4,29,232
+sk08755,Manipur,History,Country Prediction,low,0.6931471805599453,Khogjom War Park,4,20,232
+sk08756,Manipur,History,Country Prediction,low,3.9318256327243257,Nupi Lal Memorial Complex,29,54,232
+sk08805,Manipur,Tourism,Country Prediction,high,12.734551529533482,State Museum,4,16,329
+sk08806,Manipur,Tourism,Country Prediction,high,8.422662707570003,Dzukou Valley,32,45,329
+sk08811,Manipur,Tourism,Country Prediction,high,8.305978210967302,Keibul Lamjao National Park,4,31,329
+sk08812,Manipur,Tourism,Country Prediction,low,0.6931471805599453,Kenya Tourist Accommodation,29,56,329
+sk08815,Manipur,Tourism,Country Prediction,high,8.422662707570003,Dzukou Valley,4,17,329
+sk08818,Manipur,Tourism,Country Prediction,high,12.734551529533482,State Museum,29,41,329
+sk08819,Manipur,Tourism,Country Prediction,low,4.624972813284271,Shirui Hill,4,15,329
+sk08820,Manipur,Tourism,Country Prediction,low,0.0,Jeweled town,29,41,329
+sk08827,Manipur,Tourism,Country Prediction,high,8.422662707570003,Dzukou Valley,29,42,329
+sk08828,Manipur,Tourism,Country Prediction,low,0.0,Keibul Lamjao National Gardens,32,62,329
+sk08831,Manipur,Tourism,Country Prediction,low,4.624972813284271,Shirui Hill,29,40,329
+sk08832,Manipur,Tourism,Country Prediction,high,9.514289416891836,Loktak Lake,32,43,329
+sk08834,Manipur,Tourism,Country Prediction,low,4.624972813284271,Shirui Hill,32,43,329
+sk08955,Nagaland,Festivals,Country Prediction,high,6.86484777797086,Sekrenyi,32,40,199
+sk08957,Nagaland,Festivals,Country Prediction,low,4.1588830833596715,Tuluni Festival,29,44,199
+sk08958,Nagaland,Festivals,Country Prediction,high,9.583075655461428,Hornbill Festival,32,49,199
+sk08961,Nagaland,Festivals,Country Prediction,low,4.1588830833596715,Tuluni Festival,4,19,199
+sk08962,Nagaland,Festivals,Country Prediction,high,6.3818160174060985,Aoleang,32,39,199
+sk08963,Nagaland,Festivals,Country Prediction,high,9.583075655461428,Hornbill Festival,29,46,199
+sk08967,Nagaland,Festivals,Country Prediction,high,5.484796933490655,Moatsu Festival,32,47,199
+sk08968,Nagaland,Festivals,Country Prediction,low,4.1588830833596715,Tuluni Festival,32,47,199
+sk08970,Nagaland,History,Country Prediction,high,7.0967213784947605,Kohima War Cemetery,4,23,229
+sk08971,Nagaland,History,Country Prediction,low,0.0,Mount JapfÃÆÃÂ¼,4,22,229
+sk08972,Nagaland,History,Country Prediction,low,1.3862943611198906,Ruins of Kachari Rajbari,32,56,229
+sk08973,Nagaland,History,Country Prediction,high,7.0967213784947605,Kohima War Cemetery,29,48,229
+sk08974,Nagaland,History,Country Prediction,low,1.3862943611198906,Ruins of Kachari Rajbari,29,53,229
+sk08975,Nagaland,History,Country Prediction,low,1.3862943611198906,Ruins of Kachari Rajbari,4,28,229
+sk08976,Nagaland,History,Country Prediction,high,7.0967213784947605,Kohima War Cemetery,32,51,229
+sk08977,Nagaland,History,Country Prediction,low,0.0,TokhÃÆÃÂ¼ Emong,29,47,229
+sk08978,Nagaland,History,Country Prediction,low,0.0,TokhÃÆÃÂ¼ Emong,32,50,229
+sk08979,Nagaland,History,Country Prediction,low,0.0,Mount JapfÃÆÃÂ¼,29,47,229
+sk08980,Nagaland,History,Country Prediction,low,0.0,TokhÃÆÃÂ¼ Emong,4,22,229
+sk08981,Nagaland,History,Country Prediction,low,0.0,Mount JapfÃÆÃÂ¼,32,50,229
+sk08991,Nagaland,Tourism,Country Prediction,low,5.545177444479562,Ntangki National Park,32,53,332
+sk08993,Nagaland,Tourism,Country Prediction,high,10.25393313422352,Mokokchung,4,14,332
+sk08998,Nagaland,Tourism,Country Prediction,low,5.771441123130016,Fakim Wildlife Sanctuary,29,53,332
+sk09002,Nagaland,Tourism,Country Prediction,low,5.771441123130016,Fakim Wildlife Sanctuary,4,28,332
+sk09003,Nagaland,Tourism,Country Prediction,high,18.65799107883159,Mon,32,35,332
+sk09005,Nagaland,Tourism,Country Prediction,high,10.25393313422352,Mokokchung,29,39,332
+sk09006,Nagaland,Tourism,Country Prediction,high,10.25393313422352,Mokokchung,32,42,332
+sk09011,Nagaland,Tourism,Country Prediction,high,18.65799107883159,Mon,4,7,332
+sk09012,Nagaland,Tourism,Country Prediction,low,5.66988092298052,Nagaland State Museum,29,50,332
+sk09014,Nagaland,Tourism,Country Prediction,high,18.65799107883159,Mon,29,32,332
+sk09937,Tamil_Nadu,Festivals,Country Prediction,low,3.044522437723423,Thaipusam kavadi,29,45,197
+sk09942,Tamil_Nadu,Festivals,Country Prediction,high,5.0238805208462765,Aadi Perukku festival,29,50,197
+sk09944,Tamil_Nadu,Festivals,Country Prediction,high,6.0112671744041615,Natyanjali Dance Festival,29,54,197
+sk09950,Tamil_Nadu,Festivals,Country Prediction,high,5.0238805208462765,Aadi Perukku festival,32,53,197
+sk09954,Tamil_Nadu,Festivals,Country Prediction,low,3.044522437723423,Thaipusam kavadi,4,20,197
+sk09956,Tamil_Nadu,Festivals,Country Prediction,high,6.582025138892826,Mahamaham festival,32,50,197
+sk09960,Tamil_Nadu,Festivals,Country Prediction,high,10.654479022780512,Golu,32,36,197
+sk09961,Tamil_Nadu,Festivals,Country Prediction,low,3.044522437723423,Thaipusam kavadi,32,48,197
+sk09962,Tamil_Nadu,Festivals,Country Prediction,high,7.343426229147367,Aadi Perukku,4,16,197
+sk09968,Tamil_Nadu,History,Country Prediction,high,7.43543801981455,Great Living Chola Temples,32,58,229
+sk09969,Tamil_Nadu,History,Country Prediction,high,7.496097345175956,Kanchi Kamakoti Peetham,4,27,229
+sk09972,Tamil_Nadu,History,Country Prediction,high,10.080168229439996,Vijayanagara Empire,4,23,229
+sk09973,Tamil_Nadu,History,Country Prediction,high,8.612503371220562,Chola Dynasty,29,42,229
+sk09975,Tamil_Nadu,History,Country Prediction,low,3.8501476017100584,Tamil palm-leaf manuscripts,32,59,229
+sk09976,Tamil_Nadu,History,Country Prediction,high,7.43543801981455,Great Living Chola Temples,4,30,229
+sk09977,Tamil_Nadu,History,Country Prediction,low,3.8501476017100584,Tamil palm-leaf manuscripts,4,31,229
+sk09978,Tamil_Nadu,History,Country Prediction,low,3.8501476017100584,Tamil palm-leaf manuscripts,29,56,229
+sk09979,Tamil_Nadu,History,Country Prediction,high,10.080168229439996,Vijayanagara Empire,29,48,229
+sk10028,Tamil_Nadu,Tourism,Country Prediction,low,5.717027701406222,Chettinad mansions,32,50,335
+sk10029,Tamil_Nadu,Tourism,Country Prediction,high,9.737255856891121,Nilgiri Hills,29,42,335
+sk10030,Tamil_Nadu,Tourism,Country Prediction,low,5.717027701406222,Chettinad mansions,29,47,335
+sk10031,Tamil_Nadu,Tourism,Country Prediction,high,11.93865714502319,Kodaikanal,32,42,335
+sk10035,Tamil_Nadu,Tourism,Country Prediction,high,9.737255856891121,Nilgiri Hills,4,17,335
+sk10037,Tamil_Nadu,Tourism,Country Prediction,low,5.717027701406222,Chettinad mansions,4,22,335
+sk10038,Tamil_Nadu,Tourism,Country Prediction,high,8.969669103793757,Poompuhar,29,38,335
+sk10039,Tamil_Nadu,Tourism,Country Prediction,high,11.93865714502319,Kodaikanal,4,14,335
+sk10147,Telangana,Festivals,Country Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,32,57,205
+sk10148,Telangana,Festivals,Country Prediction,low,0.0,Kakatiya Festival in telangana,4,34,205
+sk10149,Telangana,Festivals,Country Prediction,high,9.002454823050954,Bonalu,32,38,205
+sk10150,Telangana,Festivals,Country Prediction,high,9.002454823050954,Bonalu,4,10,205
+sk10152,Telangana,Festivals,Country Prediction,low,0.0,Kakatiya Festival in telangana,29,59,205
+sk10153,Telangana,Festivals,Country Prediction,low,0.0,Kakatiya Festival in telangana,32,62,205
+sk10154,Telangana,Festivals,Country Prediction,high,9.002454823050954,Bonalu,32,38,205
+sk10155,Telangana,Festivals,Country Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,4,29,205
+sk10156,Telangana,Festivals,Country Prediction,high,9.002454823050954,Bonalu,4,10,205
+sk10157,Telangana,Festivals,Country Prediction,high,9.002454823050954,Bonalu,29,35,205
+sk10158,Telangana,Festivals,Country Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,29,54,205
+sk10164,Telangana,History,Country Prediction,low,1.0986122886681098,"Madina building, Hyderabad",29,55,201
+sk10167,Telangana,History,Country Prediction,low,5.605802066295998,Asman Garh Palace,32,49,201
+sk10169,Telangana,History,Country Prediction,high,11.67366581373058,Golconda,4,12,201
+sk10173,Telangana,History,Country Prediction,low,5.6240175061873385,Khammam Fort,29,41,201
+sk10182,Telangana,History,Country Prediction,high,6.208590026096629,King Kothi Palace,29,46,201
+sk10188,Telangana,History,Country Prediction,low,0.6931471805599453,"Erakeswara Temple, Pillalamarri",29,60,201
+sk10195,Telangana,History,Country Prediction,high,11.100707608289353,Charminar,29,38,201
+sk10199,Telangana,History,Country Prediction,low,5.945420608606575,Gnana Saraswati Temple,32,54,201
+sk10201,Telangana,History,Country Prediction,high,9.213236175088209,Abids,32,37,201
+sk10210,Telangana,History,Country Prediction,low,5.627621113690637,Rachakonda Fort,29,44,201
+sk10213,Telangana,History,Country Prediction,low,4.859812404361672,Pathargatti,29,40,201
+sk10231,Telangana,History,Country Prediction,high,7.543273346705446,Asaf Jahi dynasty,29,46,201
+sk10237,Telangana,History,Country Prediction,low,4.653960350157523,Basheer Bagh Palace,4,23,201
+sk10245,Telangana,History,Country Prediction,high,8.89604050162011,Chowmahalla Palace,29,47,201
+sk10251,Telangana,History,Country Prediction,low,5.71042701737487,Kakatiya Kala Thoranam,29,51,201
+sk10252,Telangana,History,Country Prediction,high,7.084226422097916,Qutb Shahi tombs,29,45,201
+sk10259,Telangana,History,Country Prediction,low,4.859812404361672,Pathargatti,4,15,201
+sk10375,Telangana,Tourism,Country Prediction,low,5.472270673671475,Pranahita Wildlife Sanctuary,29,57,296
+sk10376,Telangana,Tourism,Country Prediction,low,5.476463551931511,Ameenpur Lake,29,42,296
+sk10381,Telangana,Tourism,Country Prediction,low,5.176149732573829,Manjira Wildlife Sanctuary,29,55,296
+sk10401,Telangana,Tourism,Country Prediction,low,2.70805020110221,Khajaguda Talab,29,44,296
+sk10416,Telangana,Tourism,Country Prediction,high,9.436997742590188,Falaknuma Palace,4,20,296
+sk10419,Telangana,Tourism,Country Prediction,low,1.9459101490553132,"Ananthagiri Hills, Vikarabad district",4,41,296
+sk10438,Telangana,Tourism,Country Prediction,high,6.586171654854675,Laknavaram Lake,29,44,296
+sk10444,Telangana,Tourism,Country Prediction,high,8.941676305360163,Salar Jung Museum,32,49,296
+sk10449,Telangana,Tourism,Country Prediction,high,8.711607995897575,Lumbini Park,29,41,296
+sk10456,Telangana,Tourism,Country Prediction,low,1.0986122886681098,Umda Sagar Lake,32,47,296
+sk10461,Telangana,Tourism,Country Prediction,high,8.711607995897575,Lumbini Park,32,44,296
+sk10471,Telangana,Tourism,Country Prediction,high,8.223090551161533,Durgam Cheruvu,32,46,296
+sk10472,Telangana,Tourism,Country Prediction,low,2.995732273553991,Alampur Museum,32,46,296
+sk10476,Telangana,Tourism,Country Prediction,high,6.980075940561763,Pakhal Lake,29,40,296
+sk10478,Telangana,Tourism,Country Prediction,high,7.233455418621439,Kinnerasani Wildlife Sanctuary,29,59,296
+sk10481,Telangana,Tourism,Country Prediction,low,6.238324625039508,Pocharam Wildlife Sanctuary,32,59,296
+sk10795,Uttarakhand,Festivals,Country Prediction,low,2.3978952727983707,Ghee Sankrant,29,42,197
+sk10797,Uttarakhand,Festivals,Country Prediction,high,5.493061443340548,Nanda Devi Raj Jaat,32,51,197
+sk10798,Uttarakhand,Festivals,Country Prediction,high,5.493061443340548,Nanda Devi Raj Jaat,29,48,197
+sk10800,Uttarakhand,Festivals,Country Prediction,low,3.713572066704308,Ramman festival,4,19,197
+sk10801,Uttarakhand,Festivals,Country Prediction,high,5.493061443340548,Nanda Devi Raj Jaat,4,23,197
+sk10804,Uttarakhand,Festivals,Country Prediction,low,3.713572066704308,Ramman festival,32,47,197
+sk10805,Uttarakhand,Festivals,Country Prediction,low,4.343805421853684,Purnagiri Mela,29,43,197
+sk10807,Uttarakhand,Festivals,Country Prediction,high,8.11312710422178,Ganga Dussehra,29,43,197
+sk10810,Uttarakhand,Festivals,Country Prediction,low,3.9318256327243257,Uttarayani festival,32,51,197
+sk10811,Uttarakhand,Festivals,Country Prediction,high,8.11312710422178,Ganga Dussehra,4,18,197
+sk10813,Uttarakhand,Festivals,Country Prediction,low,2.3978952727983707,Ghee Sankrant,32,45,197
+sk10815,Uttarakhand,Festivals,Country Prediction,high,8.11312710422178,Ganga Dussehra,32,46,197
+sk10817,Uttarakhand,History,Country Prediction,high,11.683157571291813,Gangotri,29,37,221
+sk10818,Uttarakhand,History,Country Prediction,high,10.959296718878928,Bhagirathi,29,39,221
+sk10819,Uttarakhand,History,Country Prediction,high,8.806723554725636,Alaknanda River,29,44,221
+sk10825,Uttarakhand,History,Country Prediction,high,10.959296718878928,Bhagirathi,4,14,221
+sk10826,Uttarakhand,History,Country Prediction,low,0.0,Pandavas' birth site,29,49,221
+sk10827,Uttarakhand,History,Country Prediction,low,0.0,Surkanda Devi temple architecture,29,62,221
+sk10830,Uttarakhand,History,Country Prediction,high,13.611253773497602,Ganges,4,10,221
+sk10832,Uttarakhand,History,Country Prediction,low,0.0,Surkanda Devi temple architecture,32,65,221
+sk10833,Uttarakhand,History,Country Prediction,high,8.806723554725636,Alaknanda River,4,19,221
+sk10835,Uttarakhand,History,Country Prediction,low,3.4011973816621555,Naina devi Temple,4,21,221
+sk10837,Uttarakhand,History,Country Prediction,high,10.114679972730583,Tungnath,32,40,221
+sk10864,Uttarakhand,Tourism,Country Prediction,high,8.521185212685776,Har ki Pauri,29,41,327
+sk10865,Uttarakhand,Tourism,Country Prediction,high,8.993799971795545,Bholanath,4,13,327
+sk10866,Uttarakhand,Tourism,Country Prediction,high,12.84746063371527,Haridwar,29,37,327
+sk10869,Uttarakhand,Tourism,Country Prediction,low,0.0,The Deva Bhoomi,29,44,327
+sk10870,Uttarakhand,Tourism,Country Prediction,low,3.1780538303479458,the Hemkund Sahib Gurdwara,29,55,327
+sk10877,Uttarakhand,Tourism,Country Prediction,high,12.84746063371527,Haridwar,4,12,327
+sk10878,Uttarakhand,Tourism,Country Prediction,low,6.234410725718371,Kedarnath town,32,46,327
+sk10880,Uttarakhand,Tourism,Country Prediction,high,9.622847294873393,Palki,32,37,327
+sk10882,Uttarakhand,Tourism,Country Prediction,low,3.091042453358316,Lakhudiyar Caves,4,20,327
+sk10884,Uttarakhand,Tourism,Country Prediction,high,9.622847294873393,Palki,4,9,327
+sk10886,Uttarakhand,Tourism,Country Prediction,high,8.521185212685776,Har ki Pauri,4,16,327
+sk10891,Uttarakhand,Tourism,Country Prediction,low,3.091042453358316,Lakhudiyar Caves,32,48,327
+sk11806,Assam,Festivals,General Awareness,high,11.317931957072364,Bihu,37,41,201
+sk11837,Assam,History,General Awareness,high,7.6246189861593985,Ahom dynasty,4,16,228
+sk11876,Assam,Tourism,General Awareness,high,9.375176614429117,Kamakhya Temple,4,19,334
+sk13273,Himachal_Pradesh,Tourism,General Awareness,low,0.0,sacred mountains and pilgrimages draw spiritual seekers,17,72,331
+sk13284,Himachal_Pradesh,Tourism,General Awareness,high,14.39578630866001,Dalai Lama,87,97,331
+sk13304,Himachal_Pradesh,Tourism,General Awareness,low,0.0,futuristic architecture and urban parks attract tourists,17,73,331
+sk13499,Jharkhand,Festivals,General Awareness,high,7.652070746116482,Sarhul,16,22,200
+sk13501,Jharkhand,History,General Awareness,high,5.976350909297934,Santhal Rebellion,30,47,221
+sk13795,Karnataka,History,General Awareness,high,8.00469951054955,Tiger of Mysore,53,68,222
+sk13894,Karnataka,Tourism,General Awareness,high,12.220251646703444,Hampi,22,27,336
+sk14153,Madhya_Pradesh,Festivals,General Awareness,high,10.28755876795662,Pachmarhi,4,13,174
+sk14164,Madhya_Pradesh,History,General Awareness,high,6.773080375655535,Paramara dynasty,52,68,222
+sk14310,Manipur,Festivals,General Awareness,low,0.6931471805599453,Hikru Hidongba,30,44,200
+sk14313,Manipur,Festivals,General Awareness,low,0.6931471805599453,Hikru Hidongba,47,61,200
+sk14402,Manipur,Tourism,General Awareness,high,8.305978210967302,Keibul Lamjao National Park,41,68,329
+sk14668,Nagaland,Festivals,General Awareness,high,6.86484777797086,Sekrenyi,49,57,199
+sk14683,Nagaland,Festivals,General Awareness,high,6.86484777797086,Sekrenyi,42,50,199
+sk14745,Nagaland,Tourism,General Awareness,high,9.102643796520809,Khonoma,80,87,332
+sk15511,Telangana,Festivals,General Awareness,high,9.002454823050954,Bonalu,61,67,205
+sk15687,Telangana,Tourism,General Awareness,high,9.002454823050954,Bonalu,21,27,296
+sk16141,Uttarakhand,Festivals,General Awareness,high,9.693383614729722,Kumaoni,51,58,197
+sk16156,Uttarakhand,Festivals,General Awareness,low,3.6109179126442243,Phul Dei,51,59,197
+sk17036,Assam,Festivals,State Prediction,low,2.5649493574615367,Ali Ai Ligang festival,26,48,201
+sk17038,Assam,Festivals,State Prediction,high,5.2832037287379885,Karam Puja,59,69,201
+sk17041,Assam,Festivals,State Prediction,high,5.2832037287379885,Karam Puja,26,36,201
+sk17042,Assam,Festivals,State Prediction,high,6.129050210060545,Jonbeel Mela,59,71,201
+sk17043,Assam,Festivals,State Prediction,high,5.3471075307174685,Majuli Festival,26,41,201
+sk17046,Assam,Festivals,State Prediction,high,11.317931957072364,Bihu,26,30,201
+sk17048,Assam,Festivals,State Prediction,high,5.2832037287379885,Karam Puja,58,68,201
+sk17049,Assam,Festivals,State Prediction,low,2.5649493574615367,Ali Ai Ligang festival,58,80,201
+sk17050,Assam,Festivals,State Prediction,low,2.5649493574615367,Ali Ai Ligang festival,59,81,201
+sk17053,Assam,Festivals,State Prediction,high,11.317931957072364,Bihu,59,63,201
+sk17054,Assam,History,State Prediction,high,7.207118856207756,Talatal Ghar,58,70,228
+sk17058,Assam,History,State Prediction,low,0.0,Dubi Copper Plate Inscriptions,59,89,228
+sk17059,Assam,History,State Prediction,high,7.374001859350161,Battle of Saraighat,59,78,228
+sk17060,Assam,History,State Prediction,low,0.0,Dubi Copper Plate Inscriptions,60,90,228
+sk17061,Assam,History,State Prediction,high,7.418180822726788,Rang Ghar,58,67,228
+sk17062,Assam,History,State Prediction,low,0.0,Dubi Copper Plate Inscriptions,27,57,228
+sk17063,Assam,History,State Prediction,high,7.6246189861593985,Ahom dynasty,58,70,228
+sk17064,Assam,History,State Prediction,low,5.389071729816501,Kamarupa Kingdom,59,75,228
+sk17066,Assam,History,State Prediction,low,5.389071729816501,Kamarupa Kingdom,26,42,228
+sk17069,Assam,History,State Prediction,low,5.389071729816501,Kamarupa Kingdom,58,74,228
+sk17071,Assam,History,State Prediction,high,6.530877627725885,Deopahar,26,34,228
+sk17073,Assam,History,State Prediction,high,7.418180822726788,Rang Ghar,59,68,228
+sk17074,Assam,History,State Prediction,high,6.530877627725885,Deopahar,59,67,228
+sk17082,Assam,Tourism,State Prediction,low,5.3612921657094255,Majuli River Island,26,45,334
+sk17083,Assam,Tourism,State Prediction,low,5.3612921657094255,Majuli River Island,58,77,334
+sk17085,Assam,Tourism,State Prediction,low,5.948034989180646,Tea tourism,26,37,334
+sk17086,Assam,Tourism,State Prediction,low,5.948034989180646,Tea tourism,59,70,334
+sk17088,Assam,Tourism,State Prediction,high,7.805882040228621,Majuli island,58,71,334
+sk17090,Assam,Tourism,State Prediction,high,7.805882040228621,Majuli island,59,72,334
+sk17091,Assam,Tourism,State Prediction,low,5.3612921657094255,Majuli River Island,59,78,334
+sk17093,Assam,Tourism,State Prediction,high,10.968439639711603,Kaziranga National Park,59,82,334
+sk17094,Assam,Tourism,State Prediction,high,10.968439639711603,Kaziranga National Park,58,81,334
+sk17095,Assam,Tourism,State Prediction,low,5.948034989180646,Tea tourism,58,69,334
+sk17578,Delhi,Festivals,State Prediction,low,4.174387269895637,Ananya Festival,58,73,198
+sk17580,Delhi,Festivals,State Prediction,high,6.745236349484363,Qutub Festival,58,72,198
+sk17583,Delhi,Festivals,State Prediction,high,6.068425588244111,Garden Tourism Festival,59,82,198
+sk17586,Delhi,Festivals,State Prediction,low,4.174387269895637,Ananya Festival,26,41,198
+sk17588,Delhi,Festivals,State Prediction,low,4.330733340286331,Annual Republic Day,58,77,198
+sk17589,Delhi,Festivals,State Prediction,high,7.53955882930103,International Mango Festival,26,54,198
+sk17590,Delhi,Festivals,State Prediction,high,9.521568058002977,World Book Fair,26,41,198
+sk17591,Delhi,Festivals,State Prediction,low,4.330733340286331,Annual Republic Day,59,78,198
+sk17592,Delhi,Festivals,State Prediction,high,14.645634501537884,Independence Day,26,42,198
+sk17595,Delhi,Festivals,State Prediction,low,3.6109179126442243,Bhakti Sangeet Festival,26,49,198
+sk17596,Delhi,Festivals,State Prediction,low,3.6109179126442243,Bhakti Sangeet Festival,58,81,198
+sk17598,Delhi,Festivals,State Prediction,high,7.53955882930103,International Mango Festival,58,86,198
+sk17599,Delhi,Festivals,State Prediction,low,3.6109179126442243,Bhakti Sangeet Festival,59,82,198
+sk17601,Delhi,Festivals,State Prediction,high,7.53955882930103,International Mango Festival,59,87,198
+sk17604,Delhi,Festivals,State Prediction,high,6.068425588244111,Garden Tourism Festival,26,49,198
+sk17610,Delhi,History,State Prediction,high,7.699842407396986,Agrasen ki Baoli,26,42,221
+sk17614,Delhi,History,State Prediction,high,9.487896348128954,Dental Council of India,59,82,221
+sk17618,Delhi,History,State Prediction,high,11.444582382324773,Rashtrapati Bhavan,58,76,221
+sk17619,Delhi,History,State Prediction,low,0.0,Mamluk  Dynasty,59,74,221
+sk17620,Delhi,History,State Prediction,low,1.9459101490553132,Architect Ratish Nanda,26,48,221
+sk17621,Delhi,History,State Prediction,high,8.667680024690174,Mughal architectural,59,79,221
+sk17626,Delhi,History,State Prediction,high,12.356400312662284,Pandavas,59,67,221
+sk17627,Delhi,History,State Prediction,high,9.020510699691906,King of Bollywood,58,75,221
+sk17628,Delhi,History,State Prediction,low,1.9459101490553132,Architect Ratish Nanda,59,81,221
+sk17630,Delhi,History,State Prediction,high,7.295735072749282,Museum of Toilets,26,43,221
+sk17632,Delhi,History,State Prediction,high,11.407042590684664,Indraprastha,59,71,221
+sk17634,Delhi,History,State Prediction,low,4.174387269895637,Dilli chalo,26,37,221
+sk17638,Delhi,History,State Prediction,low,0.0,Mamluk  Dynasty,58,73,221
+sk17639,Delhi,History,State Prediction,low,5.834810737062605,Ashokan Rock Edict,58,76,221
+sk17642,Delhi,History,State Prediction,low,1.9459101490553132,Architect Ratish Nanda,58,80,221
+sk17721,Delhi,Tourism,State Prediction,low,6.320768294250582,National Handicrafts and Handlooms Museum,58,99,312
+sk17725,Delhi,Tourism,State Prediction,high,10.545788707090159,Lotus Temple,59,71,312
+sk17732,Delhi,Tourism,State Prediction,high,11.770431794911948,Jama Masjid,58,69,312
+sk17739,Delhi,Tourism,State Prediction,high,7.494430215031565,National Gandhi Museum,58,80,312
+sk17747,Delhi,Tourism,State Prediction,low,0.0,Shalimar  Garden,59,75,312
+sk17749,Delhi,Tourism,State Prediction,low,6.1224928095143865,Cathedral Church of the Redemption,58,92,312
+sk17751,Delhi,Tourism,State Prediction,high,10.088596886532404,Raj Ghat,59,67,312
+sk17758,Delhi,Tourism,State Prediction,high,10.3495506300728,Indian Council of Medical Research (ICMR),59,100,312
+sk17766,Delhi,Tourism,State Prediction,high,7.5126175446745105,Teen Murti Bhavan,59,76,312
+sk17772,Delhi,Tourism,State Prediction,high,14.721853170982815,National Museum,58,73,312
+sk17788,Delhi,Tourism,State Prediction,low,6.1224928095143865,Cathedral Church of the Redemption,26,60,312
+sk17793,Delhi,Tourism,State Prediction,low,6.320768294250582,National Handicrafts and Handlooms Museum,26,67,312
+sk17801,Delhi,Tourism,State Prediction,low,0.0,Shalimar  Garden,26,42,312
+sk17802,Delhi,Tourism,State Prediction,high,8.444407421690585,Nizamuddin Dargah,26,43,312
+sk17804,Delhi,Tourism,State Prediction,low,0.0,Shalimar  Garden,58,74,312
+sk18125,Haryana,History,State Prediction,high,12.244206229511077,Kurukshetra,59,70,225
+sk18126,Haryana,History,State Prediction,low,2.5649493574615367,Raja Harsh Ka Tila,26,44,225
+sk18134,Haryana,History,State Prediction,high,6.943122422819428,Archaeological artifacts,26,50,225
+sk18135,Haryana,History,State Prediction,low,1.0986122886681098,Tosham Rock,26,37,225
+sk18137,Haryana,History,State Prediction,low,2.5649493574615367,Raja Harsh Ka Tila,59,77,225
+sk18140,Haryana,History,State Prediction,high,9.21253795551967,Rakhigarhi,59,69,225
+sk18141,Haryana,History,State Prediction,high,10.942526749669337,Indus Valley Civilization,26,51,225
+sk18142,Haryana,History,State Prediction,high,6.943122422819428,Archaeological artifacts,59,83,225
+sk18145,Haryana,History,State Prediction,high,12.244206229511077,Kurukshetra,58,69,225
+sk18146,Haryana,History,State Prediction,low,2.5649493574615367,Raja Harsh Ka Tila,58,76,225
+sk18150,Haryana,History,State Prediction,low,1.0986122886681098,Tosham Rock,58,69,225
+sk18194,Haryana,Tourism,State Prediction,low,2.772588722239781,Kalesar national park,26,47,330
+sk18195,Haryana,Tourism,State Prediction,high,12.17570106307226,Panchkula,59,68,330
+sk18197,Haryana,Tourism,State Prediction,high,10.963670814584455,Sohna,58,63,330
+sk18198,Haryana,Tourism,State Prediction,low,2.6390573296152584,Hodal City,58,68,330
+sk18200,Haryana,Tourism,State Prediction,high,8.961366060627451,Ambala City,58,69,330
+sk18203,Haryana,Tourism,State Prediction,low,2.6390573296152584,Hodal City,26,36,330
+sk18205,Haryana,Tourism,State Prediction,high,6.584791392385716,Badkhal Lake,26,38,330
+sk18207,Haryana,Tourism,State Prediction,low,2.772588722239781,Kalesar national park,59,80,330
+sk18208,Haryana,Tourism,State Prediction,high,10.497283900839735,Palwal,59,65,330
+sk18210,Haryana,Tourism,State Prediction,low,2.6390573296152584,Hodal City,59,69,330
+sk18213,Haryana,Tourism,State Prediction,high,6.584791392385716,Badkhal Lake,59,71,330
+sk18214,Haryana,Tourism,State Prediction,low,2.772588722239781,Kalesar national park,58,79,330
+sk18298,Himachal_Pradesh,Festivals,State Prediction,low,4.276666119016055,Sair Festival,58,71,194
+sk18304,Himachal_Pradesh,Festivals,State Prediction,low,2.5649493574615367,Faguli festival,26,41,194
+sk18308,Himachal_Pradesh,Festivals,State Prediction,high,10.588249676561633,Losar,26,31,194
+sk18309,Himachal_Pradesh,Festivals,State Prediction,high,8.13593277200489,Kullu Dussehra,26,40,194
+sk18312,Himachal_Pradesh,Festivals,State Prediction,low,4.276666119016055,Sair Festival,59,72,194
+sk18319,Himachal_Pradesh,Festivals,State Prediction,high,4.499809670330265,Minjar Festival,26,41,194
+sk18320,Himachal_Pradesh,Festivals,State Prediction,high,10.588249676561633,Losar,59,64,194
+sk18321,Himachal_Pradesh,Festivals,State Prediction,high,4.499809670330265,Minjar Festival,58,73,194
+sk18322,Himachal_Pradesh,Festivals,State Prediction,low,0.0,Temple fairs (Jatras),26,47,194
+sk18326,Himachal_Pradesh,Festivals,State Prediction,low,3.871201010907891,Phulaich festival,26,43,194
+sk18330,Himachal_Pradesh,Festivals,State Prediction,low,3.871201010907891,Phulaich festival,58,75,194
+sk18331,Himachal_Pradesh,Festivals,State Prediction,low,0.0,Temple fairs (Jatras),59,80,194
+sk18333,Himachal_Pradesh,Festivals,State Prediction,high,5.003946305945459,Halda festival,26,40,194
+sk18334,Himachal_Pradesh,Festivals,State Prediction,low,4.382026634673881,Fagli festival,60,74,194
+sk18336,Himachal_Pradesh,Festivals,State Prediction,high,6.018593214496234,Kullu Dussehra festival,58,81,194
+sk18339,Himachal_Pradesh,History,State Prediction,high,8.335191583433202,Naggar Castle,58,71,227
+sk18341,Himachal_Pradesh,History,State Prediction,high,7.035268599281097,Manimahesh Kailash,58,76,227
+sk18343,Himachal_Pradesh,History,State Prediction,high,8.11701408773731,Hidimbi,58,65,227
+sk18346,Himachal_Pradesh,History,State Prediction,low,5.717027701406222,1905 Kangra Earthquake,59,81,227
+sk18349,Himachal_Pradesh,History,State Prediction,high,8.11701408773731,Hidimbi,26,33,227
+sk18350,Himachal_Pradesh,History,State Prediction,high,8.335191583433202,Naggar Castle,59,72,227
+sk18351,Himachal_Pradesh,History,State Prediction,low,4.394449154672439,Bushahr kingdom,26,41,227
+sk18352,Himachal_Pradesh,History,State Prediction,low,5.717027701406222,1905 Kangra Earthquake,58,80,227
+sk18353,Himachal_Pradesh,History,State Prediction,low,2.70805020110221,Kath-Kuni architecture,26,48,227
+sk18354,Himachal_Pradesh,History,State Prediction,low,2.70805020110221,Kath-Kuni architecture,58,80,227
+sk18355,Himachal_Pradesh,History,State Prediction,low,4.394449154672439,Bushahr kingdom,59,74,227
+sk18358,Himachal_Pradesh,History,State Prediction,low,0.0,Princely hill states,59,79,227
+sk18360,Himachal_Pradesh,History,State Prediction,high,6.089044875446846,Kardang Monastery,26,43,227
+sk18383,Himachal_Pradesh,Tourism,State Prediction,low,6.542471960506805,Manimahesh Yatra,59,75,331
+sk18384,Himachal_Pradesh,Tourism,State Prediction,low,0.6931471805599453,Bathu Ki Ladi Temple,58,78,331
+sk18387,Himachal_Pradesh,Tourism,State Prediction,high,9.301551252029567,Great Himalayan National Park,59,88,331
+sk18388,Himachal_Pradesh,Tourism,State Prediction,high,7.417580402414544,Kangra fort,59,70,331
+sk18389,Himachal_Pradesh,Tourism,State Prediction,high,9.301551252029567,Great Himalayan National Park,26,55,331
+sk18390,Himachal_Pradesh,Tourism,State Prediction,high,8.231642179973411,Hidimba Devi Temple,58,77,331
+sk18391,Himachal_Pradesh,Tourism,State Prediction,low,6.542471960506805,Manimahesh Yatra,58,74,331
+sk18392,Himachal_Pradesh,Tourism,State Prediction,low,0.6931471805599453,Bathu Ki Ladi Temple,59,79,331
+sk18393,Himachal_Pradesh,Tourism,State Prediction,low,6.542471960506805,Manimahesh Yatra,26,42,331
+sk18394,Himachal_Pradesh,Tourism,State Prediction,high,9.301551252029567,Great Himalayan National Park,58,87,331
+sk18395,Himachal_Pradesh,Tourism,State Prediction,low,0.6931471805599453,Bathu Ki Ladi Temple,26,46,331
+sk18559,Jharkhand,Festivals,State Prediction,high,6.054439346269371,Sarhul festival,29,44,200
+sk18560,Jharkhand,Festivals,State Prediction,high,6.054439346269371,Sarhul festival,59,74,200
+sk18561,Jharkhand,Festivals,State Prediction,low,4.127134385045092,Hal Punhya,58,68,200
+sk18562,Jharkhand,Festivals,State Prediction,high,6.054439346269371,Sarhul festival,26,41,200
+sk18564,Jharkhand,Festivals,State Prediction,high,7.652070746116482,Sarhul,93,99,200
+sk18567,Jharkhand,Festivals,State Prediction,high,7.652070746116482,Sarhul,59,65,200
+sk18569,Jharkhand,Festivals,State Prediction,high,7.652070746116482,Sarhul,58,64,200
+sk18571,Jharkhand,Festivals,State Prediction,low,4.127134385045092,Hal Punhya,59,69,200
+sk18572,Jharkhand,Festivals,State Prediction,low,0.0,Karma festival primarily celebrated in,59,97,200
+sk18573,Jharkhand,Festivals,State Prediction,high,6.054439346269371,Sarhul festival,36,51,200
+sk18576,Jharkhand,Festivals,State Prediction,high,6.054439346269371,Sarhul festival,36,51,200
+sk18577,Jharkhand,Festivals,State Prediction,high,6.054439346269371,Sarhul festival,58,73,200
+sk18578,Jharkhand,Festivals,State Prediction,low,3.784189633918261,Bhagta Parab,26,38,200
+sk18583,Jharkhand,Festivals,State Prediction,high,7.652070746116482,Sarhul,26,32,200
+sk18587,Jharkhand,Festivals,State Prediction,low,3.784189633918261,Bhagta Parab,59,71,200
+sk18589,Jharkhand,History,State Prediction,low,0.0,Tribal communities supporting Kol Rebellion,26,69,221
+sk18593,Jharkhand,History,State Prediction,low,0.0,Pathalgadi tradition state,26,52,221
+sk18594,Jharkhand,History,State Prediction,high,7.888334500738654,Pathalgadi,59,69,221
+sk18596,Jharkhand,History,State Prediction,high,7.888334500738654,Pathalgadi,58,68,221
+sk18598,Jharkhand,History,State Prediction,high,5.976350909297934,Santhal Rebellion,59,76,221
+sk18602,Jharkhand,History,State Prediction,low,0.0,Tribal communities supporting Kol Rebellion,58,101,221
+sk18603,Jharkhand,History,State Prediction,low,3.58351893845611,Kol Uprising,26,38,221
+sk18605,Jharkhand,History,State Prediction,high,5.976350909297934,Santhal Rebellion,26,43,221
+sk18613,Jharkhand,History,State Prediction,high,7.888334500738654,Pathalgadi,26,36,221
+sk18616,Jharkhand,History,State Prediction,low,0.0,Pathalgadi tradition state,58,84,221
+sk18620,Jharkhand,History,State Prediction,low,5.402677381872279,Megalithic Structures,59,80,221
+sk18621,Jharkhand,History,State Prediction,low,0.0,British policy triggering Kol Rebellion,26,65,221
+sk18628,Jharkhand,History,State Prediction,low,0.0,Pathalgadi tradition state,59,85,221
+sk18630,Jharkhand,History,State Prediction,low,5.402677381872279,Megalithic Structures,26,47,221
+sk18635,Jharkhand,History,State Prediction,high,5.976350909297934,Santhal Rebellion,58,75,221
+sk18678,Jharkhand,Tourism,State Prediction,low,4.174387269895637,Netarhat Hills,26,40,336
+sk18679,Jharkhand,Tourism,State Prediction,low,4.174387269895637,Netarhat Hills,59,73,336
+sk18681,Jharkhand,Tourism,State Prediction,high,7.356918242356021,Betla National Park,34,53,336
+sk18682,Jharkhand,Tourism,State Prediction,low,5.648974238161206,Patratu Valley,58,72,336
+sk18684,Jharkhand,Tourism,State Prediction,low,4.174387269895637,Netarhat Hills,58,72,336
+sk18685,Jharkhand,Tourism,State Prediction,high,7.356918242356021,Betla National Park,58,77,336
+sk18687,Jharkhand,Tourism,State Prediction,low,5.648974238161206,Patratu Valley,26,40,336
+sk18688,Jharkhand,Tourism,State Prediction,low,5.648974238161206,Patratu Valley,18,32,336
+sk18690,Jharkhand,Tourism,State Prediction,high,7.356918242356021,Betla National Park,34,53,336
+sk18692,Jharkhand,Tourism,State Prediction,low,5.648974238161206,Patratu Valley,59,73,336
+sk18693,Jharkhand,Tourism,State Prediction,high,7.356918242356021,Betla National Park,26,45,336
+sk18694,Jharkhand,Tourism,State Prediction,high,6.628041376179533,Hundru Falls,36,48,336
+sk18696,Jharkhand,Tourism,State Prediction,high,7.356918242356021,Betla National Park,59,78,336
+sk18699,Jharkhand,Tourism,State Prediction,high,6.628041376179533,Hundru Falls,36,48,336
+sk18700,Jharkhand,Tourism,State Prediction,high,6.628041376179533,Hundru Falls,26,38,336
+sk18863,Karnataka,Festivals,State Prediction,low,0.0,Sharana Basava Jayanti commemorates,59,94,176
+sk18867,Karnataka,Festivals,State Prediction,low,0.0,Jumbo Savari features which idol,59,91,176
+sk18871,Karnataka,Festivals,State Prediction,high,5.214935757608986,Karaga Festival,59,74,176
+sk18879,Karnataka,Festivals,State Prediction,high,6.021023349349527,Huttari,58,65,176
+sk18884,Karnataka,Festivals,State Prediction,low,0.0,Traditional opening of Mysore Dasara,26,62,176
+sk18891,Karnataka,Festivals,State Prediction,high,6.021023349349527,Huttari,59,66,176
+sk18894,Karnataka,Festivals,State Prediction,low,0.0,Kadalekai Parishe festival city,26,57,176
+sk18924,Karnataka,Festivals,State Prediction,low,0.0,Traditional opening of Mysore Dasara,59,95,176
+sk18925,Karnataka,Festivals,State Prediction,low,0.0,Kudala Sangama Utsava festival,58,88,176
+sk18929,Karnataka,Festivals,State Prediction,high,6.021023349349527,Huttari,26,33,176
+sk18949,Karnataka,Festivals,State Prediction,high,5.214935757608986,Karaga Festival,58,73,176
+sk18952,Karnataka,Festivals,State Prediction,high,5.214935757608986,Karaga Festival,26,41,176
+sk18962,Karnataka,History,State Prediction,low,0.0,Hindu epics in Yakshagana stories,58,91,222
+sk18963,Karnataka,History,State Prediction,low,0.0,Vijayanagara Empire response to,26,57,222
+sk18970,Karnataka,History,State Prediction,low,0.0,Sharana movement origin,26,49,222
+sk18971,Karnataka,History,State Prediction,low,0.0,Sharana movement origin,58,81,222
+sk18974,Karnataka,History,State Prediction,low,0.0,Modern-day state with Vijayanagara remnants,59,102,222
+sk18976,Karnataka,History,State Prediction,low,0.0,Sharana Movement state,26,48,222
+sk18983,Karnataka,History,State Prediction,low,0.0,Royal dynasty associated with Bisi Bele Bath,59,103,222
+sk18984,Karnataka,History,State Prediction,high,11.583290727630791,Tipu Sultan,58,69,222
+sk18986,Karnataka,History,State Prediction,low,0.0,Kodava weapon during Huttari,59,87,222
+sk18988,Karnataka,History,State Prediction,high,11.583290727630791,Tipu Sultan,59,70,222
+sk18991,Karnataka,History,State Prediction,high,11.583290727630791,Tipu Sultan,26,37,222
+sk19076,Karnataka,Tourism,State Prediction,low,1.3862943611198906,Kudalasangama temple,26,46,336
+sk19077,Karnataka,Tourism,State Prediction,high,8.889859587773016,M. Chinnaswamy Stadium,59,81,336
+sk19078,Karnataka,Tourism,State Prediction,low,1.3862943611198906,Kudalasangama temple,58,78,336
+sk19079,Karnataka,Tourism,State Prediction,low,1.3862943611198906,Kudalasangama temple,59,79,336
+sk19080,Karnataka,Tourism,State Prediction,low,1.0986122886681098,Jog Falls location,58,76,336
+sk19081,Karnataka,Tourism,State Prediction,high,8.889859587773016,M. Chinnaswamy Stadium,26,48,336
+sk19082,Karnataka,Tourism,State Prediction,low,1.0986122886681098,Jog Falls location,26,44,336
+sk19083,Karnataka,Tourism,State Prediction,low,1.0986122886681098,Jog Falls location,59,77,336
+sk19084,Karnataka,Tourism,State Prediction,high,8.889859587773016,M. Chinnaswamy Stadium,58,80,336
+sk19402,Madhya_Pradesh,Festivals,State Prediction,high,4.90527477843843,Malwa Utsav,26,37,174
+sk19403,Madhya_Pradesh,Festivals,State Prediction,high,4.820281565605037,Lokrang Festival,58,74,174
+sk19405,Madhya_Pradesh,Festivals,State Prediction,high,4.820281565605037,Lokrang Festival,59,75,174
+sk19406,Madhya_Pradesh,Festivals,State Prediction,high,4.90527477843843,Malwa Utsav,59,70,174
+sk19410,Madhya_Pradesh,Festivals,State Prediction,low,4.290459441148391,Gotmar Mela,58,69,174
+sk19416,Madhya_Pradesh,Festivals,State Prediction,low,0.0,Hingot Mela,44,55,174
+sk19417,Madhya_Pradesh,Festivals,State Prediction,high,4.90527477843843,Malwa Utsav,58,69,174
+sk19418,Madhya_Pradesh,History,State Prediction,low,0.0,Buddhist caves near Udayagiri,26,55,222
+sk19419,Madhya_Pradesh,History,State Prediction,low,5.351858133476067,Holkar and Scindia,58,76,222
+sk19420,Madhya_Pradesh,History,State Prediction,low,2.6390573296152584,Bell Metal Ware,59,74,222
+sk19424,Madhya_Pradesh,History,State Prediction,low,5.351858133476067,Holkar and Scindia,67,85,222
+sk19425,Madhya_Pradesh,History,State Prediction,high,6.329720905522696,Malwa Sultanate,41,56,222
+sk19426,Madhya_Pradesh,History,State Prediction,high,6.773080375655535,Paramara dynasty,59,75,222
+sk19427,Madhya_Pradesh,History,State Prediction,high,6.773080375655535,Paramara dynasty,23,39,222
+sk19430,Madhya_Pradesh,History,State Prediction,high,6.329720905522696,Malwa Sultanate,26,41,222
+sk19431,Madhya_Pradesh,History,State Prediction,high,6.329720905522696,Malwa Sultanate,58,73,222
+sk19435,Madhya_Pradesh,History,State Prediction,high,6.329720905522696,Malwa Sultanate,59,74,222
+sk19437,Madhya_Pradesh,History,State Prediction,high,6.773080375655535,Paramara dynasty,58,74,222
+sk19438,Madhya_Pradesh,History,State Prediction,high,6.773080375655535,Paramara dynasty,26,42,222
+sk19440,Madhya_Pradesh,History,State Prediction,low,2.6390573296152584,Bell Metal Ware,26,41,222
+sk19446,Madhya_Pradesh,Tourism,State Prediction,low,5.945420608606575,Great Stupa of Sanchi,28,49,319
+sk19448,Madhya_Pradesh,Tourism,State Prediction,high,6.900730664045173,Narmada Parikrama,26,43,319
+sk19449,Madhya_Pradesh,Tourism,State Prediction,low,5.945420608606575,Great Stupa of Sanchi,58,79,319
+sk19451,Madhya_Pradesh,Tourism,State Prediction,low,5.945420608606575,Great Stupa of Sanchi,26,47,319
+sk19452,Madhya_Pradesh,Tourism,State Prediction,high,10.22868214924768,Kanha National Park,26,45,319
+sk19454,Madhya_Pradesh,Tourism,State Prediction,high,10.22868214924768,Kanha National Park,59,78,319
+sk19455,Madhya_Pradesh,Tourism,State Prediction,low,2.9444389791664403,Marble Rocks and Dhuandhar Falls,59,91,319
+sk19457,Madhya_Pradesh,Tourism,State Prediction,low,2.9444389791664403,Marble Rocks and Dhuandhar Falls,26,58,319
+sk19458,Madhya_Pradesh,Tourism,State Prediction,high,10.28755876795662,Pachmarhi,58,67,319
+sk19461,Madhya_Pradesh,Tourism,State Prediction,low,2.9444389791664403,Marble Rocks and Dhuandhar Falls,58,90,319
+sk19464,Madhya_Pradesh,Tourism,State Prediction,high,10.82013821962583,Orchha,59,65,319
+sk19595,Manipur,Festivals,State Prediction,high,6.326149473155099,Chumpha,58,65,200
+sk19597,Manipur,Festivals,State Prediction,high,6.824373670043086,Ningol Chakouba,58,73,200
+sk19598,Manipur,Festivals,State Prediction,high,6.532334292222349,Yaosang,58,65,200
+sk19602,Manipur,Festivals,State Prediction,high,6.824373670043086,Ningol Chakouba,59,74,200
+sk19603,Manipur,Festivals,State Prediction,high,6.824373670043086,Ningol Chakouba,26,41,200
+sk19604,Manipur,Festivals,State Prediction,high,4.543294782270004,Kang festival,59,72,200
+sk19606,Manipur,Festivals,State Prediction,high,4.543294782270004,Kang festival,26,39,200
+sk19609,Manipur,History,State Prediction,low,0.6931471805599453,Khogjom War Park,59,75,232
+sk19610,Manipur,History,State Prediction,high,5.993961427306569,Kangla Palace,26,39,232
+sk19611,Manipur,History,State Prediction,low,3.9318256327243257,Nupi Lal Memorial Complex,58,83,232
+sk19612,Manipur,History,State Prediction,high,5.993961427306569,Kangla Palace,59,72,232
+sk19613,Manipur,History,State Prediction,low,0.6931471805599453,Khogjom War Park,58,74,232
+sk19614,Manipur,History,State Prediction,high,5.993961427306569,Kangla Palace,58,71,232
+sk19615,Manipur,History,State Prediction,low,3.9318256327243257,Nupi Lal Memorial Complex,59,84,232
+sk19616,Manipur,History,State Prediction,low,3.9318256327243257,Nupi Lal Memorial Complex,26,51,232
+sk19617,Manipur,History,State Prediction,low,0.6931471805599453,Khogjom War Park,26,42,232
+sk19668,Manipur,Tourism,State Prediction,low,0.0,Keibul Lamjao National Gardens,26,56,329
+sk19669,Manipur,Tourism,State Prediction,high,8.305978210967302,Keibul Lamjao National Park,26,53,329
+sk19672,Manipur,Tourism,State Prediction,high,9.514289416891836,Loktak Lake,59,70,329
+sk19675,Manipur,Tourism,State Prediction,high,10.205257424305527,Sangai,26,32,329
+sk19676,Manipur,Tourism,State Prediction,high,12.734551529533482,State Museum,59,71,329
+sk19679,Manipur,Tourism,State Prediction,low,0.0,Jeweled town,26,38,329
+sk19680,Manipur,Tourism,State Prediction,high,8.305978210967302,Keibul Lamjao National Park,59,86,329
+sk19681,Manipur,Tourism,State Prediction,low,4.624972813284271,Shirui Hill,59,70,329
+sk19682,Manipur,Tourism,State Prediction,low,1.0986122886681098,Khogampatt Gardens,59,77,329
+sk19685,Manipur,Tourism,State Prediction,high,9.514289416891836,Loktak Lake,58,69,329
+sk19687,Manipur,Tourism,State Prediction,low,4.624972813284271,Shirui Hill,58,69,329
+sk19689,Manipur,Tourism,State Prediction,low,0.0,Jeweled town,58,70,329
+sk19694,Manipur,Tourism,State Prediction,low,0.6931471805599453,Kenya Tourist Accommodation,58,85,329
+sk19695,Manipur,Tourism,State Prediction,high,10.205257424305527,Sangai,58,64,329
+sk19905,Nagaland,Festivals,State Prediction,low,4.1588830833596715,Tuluni Festival,26,41,199
+sk19913,Nagaland,Festivals,State Prediction,high,8.546557800046141,Festival of Festivals,62,83,199
+sk19915,Nagaland,Festivals,State Prediction,low,4.1588830833596715,Tuluni Festival,59,74,199
+sk19917,Nagaland,Festivals,State Prediction,high,9.583075655461428,Hornbill Festival,26,43,199
+sk19918,Nagaland,Festivals,State Prediction,high,5.484796933490655,Moatsu Festival,59,74,199
+sk19919,Nagaland,Festivals,State Prediction,high,6.86484777797086,Sekrenyi,59,67,199
+sk19921,Nagaland,Festivals,State Prediction,high,9.583075655461428,Hornbill Festival,58,75,199
+sk19925,Nagaland,Festivals,State Prediction,high,6.86484777797086,Sekrenyi,58,66,199
+sk19926,Nagaland,Festivals,State Prediction,low,4.1588830833596715,Tuluni Festival,58,73,199
+sk19927,Nagaland,History,State Prediction,low,1.3862943611198906,Ruins of Kachari Rajbari,58,82,229
+sk19928,Nagaland,History,State Prediction,low,1.3862943611198906,Ruins of Kachari Rajbari,26,50,229
+sk19929,Nagaland,History,State Prediction,low,0.0,TokhÃÂ¼ Emong,26,40,229
+sk19930,Nagaland,History,State Prediction,high,7.0967213784947605,Kohima War Cemetery,58,77,229
+sk19932,Nagaland,History,State Prediction,low,1.3862943611198906,Ruins of Kachari Rajbari,59,83,229
+sk19934,Nagaland,History,State Prediction,high,7.0967213784947605,Kohima War Cemetery,26,45,229
+sk19935,Nagaland,History,State Prediction,high,7.0967213784947605,Kohima War Cemetery,59,78,229
+sk19936,Nagaland,History,State Prediction,low,0.0,TokhÃÂ¼ Emong,58,72,229
+sk19938,Nagaland,History,State Prediction,low,0.0,Mount JapfÃÂ¼,58,72,229
+sk19940,Nagaland,History,State Prediction,low,0.0,Mount JapfÃÂ¼,26,40,229
+sk19943,Nagaland,History,State Prediction,low,0.0,Mount JapfÃÂ¼,59,73,229
+sk19973,Nagaland,Tourism,State Prediction,low,4.1588830833596715,Lake Shilloi,58,70,332
+sk19974,Nagaland,Tourism,State Prediction,high,18.65799107883159,Mon,58,61,332
+sk19975,Nagaland,Tourism,State Prediction,high,9.102643796520809,Khonoma,54,61,332
+sk19977,Nagaland,Tourism,State Prediction,low,4.23410650459726,Pulie Badze Wildlife Sanctuary,58,88,332
+sk19978,Nagaland,Tourism,State Prediction,high,18.65799107883159,Mon,26,29,332
+sk19979,Nagaland,Tourism,State Prediction,high,10.25393313422352,Mokokchung,58,68,332
+sk19982,Nagaland,Tourism,State Prediction,high,10.25393313422352,Mokokchung,26,36,332
+sk19991,Nagaland,Tourism,State Prediction,low,5.771441123130016,Fakim Wildlife Sanctuary,59,83,332
+sk19992,Nagaland,Tourism,State Prediction,low,5.545177444479562,Ntangki National Park,26,47,332
+sk19993,Nagaland,Tourism,State Prediction,high,18.65799107883159,Mon,59,62,332
+sk19994,Nagaland,Tourism,State Prediction,low,5.545177444479562,Ntangki National Park,59,80,332
+sk19996,Nagaland,Tourism,State Prediction,low,4.1588830833596715,Lake Shilloi,26,38,332
+sk19999,Nagaland,Tourism,State Prediction,high,10.25393313422352,Mokokchung,59,69,332
+sk20655,Tamil_Nadu,Festivals,State Prediction,high,10.654479022780512,Golu,58,62,197
+sk20660,Tamil_Nadu,Festivals,State Prediction,high,6.0112671744041615,Natyanjali Dance Festival,59,84,197
+sk20664,Tamil_Nadu,Festivals,State Prediction,low,3.044522437723423,Thaipusam kavadi,59,75,197
+sk20665,Tamil_Nadu,Festivals,State Prediction,low,3.044522437723423,Thaipusam kavadi,58,74,197
+sk20666,Tamil_Nadu,Festivals,State Prediction,high,9.27865301215827,Pongal festival,59,74,197
+sk20667,Tamil_Nadu,Festivals,State Prediction,high,6.582025138892826,Mahamaham festival,26,44,197
+sk20669,Tamil_Nadu,Festivals,State Prediction,high,8.07775756373692,Panguni Uthiram,58,73,197
+sk20671,Tamil_Nadu,Festivals,State Prediction,high,6.7661917146603505,Chithirai Festival,26,44,197
+sk20677,Tamil_Nadu,Festivals,State Prediction,high,10.654479022780512,Golu,26,30,197
+sk20678,Tamil_Nadu,Festivals,State Prediction,high,8.07775756373692,Panguni Uthiram,26,41,197
+sk20679,Tamil_Nadu,Festivals,State Prediction,high,5.0238805208462765,Aadi Perukku festival,26,47,197
+sk20680,Tamil_Nadu,Festivals,State Prediction,high,5.0238805208462765,Aadi Perukku festival,59,80,197
+sk20683,Tamil_Nadu,Festivals,State Prediction,low,3.044522437723423,Thaipusam kavadi,26,42,197
+sk20684,Tamil_Nadu,History,State Prediction,high,10.080168229439996,Vijayanagara Empire,58,77,229
+sk20686,Tamil_Nadu,History,State Prediction,high,8.612503371220562,Chola Dynasty,58,71,229
+sk20689,Tamil_Nadu,History,State Prediction,high,7.43543801981455,Great Living Chola Temples,58,84,229
+sk20694,Tamil_Nadu,History,State Prediction,high,7.496097345175956,Kanchi Kamakoti Peetham,26,49,229
+sk20698,Tamil_Nadu,History,State Prediction,high,10.080168229439996,Vijayanagara Empire,26,45,229
+sk20745,Tamil_Nadu,Tourism,State Prediction,high,8.969669103793757,Poompuhar,58,67,335
+sk20747,Tamil_Nadu,Tourism,State Prediction,high,9.737255856891121,Nilgiri Hills,26,39,335
+sk20748,Tamil_Nadu,Tourism,State Prediction,high,11.620442653336701,Mahabalipuram,59,72,335
+sk20750,Tamil_Nadu,Tourism,State Prediction,low,5.717027701406222,Chettinad mansions,59,77,335
+sk20752,Tamil_Nadu,Tourism,State Prediction,high,9.737255856891121,Nilgiri Hills,59,72,335
+sk20753,Tamil_Nadu,Tourism,State Prediction,low,5.717027701406222,Chettinad mansions,26,44,335
+sk20754,Tamil_Nadu,Tourism,State Prediction,high,11.93865714502319,Kodaikanal,58,68,335
+sk20757,Tamil_Nadu,Tourism,State Prediction,high,8.969669103793757,Poompuhar,26,35,335
+sk20758,Tamil_Nadu,Tourism,State Prediction,low,5.717027701406222,Chettinad mansions,58,76,335
+sk20878,Telangana,Festivals,State Prediction,high,9.002454823050954,Bonalu,58,64,205
+sk20880,Telangana,Festivals,State Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,26,51,205
+sk20881,Telangana,Festivals,State Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,59,84,205
+sk20882,Telangana,Festivals,State Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,58,83,205
+sk20885,Telangana,Festivals,State Prediction,high,9.002454823050954,Bonalu,59,65,205
+sk20887,Telangana,Festivals,State Prediction,high,5.932245187448011,Sammakka Saralamma Jatara,29,54,205
+sk20889,Telangana,Festivals,State Prediction,high,9.002454823050954,Bonalu,59,65,205
+sk20891,Telangana,Festivals,State Prediction,high,9.002454823050954,Bonalu,58,64,205
+sk20894,Telangana,History,State Prediction,high,6.208590026096629,King Kothi Palace,59,76,201
+sk20899,Telangana,History,State Prediction,high,7.992268643270745,Purani Haveli,59,72,201
+sk20907,Telangana,History,State Prediction,low,1.0986122886681098,"Madina building, Hyderabad",59,85,201
+sk20913,Telangana,History,State Prediction,low,4.174387269895637,Moula Ali hill,59,73,201
+sk20924,Telangana,History,State Prediction,low,4.5217885770490405,Fox Sagar Lake,58,72,201
+sk20938,Telangana,History,State Prediction,low,5.71042701737487,Kakatiya Kala Thoranam,59,81,201
+sk20948,Telangana,History,State Prediction,high,9.213236175088209,Abids,26,31,201
+sk20970,Telangana,History,State Prediction,high,11.67366581373058,Golconda,26,34,201
+sk20974,Telangana,History,State Prediction,high,7.80016307039296,Warangal Fort,59,72,201
+sk20982,Telangana,History,State Prediction,low,4.454347296253507,Dewan Devdi,58,69,201
+sk21122,Telangana,Tourism,State Prediction,high,7.233455418621439,Kinnerasani Wildlife Sanctuary,26,56,296
+sk21123,Telangana,Tourism,State Prediction,high,6.980075940561763,Pakhal Lake,26,37,296
+sk21128,Telangana,Tourism,State Prediction,high,6.551080335043404,Mrugavani National Park,59,82,296
+sk21134,Telangana,Tourism,State Prediction,low,2.833213344056216,Edulabad Lake,58,71,296
+sk21147,Telangana,Tourism,State Prediction,high,6.551080335043404,Mrugavani National Park,26,49,296
+sk21166,Telangana,Tourism,State Prediction,low,5.472270673671475,Pranahita Wildlife Sanctuary,58,86,296
+sk21167,Telangana,Tourism,State Prediction,low,2.70805020110221,Khajaguda Talab,26,41,296
+sk21190,Telangana,Tourism,State Prediction,high,8.223090551161533,Durgam Cheruvu,26,40,296
+sk21193,Telangana,Tourism,State Prediction,high,6.586171654854675,Laknavaram Lake,59,74,296
+sk21210,Telangana,Tourism,State Prediction,low,5.298317366548036,Shivaram Wildlife Sanctuary,58,85,296
+sk21215,Telangana,Tourism,State Prediction,low,6.492239835020471,Shamirpet Lake,26,40,296
+sk21219,Telangana,Tourism,State Prediction,high,7.80954132465341,Kollapur,58,66,296
+sk21629,Uttarakhand,Festivals,State Prediction,low,2.3978952727983707,Ghee Sankrant,58,71,197
+sk21630,Uttarakhand,Festivals,State Prediction,high,8.11312710422178,Ganga Dussehra,59,73,197
+sk21631,Uttarakhand,Festivals,State Prediction,high,8.11312710422178,Ganga Dussehra,58,72,197
+sk21632,Uttarakhand,Festivals,State Prediction,high,8.11312710422178,Ganga Dussehra,26,40,197
+sk21635,Uttarakhand,Festivals,State Prediction,low,2.3978952727983707,Ghee Sankrant,59,72,197
+sk21636,Uttarakhand,Festivals,State Prediction,low,3.6109179126442243,Phul Dei,26,34,197
+sk21637,Uttarakhand,Festivals,State Prediction,low,3.9318256327243257,Uttarayani festival,58,77,197
+sk21640,Uttarakhand,Festivals,State Prediction,low,3.713572066704308,Ramman festival,58,73,197
+sk21642,Uttarakhand,Festivals,State Prediction,low,3.6109179126442243,Phul Dei,58,66,197
+sk21646,Uttarakhand,Festivals,State Prediction,high,5.493061443340548,Nanda Devi Raj Jaat,26,45,197
+sk21647,Uttarakhand,Festivals,State Prediction,high,5.493061443340548,Nanda Devi Raj Jaat,58,77,197
+sk21648,Uttarakhand,Festivals,State Prediction,low,3.713572066704308,Ramman festival,59,74,197
+sk21650,Uttarakhand,History,State Prediction,low,0.0,Surkanda Devi temple architecture,58,91,221
+sk21652,Uttarakhand,History,State Prediction,low,3.4011973816621555,Naina devi Temple,58,75,221
+sk21654,Uttarakhand,History,State Prediction,high,11.683157571291813,Gangotri,26,34,221
+sk21656,Uttarakhand,History,State Prediction,high,11.683157571291813,Gangotri,59,67,221
+sk21658,Uttarakhand,History,State Prediction,high,10.959296718878928,Bhagirathi,58,68,221
+sk21659,Uttarakhand,History,State Prediction,low,3.4011973816621555,Naina devi Temple,26,43,221
+sk21660,Uttarakhand,History,State Prediction,low,0.0,Surkanda Devi temple architecture,26,59,221
+sk21664,Uttarakhand,History,State Prediction,low,0.0,Pandavas' birth site,58,78,221
+sk21665,Uttarakhand,History,State Prediction,high,10.959296718878928,Bhagirathi,59,69,221
+sk21667,Uttarakhand,History,State Prediction,high,8.806723554725636,Alaknanda River,26,41,221
+sk21670,Uttarakhand,History,State Prediction,high,11.11161172798454,Nanda Devi,59,69,221
+sk21673,Uttarakhand,History,State Prediction,low,0.0,Pandavas' birth site,59,79,221
+sk21674,Uttarakhand,History,State Prediction,low,3.4011973816621555,Naina devi Temple,59,76,221
+sk21700,Uttarakhand,Tourism,State Prediction,high,8.17413934342947,Chota Char Dham,58,73,327
+sk21701,Uttarakhand,Tourism,State Prediction,low,6.234410725718371,Kedarnath town,59,73,327
+sk21704,Uttarakhand,Tourism,State Prediction,high,9.303739636234733,Kedarnath Temple,26,42,327
+sk21705,Uttarakhand,Tourism,State Prediction,low,3.091042453358316,Lakhudiyar Caves,26,42,327
+sk21706,Uttarakhand,Tourism,State Prediction,low,0.0,The Deva Bhoomi,26,41,327
+sk21709,Uttarakhand,Tourism,State Prediction,low,6.234410725718371,Kedarnath town,58,72,327
+sk21711,Uttarakhand,Tourism,State Prediction,high,8.521185212685776,Har ki Pauri,26,38,327
+sk21715,Uttarakhand,Tourism,State Prediction,low,0.0,The Deva Bhoomi,58,73,327
+sk21718,Uttarakhand,Tourism,State Prediction,high,8.993799971795545,Bholanath,58,67,327
+sk21720,Uttarakhand,Tourism,State Prediction,high,8.993799971795545,Bholanath,26,35,327
+sk21721,Uttarakhand,Tourism,State Prediction,low,3.091042453358316,Lakhudiyar Caves,58,74,327
+sk21724,Uttarakhand,Tourism,State Prediction,high,9.622847294873393,Palki,26,31,327
