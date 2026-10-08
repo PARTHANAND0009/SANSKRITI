@@ -1,0 +1,87 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Data}
+\label{sec:data}
+
+We use SANSKRITI \citep{maji-etal-2025-sanskriti} from the Hugging Face Hub (\texttt{13ari/Sanskriti}, fixed revision), \nRaw{} four-option questions about \nStates{} Indian states and union territories, sixteen cultural attributes and four question types (association, state prediction, country prediction, general awareness).
+We drop the \nDropped{} rows whose answer field matches none of the options and exclude \nAmbiguous{} rows whose gold text appears in two options.
+We also exclude the \nLeaks{} rows whose stem reveals the answer: the stem contains the gold option text, the gold state's name or one of its name forms, demonyms or languages, or ``Indian'' when the gold is India.
+This leaves \nAnalysis{} questions (Table~\ref{tab:data}; details in Appendix~\ref{app:data}).
+
+Each question is formatted as
+\texttt{Question: \{stem\} A. \{o$_1$\} B. \{o$_2$\} C. \{o$_3$\} D. \{o$_4$\} Answer:}
+with each option on its own line, and the model's choice is read at the final token over the four tokens ``\,A'' to ``\,D'' (a leading space; one token in every tokenizer we use).
+Every question is run in five option orders: the four cyclic rotations that place the gold answer at A, B, C and D once each, and one seeded random permutation used only for robustness.
+
+\subsection{Models and readouts}
+
+We study the base (not instruction-tuned) Llama-3.1-8B \citep{grattafiori2024llama3}, Qwen2.5-7B \citep{qwen2025qwen25} and Gemma-2-9B \citep{gemma2024gemma2}, with $L = 32$, 28 and 42 blocks, in bfloat16, using Hugging Face \texttt{transformers} with forward hooks.
+For readout layer $\ell \in \{0, \dots, L\}$ we take the residual stream at the final prompt token: $\ell = 0$ is the embedding output as it enters the first block (including Gemma's $\sqrt{d}$ scaling) and $\ell \geq 1$ is the output of block $\ell$.
+
+\paragraph{Logit lens.}
+We apply the model's final normalisation and unembedding to the layer-$\ell$ state (and Gemma-2's final logit soft-capping) and take a softmax restricted to the four option tokens, giving $p_\ell \in \Delta^3$.
+We check that at $\ell = L$ this reproduces the model's own output logits.
+
+\paragraph{Tuned lens.}
+Following \citet{belrose2023tuned}, each layer gets an affine translator $T_\ell(h) = h + A_\ell (h / s_\ell) + b_\ell$, initialised to the identity, trained to minimise the KL divergence from the model's final next-token distribution on WikiText-103 \citep{merity2016pointer} text (4M training tokens, SGD with Nesterov momentum).
+Here $s_\ell$ is a fixed per-layer scale, the mean Euclidean norm of the layer's residual states on a calibration batch.
+Without it, residual norms that grow by two orders of magnitude across layers made a shared learning rate diverge at late layers.
+The final layer keeps the identity, so both lenses agree at $\ell = L$.
+
+\subsection{Crystallization depth}
+
+\paragraph{Letter bias.}
+In early and middle layers the logit lens ranks one letter first for almost every question (Figure~\ref{fig:curves}, dotted grey lines).
+In the pilot, every Llama question whose naive first-correct layer was early had gold answer B, and every such Qwen question had gold A.
+A metric defined on one option order therefore measures the letter of the answer as much as the answer.
+The four cyclic rotations solve this by design: averaged over them, each option content appears at each letter once, so a letter preference adds the same amount to every option.
+
+\paragraph{Metrics.}
+For question $q$ and rotation $r$, let $p^{(r)}_\ell(c)$ be the probability of option content $c$ at layer $\ell$, and let $\bar p_\ell(c)$ be its mean over the four rotations.
+We define the following depths, all in layers and divided by $L$ to give $d$:
+\begin{itemize}
+\itemsep0em
+\item $d_{\mathrm{soft}}$: the expected layer under the normalised positive increments of the gold probability, $\sum_\ell \ell\, w_\ell$ with $w_\ell \propto \max(0, \bar p_\ell(g) - \bar p_{\ell-1}(g))$. It is continuous and robust to one-layer flips.
+\item $\lstar_{\mathrm{cyc}}$: the first layer at which the gold content has the largest $\bar p_\ell$ and keeps it through $L$.
+\item $d_{\mathrm{margin}}$: the first layer after which the rotation-mean of the letter-calibrated gold-minus-best-distractor log-probability margin stays positive. Calibration subtracts each letter's mean log-probability at that layer, estimated over all four rotations together so that gold letters are balanced.
+\item $\lstar_{\mathrm{mean}}$ and $\lstar_{\mathrm{cal,mean}}$: the original first-top-1-and-stays layer of each rotation, without and with calibration, averaged over rotations.
+\end{itemize}
+We analyse questions answered correctly under $\bar p_L$.
+
+\paragraph{Primary metric.}
+\label{sec:prereg}
+The analysis plan was registered in the repository before the full run (commit \texttt{c05260c}).
+$d_{\mathrm{soft}}$ is primary unless one of $\lstar_{\mathrm{cyc}}$ or $d_{\mathrm{margin}}$ is clearly more reliable: in at least two of three models its split-half reliability (rotations $\{0,2\}$ against $\{1,3\}$, Spearman over questions, Spearman--Brown corrected to four rotations) must exceed $d_{\mathrm{soft}}$'s by at least 0.10, with non-overlapping 95\% bootstrap intervals.
+\todoresult{name the metric selected by the rule and its reliabilities (results/primary\_metric.json).}
+
+\subsection{Entity documentation}
+
+An entity is extracted from each stem with templates for the templated question forms and a set of patterns for free-form stems (\pctEntity\% of analysed questions have an entity; Appendix~\ref{app:data}).
+Its frequency is the exact-string count in Dolma v1.7 through the infini-gram API (index \texttt{v4\_dolma-v1\_7\_llama}), used as $\log(1 + \text{count})$.
+Long names are rarer as exact strings: log count falls with log token length (slope \lenSlope, $r = \lenR$ over \nEntities{} entities).
+We therefore control for token length and word count, and also report a length-adjusted frequency, the residual of log count on log token length.
+As a check on the measure, corpus counts and 2024 English Wikipedia pageviews correlate at Spearman $\rho = \rhoPageviews$ over the \nPageviews{} entities with an article.
+State frequency is the log count of the state's name.
+
+\subsection{Statistical analysis}
+
+For each model and depth metric we fit
+\begin{multline*}
+d \sim z(\text{entity freq}) + z(\text{state freq}) + \text{acc} \\
++ z(\text{stem words}) + z(\log \text{entity tokens}) \\
++ z(\text{entity words}) + \text{attribute} + \text{question type},
+\end{multline*}
+where acc is the share of the four rotations answered correctly.
+The registered estimator is a linear mixed model with a random intercept per state; when its random-effect variance is estimated at the boundary, OLS with standard errors clustered by state is reported instead (both are saved).
+The entity-frequency test (H1) is two-sided with Holm correction across the five depth metrics within each model \todocite{Holm 1979}.
+The state-frequency test (H2) is a permutation test that shuffles state frequencies across states (1{,}000 permutations).
+A result is positive if the primary metric's Holm-adjusted $p < 0.05$ with a negative coefficient in at least two of three models, and null if in at least two models the 90\% interval of the standardised coefficient lies within $\pm 0.10$ depth standard deviations per standard deviation of frequency.
+
+\subsection{Activation patching}
+
+To test whether lens depth matches the layers where the entity is used, we patch the residual stream, in the original option order, on a stratified sample of 1{,}200 questions (frequency tier by attribute, across all eligible states, with Maharashtra and Bihar guaranteed at least 40 each).
+The corrupted prompt replaces the entity span with an entity of the same attribute from a different state.
+For each layer we copy the clean final-token residual into the corrupted run and measure recovery, $(\mathrm{LD}_{\mathrm{patch}} - \mathrm{LD}_{\mathrm{corr}}) / (\mathrm{LD}_{\mathrm{clean}} - \mathrm{LD}_{\mathrm{corr}})$, where LD is the gold-minus-best-distractor logit difference \citep{zhang2024patching}.
+A row is valid if the clean answer is correct and the corruption moves LD by at least one logit.
+Patching depth is the first layer with recovery $\geq 0.5$ (0.3 and 0.7 as sensitivity checks), and H3 is its Spearman correlation with $d_{\mathrm{soft}}$.

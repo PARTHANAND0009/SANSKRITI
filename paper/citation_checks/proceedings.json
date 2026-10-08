@@ -1,0 +1,128 @@
+{
+  "baldock2021": {
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2021/hash/5a4b25aaed25c2ee1b74de72dc03c14e-Abstract.html",
+    "citation_title": [
+      "Deep Learning Through the Lens of Example Difficulty"
+    ],
+    "citation_author": [
+      "Baldock, Robert",
+      "Maennel, Hartmut",
+      "Neyshabur, Behnam"
+    ],
+    "citation_journal_title": [
+      "Advances in Neural Information Processing Systems"
+    ],
+    "citation_volume": [
+      "34"
+    ],
+    "citation_firstpage": [
+      "10876"
+    ],
+    "citation_lastpage": [
+      "10889"
+    ],
+    "citation_pdf_url": [
+      "https://proceedings.neurips.cc/paper_files/paper/2021/file/5a4b25aaed25c2ee1b74de72dc03c14e-Paper.pdf"
+    ],
+    "citation_publication_date": [
+      "2021-12-06"
+    ]
+  },
+  "meng2022": {
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2022/hash/6f1d43d5a82a37e89b0665b33bf3a182-Abstract-Conference.html",
+    "citation_title": [
+      "Locating and Editing Factual Associations in GPT"
+    ],
+    "citation_author": [
+      "Meng, Kevin",
+      "Bau, David",
+      "Andonian, Alex",
+      "Belinkov, Yonatan"
+    ],
+    "citation_journal_title": [
+      "Advances in Neural Information Processing Systems"
+    ],
+    "citation_volume": [
+      "35"
+    ],
+    "citation_doi": [
+      "10.52202/068431-1262"
+    ],
+    "citation_firstpage": [
+      "17359"
+    ],
+    "citation_lastpage": [
+      "17372"
+    ],
+    "citation_pdf_url": [
+      "https://proceedings.neurips.cc/paper_files/paper/2022/file/6f1d43d5a82a37e89b0665b33bf3a182-Paper-Conference.pdf"
+    ],
+    "citation_publication_date": [
+      "2022-12-06"
+    ]
+  },
+  "kandpal2023": {
+    "url": "https://proceedings.mlr.press/v202/kandpal23a.html",
+    "_status": 200,
+    "citation_publisher": [
+      "PMLR"
+    ],
+    "citation_title": [
+      "Large Language Models Struggle to Learn Long-Tail Knowledge"
+    ],
+    "citation_language": [
+      "en"
+    ],
+    "citation_abstract_html_url": [
+      "https://proceedings.mlr.press/v202/kandpal23a.html"
+    ],
+    "citation_pdf_url": [
+      "https://proceedings.mlr.press/v202/kandpal23a/kandpal23a.pdf"
+    ],
+    "citation_firstpage": [
+      "15696"
+    ],
+    "citation_lastpage": [
+      "15707"
+    ],
+    "citation_author": [
+      "Nikhil Kandpal",
+      "Haikang Deng",
+      "Adam Roberts",
+      "Eric Wallace",
+      "Colin Raffel"
+    ],
+    "citation_publication_date": [
+      "2023/07/03"
+    ],
+    "citation_inbook_title": [
+      "International Conference on Machine Learning"
+    ],
+    "citation_conference_title": [
+      "International Conference on Machine Learning"
+    ],
+    "citation_issn": [
+      "2640-3498"
+    ]
+  },
+  "zhang2024": {
+    "url": "https://openreview.net/forum?id=Hf17y6u9BC",
+    "venue": "ICLR 2024 poster",
+    "authors": [
+      "Fred Zhang",
+      "Neel Nanda"
+    ],
+    "title": "Towards Best Practices of Activation Patching in Language Models: Metrics and Methods"
+  },
+  "culturescope2025_versions": {
+    "history": [
+      [
+        "4",
+        "Fri, 21 Aug 2026 13:59:55 UTC (2,567 KB)"
+      ]
+    ],
+    "titles": {
+      "4": "CulTrace: Tracing Internal Cultural Reasoning in Large Language Models"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+\section{Data Quality}
+\label{app:data}
+
+We use SANSKRITI as released and do not change any question.
+The full notes, with every affected row, are in \texttt{data/processed/data\_quality.md} and \texttt{leaks.csv} in our repository.
+
+\begin{table}[h]
+\centering\small
+\input{generated/tab_data}
+\caption{From the release to the analysis set.}
+\label{tab:data}
+\end{table}
+
+\paragraph{Answer matches no option.}
+In \nDropped{} rows the answer field matches none of the four options after trimming and lowercasing.
+In most of them the answer field holds the subject of the question or a paraphrase of it rather than an option (for example, the answer to ``What is the primary ingredient used in preparing Dhuska?'' is ``Primary ingredient in Dhuska''), and a few differ by spelling (``Uttarakhand'' against option ``Uttrakhand'').
+We drop these rows rather than guess the intended answer.
+
+\paragraph{Ambiguous gold.}
+In \nAmbiguous{} rows the gold text appears as two options, so either letter is correct; these are excluded.
+A further \nDupOnly{} rows repeat a distractor (two identical wrong options); they are kept and flagged, since the gold answer is unique.
+
+\paragraph{Stems that reveal the answer.}
+In \nLeaks{} rows the stem contains the gold option, or a name form or demonym of the gold state (or ``Indian'' when the gold is India).
+Most are Association questions: in \nAssocGoldText{} of them the gold text itself appears in the stem, and in \nAssocGoldStateName{} more a name form of the gold state does.
+These questions test reading rather than knowledge, so they are excluded from the depth analysis; they remain in the released tables with the flag \texttt{leaks\_answer}.
+
+\paragraph{Association questions answered by the state.}
+Association questions ask which region an item belongs to, and their distractors are districts, towns or valleys.
+In \nAssocState{} of them the gold option is instead the name of the row's own state, so the question can be answered at state level.
+When the templated stem also names the state, as in ``Where is the National Zoological Park famous within Delhi?'' with gold ``Delhi'', the answer is given away; this is the case for \nAssocStateLeak{} of the \nAssocState{} rows, which are among the leaks above.
+Because each templated item appears under all three Association templates, the issue sits with those items' answer fields rather than with the templates.
+In \nAssocRepeat{} further Association rows the gold option repeats the item named in the stem.

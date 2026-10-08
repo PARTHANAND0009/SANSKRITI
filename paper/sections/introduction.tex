@@ -1,0 +1,32 @@
+\section{Introduction}
+
+Benchmarks of cultural knowledge report whether a model answers correctly.
+They do not say how the answer is computed, or whether a correct answer about a festival in Bihar is produced the same way as one about a dish from Maharashtra.
+Interpretability work on factual recall gives one way to ask this.
+Reading the residual stream through the unembedding \citep{nostalgebraist2020logitlens} or through trained per-layer translators \citep{belrose2023tuned} shows the layer at which a model's prediction becomes stable, and causal methods \citep{meng2022locating,geva-etal-2023-dissecting} show which layers carry the information.
+
+We use this to study Indian cultural knowledge with SANSKRITI \citep{maji-etal-2025-sanskriti}, a benchmark of 21{,}853 questions over \nStates{} states and union territories and sixteen cultural attributes.
+For each correctly answered question we measure its \emph{crystallization depth}: the relative layer $d = \lstar / L$ at which the correct answer becomes, and remains, the model's choice.
+The idea follows \citet{baldock2021difficulty}, who showed that the layer at which an image classifier's prediction settles tracks how hard or atypical an example is.
+
+Our question is whether depth depends on how well documented the entity is.
+Language models know less about rare entities \citep{kandpal2023longtail,mallen-etal-2023-trust}, and Indian regional culture is unevenly represented in web text.
+If documentation matters beyond accuracy, then among questions a model gets right, answers about rare entities should form later, reflecting a longer computation or a weaker stored association.
+If it does not, depth is a property of the model and the question form, and coverage gaps show up only as errors.
+Both outcomes are informative for work on cultural representation in models \citep{yu2025cultrace,chelombitko2026cultural}, and we fixed the analysis, the primary metric and the criteria for a null result in advance (\S\ref{sec:prereg}).
+
+Building the measurement exposed two problems that apply to any layer-wise study of multiple-choice answers.
+First, in early and middle layers every model we tested ranks one particular answer letter first for nearly all questions.
+A naive first-correct-layer metric therefore reports early crystallization exactly for questions whose gold answer happens to sit at that letter.
+We remove this by presenting each question in its four cyclic option orders, so that each answer appears once at each letter, and averaging option probabilities by content.
+Second, a single first-correct-layer index is noisy: in our pilot its test-retest correlation between two option orders was below 0.3.
+We therefore use a continuous depth, the expected layer of the increase in gold probability, and choose between candidate metrics by split-half reliability under a rule written before the full run.
+
+Our contributions are:
+(1) a reliable, letter-bias-free measure of crystallization depth for multiple-choice questions, with its reliability reported;
+(2) depth profiles for three model families on Indian cultural knowledge;
+(3) a preregistered test of the link between entity documentation and depth, with controls for entity length and question type, and a state-level permutation test;
+(4) an activation-patching check of whether lens depth matches the layers where the entity information is causally used; and
+(5) a data-quality audit of SANSKRITI, including \nLeaks{} questions whose stem reveals the answer.
+
+\todoresult{Final paragraph of the introduction, written after the run. If H1 is supported: state the size of the effect in layers per SD in each model and what it implies. If null: state the equivalence bound that was met and that depth is set by model and question form, not documentation. In either case, one sentence on patching.}

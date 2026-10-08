@@ -1,0 +1,12 @@
+\section{Discussion}
+
+\paragraph{Measuring depth on multiple-choice answers.}
+The letter bias in Figure~\ref{fig:curves} is large enough that any layer-wise analysis of multiple-choice answers on a single option order mostly measures where the answer letter is.
+Balancing gold positions with cyclic rotations and averaging by content removes it without a learned correction.
+Single-layer crystallization indices were also too noisy to support question-level analysis in our pilot, so we recommend continuous depths and reporting their reliability.
+
+\paragraph{What depth tells us about cultural knowledge.}
+\todoresult{If H1 positive: better-documented entities resolve earlier; discuss size relative to between-model and between-attribute differences, and what it means for regional coverage. If null: depth is set by model and question form; documentation affects whether, not where, the answer forms; relate to \citet{kandpal2023longtail} and \citet{mallen-etal-2023-trust}. If opposite or mixed: report the models separately and avoid a general claim.}
+
+\paragraph{Lens and causal depth.}
+\todoresult{Agreement or disagreement between patching depth and lens depth (H3), and whether the entity information is used before the answer becomes readable.}

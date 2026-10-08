@@ -1,0 +1,9 @@
+\begin{abstract}
+Language models answer many questions about Indian culture correctly, but little is known about where in the network those answers are formed.
+We read out every layer of three open models (Llama-3.1-8B, Qwen2.5-7B, Gemma-2-9B) on \nAnalysis{} multiple-choice questions from SANSKRITI and measure the crystallization depth of each correct answer: the relative layer at which the model settles on it.
+Early layers of every model prefer one answer letter regardless of content, so we present each question in all four cyclic option orders and average over them, which removes this bias by design.
+We then test a preregistered hypothesis: answers about better-documented entities crystallize earlier, controlling for question form and entity length.
+\todoresult{one sentence with the main effect per model, or the equivalence result if null.}
+\todoresult{one sentence on whether activation patching agrees with the lens depth.}
+Code, data-quality notes and all results are released.
+\end{abstract}

@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+
+% review = anonymous submission with line numbers; preprint = named, with page numbers.
+\usepackage[review]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{xcolor}
+
+% Every number in the text that comes from data or results is a macro written by
+% analysis/figures.py; rerun it after new results and recompile.
+\input{generated/numbers}
+
+% Placeholders that must be filled once the full GPU run is in.
+\newcommand{\todoresult}[1]{\textcolor{red}{\textbf{[TODO-RESULT: #1]}}}
+\newcommand{\todocite}[1]{\textcolor{red}{\textbf{[TODO-CITE: #1]}}}
+\newcommand{\lstar}{\ell^{*}}
+
+\title{When Does the Answer Form? Crystallization Depth of Indian Cultural Knowledge in Language Models}
+
+\author{Anonymous}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related}
+\input{sections/methods}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/limitations}
+
+\bibliography{references}
+
+\appendix
+\input{sections/appendix_data}
+\input{sections/appendix_methods}
+
+\end{document}
