@@ -55,11 +55,51 @@ make smoke         # stage 2 on the proxy (CPU, 50 questions) + smoke checks
 make test
 ```
 
-Stage 2 on a real model:
+## GPU run (stages 2-4, all three models)
+
+One script does everything, resumably, and pushes `results/` after each model:
 
 ```
-python -m run.forward --model llama31_8b --device cuda --split analysis
-python -m run.forward --model llama31_8b --device cuda --split analysis --variant prompt_permuted
+git clone -b claude/research-codebase-setup-f0mhpj <repo> && cd SANSKRITI
+export HF_TOKEN=...                 # read from the environment only (Llama and Gemma are gated)
+bash scripts/gpu_run.sh             # rerun the same command after any interruption
+MODELS="qwen25_7b" bash scripts/gpu_run.sh      # one model
+KEEP_ACTS=0 bash scripts/gpu_run.sh             # delete each model's activations when done
+```
+
+Per model: download weights; `run.forward` on the full analysis set (19,742 questions) for
+the four cyclic option orders `cyc0..cyc3` and the random permutation `perm`; `run.tune_lens`;
+depth tables for the logit and tuned lens; the 4-rotation aggregate; split-half and cyc0-vs-perm
+reliability; `run.patch` on the stratified sample (1,248 questions); smoke. Then
+`analysis.stats --agg cyc`. Step durations are logged to `results/gpu_run_log.tsv`.
+
+Estimates (not measured on a GPU; derived from FLOP counts and the CPU pilot; the log will
+give real numbers after the first model):
+
+| | A100 40 GB | A100 80 GB |
+|---|---|---|
+| forward, 5 variants x 19,742 questions (~10 M tokens) | ~1 h / model (Gemma ~1.5 h) | ~0.7 h / model (Gemma ~1 h) |
+| tuned lens (250 steps, 8 x 512 tokens) + eval | ~15 min / model | ~10 min / model |
+| depth tables (2 readouts x 5 variants) | ~20 min / model | ~15 min / model |
+| patching (1,248 questions, L+1 patched runs each) | ~15 min / model | ~10 min / model |
+| **total, three models** | **~6-8 h** | **~4-6 h** |
+
+Both cards hold every model in bf16 (16, 15, 18.5 GB); on 40 GB keep the default batch
+sizes (16 / 16 / 8), on 80 GB `BATCH=32` is safe for Llama and Qwen.
+Disk: weights 68 GB (Gemma ships fp32, 37 GB; cast to bf16 at load), activations fp16
+~27 / 20 / 30 GB per model for 5 variants, env ~10 GB: **~160 GB with KEEP_ACTS=1, ~110 GB
+with KEEP_ACTS=0** (peak = all weights + one model's activations).
+
+Single steps:
+
+```
+python -m run.forward --model llama31_8b --device cuda --split analysis --variant cyc0
+python -m run.tune_lens --model llama31_8b --device cuda
+python -m analysis.depth table --model llama31_8b --variant cyc0 --device cuda --readout tuned
+python -m analysis.depth aggregate --model llama31_8b --variants cyc0 cyc1 cyc2 cyc3
+python -m analysis.depth split-half --model llama31_8b
+python -m run.patch --model llama31_8b --device cuda
+python -m analysis.stats --models llama31_8b qwen25_7b gemma2_9b --agg cyc --out results/gpu_stats
 ```
 
 Shards land in `acts/{model}/{variant}/shard_XXXXX.npz` (`acts` fp16 [n, L+1, d], layer 0 = embeddings,
