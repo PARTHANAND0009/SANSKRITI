@@ -26,5 +26,14 @@ def test_tuned_lens_beats_logit_lens_and_last_layer_stays_identity():
     raw, tuned = evaluate(model, lens, eval_chunks, batch=8, device="cpu")
     assert (tuned[:N_LAYERS] < raw[:N_LAYERS]).all(), (raw, tuned)
     dev = lens.deviation_from_identity()
-    assert dev[N_LAYERS, 0] < 1e-3 and dev[N_LAYERS, 1] < 1e-3, dev[N_LAYERS]
+    assert dev[N_LAYERS, 0] < 1e-4 and dev[N_LAYERS, 1] < 1e-4, dev[N_LAYERS]
     assert abs(tuned[N_LAYERS] - raw[N_LAYERS]) < 1e-4
+
+
+def test_scale_keeps_identity_and_is_saved(tmp_path):
+    lens = TunedLens(3, 8)
+    lens.set_scale([torch.full((5, 8), float(k + 1)) for k in range(3)])
+    h = torch.randn(2, 8)
+    torch.testing.assert_close(lens(h, 2), h)
+    torch.save({"state_dict": lens.state_dict(), "n_readout_layers": 3, "d_model": 8}, tmp_path / "s.pt")
+    torch.testing.assert_close(load_tuned_lens(tmp_path / "s.pt").scale, lens.scale)
