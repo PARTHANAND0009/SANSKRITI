@@ -83,6 +83,7 @@ def state_name_regex(states) -> re.Pattern:
 
 QUOTED = re.compile(r"[\"“](?P<E>[^\"”]{2,80}?)[,.]?[\"”]")
 MIN_LEXICON_LEN = 4
+DANGLING_TAIL = r"(?i)\s(?:state|to|in|of|the|for|houses|celebrated in)\s*$"
 
 
 def clean(s: str) -> str:
@@ -205,7 +206,9 @@ def swap_pool(df: pd.DataFrame, ent: pd.DataFrame):
     pool["n_states_for_entity"] = pool.groupby(["attribute", "key"]).state.transform("nunique")
     pool = pool.merge(sp.groupby(["attribute", "key", "state"]).entity_mentions_state.first().reset_index(),
                       on=["attribute", "key", "state"])
-    pool["swap_ok"] = (pool.n_states_for_entity == 1) & ~pool.entity_mentions_state
+    # entities cut from stems with trailing words ("Sohrai painting state", "... belong to")
+    pool["dangling_tail"] = pool.entity.str.contains(DANGLING_TAIL)
+    pool["swap_ok"] = (pool.n_states_for_entity == 1) & ~pool.entity_mentions_state & ~pool.dangling_tail
     clean_pool = pool[pool.swap_ok]
     per_attr_state = clean_pool.groupby(["attribute", "state"]).size()
     per_attr = clean_pool.groupby("attribute").size()
@@ -255,7 +258,8 @@ def main():
     cand = cand.merge(df[["qid", "question_type"]], on="qid")
     cand = cand[cand.qid.isin(an_qids)]
     print(f"\n== swap pool: {len(pool)} (attribute, entity, state) entries, "
-          f"{(~pool.swap_ok).sum()} not usable as candidates ({(pool.n_states_for_entity > 1).sum()} seen under "
+          f"{(~pool.swap_ok).sum()} not usable as candidates ({pool.dangling_tail.sum()} dangling tail, "
+          f"{(pool.n_states_for_entity > 1).sum()} seen under "
           f">1 state, {pool.entity_mentions_state.sum()} name a state)")
     print(f"entities naming a state (entity_mentions_state): {an.entity_mentions_state.sum()} rows; "
           f"in State Prediction: {an[an.question_type == 'State Prediction'].entity_mentions_state.sum()}")

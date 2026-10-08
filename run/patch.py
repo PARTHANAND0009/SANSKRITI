@@ -18,7 +18,8 @@ moves LD by less than --min-effect logits are kept but flagged valid = False.
 Stratified sample (--build-sample): 3 attributes x 12 states x 2 frequency tiers x 20
 questions, from the analysis set (no ambiguous_gold, no leaks_answer), questions with a
 stem span and a frequency tier, attributes whose questions all have >= 3 swap
-candidates. Attributes: the 3 with most eligible questions; states: the 12 that fill
+candidates. Excluded because the swap cannot change the answer: Country Prediction (the
+answer is always India) and stems that name a state (the state cue survives the swap). Attributes: the 3 with most eligible questions; states: the 12 that fill
 the most cells (sum over cells of min(count, 20)). Written to
 data/processed/patch_sample.csv and patch_sample_cells.csv (actual counts).
 
@@ -43,10 +44,12 @@ import torch
 from crystal.io import (load_analysis_set, load_entities, load_freq, load_run_config, model_config, resolve,
                         set_seed, variant_columns)
 from crystal.lens import decoder_layers
+from data.entities import state_name_regex
 from data.prep import build_prompt, option_order
 
 THRESHOLDS = (0.3, 0.5, 0.7)
 MIN_SWAP_CANDIDATES = 3
+EXCLUDED_QUESTION_TYPES = ("Country Prediction",)
 
 
 # ------------------------------------------------------------------ sample
@@ -59,6 +62,11 @@ def eligible_questions() -> pd.DataFrame:
     pool = pool[pool.swap_ok]
     df = an.merge(ent, on="qid").merge(fr, on="qid")
     df = df[df.span_start.notna() & df.tier.notna()].copy()
+    # Country Prediction: the answer is always India, so a swap to another Indian state's
+    # entity cannot change it. Stems that name a state keep the state cue after the swap.
+    df = df[~df.question_type.isin(EXCLUDED_QUESTION_TYPES)]
+    rx = state_name_regex(an.state.unique())
+    df = df[~df.stem.map(lambda s: bool(rx.search(s)))]
     per_attr = pool.groupby("attribute").size()
     per_attr_state = pool.groupby(["attribute", "state"]).size()
     df["n_swap_candidates"] = [int(per_attr.get(a, 0) - per_attr_state.get((a, s), 0))
