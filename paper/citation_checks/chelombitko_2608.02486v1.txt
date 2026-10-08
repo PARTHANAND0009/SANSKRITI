@@ -1,0 +1,2110 @@
+                                                         Cultural Awareness is Represented but Not Decoded:
+                                                    Tracing Mythological Knowledge across 18 Open-Source LLMs
+
+                                                 Iaroslav Chelombitko 1,2,3 and Ekaterina Chelombitko 1 and Mika Hämäläinen 2
+                                                     1
+                                                       DataSpike 2 Metropolia University of Applied Sciences, Helsinki, Finland
+                                                                   3
+                                                                     Neapolis University Pafos, Paphos, Cyprus
+                                                                             i.chelombitko@nup.ac.cy
+
+
+
+                                                                  Abstract                             Folk-narrative content sits squarely inside that bias
+                                                                                                       surface, but it has a property the surveyed tasks
+                                                Open-source LLMs reliably name Zeus, Jupiter,          lack: a long tradition of parallel structural catalogu-
+                                                and Thor, but recover their counterparts in
+                                                                                                       ing across cultures (the Aarne-Thompson-Uther
+                                                less-represented traditions like Finnish, Slavic,
+                                                Egyptian, or Chinese mythology far less con-           type index and the Thompson Motif-Index of Folk-
+                                                sistently. We ask where inside the model this          Literature (Thompson, 1955)) lets one ask the same
+                                                cultural default is produced. On a parallel cross-     question of the same model across many traditions
+arXiv:2608.02486v1 [cs.CL] 3 Aug 2026
+
+
+
+
+                                                cultural substrate of Thompson-motif entities,         with an unambiguous gold answer. We use this
+                                                we instrument 18 open-source LLMs from 8               property to push the cultural-bias diagnosis from
+                                                architecture families with linear probing, logit       behavioral (“what does the model say?”) to mech-
+                                                lens, activation patching, and output extraction.      anistic (“where inside the model is the bias pro-
+                                                The residual stream cleanly distinguishes cul-
+                                                                                                       duced?”), and ask what mitigations it suggests.
+                                                tures, well above a name-string baseline, yet
+                                                the decoder collapses culturally-specific tokens          When asked to name the supreme sky god, open-
+                                                onto dominant-tradition ones. The failure is at        source LLMs reliably produce Zeus for “Greek”,
+                                                readout, not at representation. Asking the same        Jupiter for “Roman”, and Thor for “Norse”,2 but
+                                                question in the target culture’s native language       for less-represented traditions (Finnish, Ukrainian,
+                                                versus English produces failures that cluster          Mesopotamian, etc.) the canonical filler is recov-
+                                                within language but decouple across language:          ered far less consistently, a familiar behavioral di-
+                                                the decoder is gated on prompt language. We
+                                                                                                       agnosis (Naous et al., 2024; Palta and Rudinger,
+                                                release a per-entity (probe, output) decompo-
+                                                sition framework, a citation-anchored cross-           2023; Ramezani and Xu, 2023); wrong answers
+                                                cultural ground truth, a within- versus cross-         tend to be refusals, hedges, or a culturally plausible
+                                                mode correlation test for language-conditioned         but incorrect entity from within the target tradition.
+                                                readout, and per-entity predictions for all 18         The follow-up is mechanistic: is the model unaware
+                                                models.1                                               that the entities are culturally distinct, or is it aware
+                                                                                                       but unable to retrieve the right name? The two
+                                        1       Introduction                                           answers split cultural bias into two regimes that re-
+                                        Large language models are deployed across the                  spond to opposite interventions, representational
+                                        world, yet their pretraining corpora are domi-                 flattening (the residual stream does not separate
+                                        nated by English-language web data and a narrow                cultures, so the fix needs new information) and de-
+                                        band of culturally hegemonic sources. The result-              coding flattening (the residual separates cultures
+                                        ing cultural skew shows up in tasks as different               but the readout collapses culturally-specific tokens
+                                        as moral reasoning, food and religious practice,               onto dominant-tradition ones). Disentangling these
+                                        named-entity recognition, and even temperature-                regimes under scaling and prompt-language condi-
+                                        scale defaults, with LLMs defaulting to the Anglo-             tioning motivates our five research questions:
+                                        American or broader Western frame across all                      • RQ1 (representational preservation): To what
+                                        of them (Naous et al., 2024; Palta and Rudinger,                    extent does the residual stream encode cul-
+                                        2023; Atari et al., 2023; Adilazuarda et al., 2024).                ture above a name-surface baseline when the
+                                            1
+                                            Code, data, and per-entity predictions for every model:         output is wrong?
+                                        https://github.com/AragonerUA/folkmotif;             dataset
+                                                                                                          2
+                                        card:   https://huggingface.co/datasets/Aragoner/                 The chief sky god of Norse tradition is Odin; the
+                                        folkmotif.                                                     Thompson-index canonical filler is Thor, the storm-sky figure.
+   • RQ2 (layer-wise emergence): At what depth            2   Related Work
+      does the gold-token continuation enter the top-
+      k, relative to the probe peak?                      A growing behavioral literature documents that
+   • RQ3 (causal localization): Where along the           LLMs default to Western and Anglo-American cul-
+      network does swapping residual streams be-          tural reference frames (Naous et al., 2024; Palta
+      tween cross-cultural prompts begin to flip the      and Rudinger, 2023; Ramezani and Xu, 2023; Atari
+      model’s continuation?                               et al., 2023), with recent surveys consolidating the
+   • RQ4 (scaling): How does within-family scal-          programme (Hershcovich et al., 2022; Adilazuarda
+      ing reshape the gap between probe and output        et al., 2024); cross-language and cross-script asym-
+      accuracy: does it close, shrink, or persist?        metries underpinning these gaps are documented
+   • RQ5 (cross-lingual querying): How do para-           at the data and tokenization levels (Kreutzer et al.,
+      phrase failures decompose under prompt-             2022; Chelombitko et al., 2024; Chelombitko and
+      language conditioning, and how much cell            Komissarov, 2024; Chelombitko et al., 2026), and
+      recovery does a bilingual ensemble buy over         the disconnect between formal “low-resource” cov-
+      either single mode?                                 erage and actual cultural representation is artic-
+   To answer these we instrument the 18 open-             ulated by Hämäläinen (2021). What this strand
+source LLMs listed in Table 1, spanning 1.2B–34B          cannot tell us is where inside the model the failure
+across eight architecture families (Grattafiori et al.,   happens.
+2024; Team et al., 2025; Abdin et al., 2024; Qwen            The natural instruments are the linear probe
+et al., 2025; Yang et al., 2025; AI et al., 2025;         (Alain and Bengio, 2018; Hewitt and Liang, 2019;
+OLMo et al., 2025; Aryabumi et al., 2024a,b), with        Belinkov, 2022), which since LAMA (Petroni et al.,
+four mechanistic measurements: layer-wise linear          2019) has become the standard tool for asking
+probing of the residual stream for the 10-way cul-        what knowledge is linearly readable from a resid-
+ture label (E1), a logit lens tracking the depth at       ual stream and has been applied to factual, geo-
+which the gold entity’s first sub-token enters the        graphic, and temporal information (Gurnee and
+top-k continuations (E2), cross-cultural activation       Tegmark, 2024; Marks and Tegmark, 2024); the
+patching that swaps source-culture residuals into         logit lens (Belrose et al., 2025), used in multilin-
+the target-culture prompt (E3), and output extrac-        gual form to argue that LLMs reason in a dominant
+tion by greedy chat-template generation in two            language and translate at the last layer (Wendler
+prompt modes, English (EN) and target-language            et al., 2024); and activation patching (Vig et al.,
+(NL) query (E4); §3.3 specifies each. Each entity’s       2020; Meng et al., 2023; Geiger et al., 2024;
+E1 outcome (does the probe read the culture?) and         Wang et al., 2022), the central causal instrument of
+EN outcome (does the model emit the right name?)          the mechanistic-interpretability programme (Olah
+form a 2 × 2 decomposition (§3.3) with four cells:        et al., 2020; Elhage et al., 2021). For these instru-
+Preserved (recognized and emitted), Decoding-             ments to mean anything cross-culturally we need a
+Suppressed (recognized but emits a wrong name),           substrate parallel by construction, which we draw
+SurfaceLuck (right name without internal disam-           from Thompson’s Motif-Index of Folk-Literature
+biguation), and RepresentationallyFlat (neither).         (Thompson, 1955), previously applied in computa-
+The substrate is a parallel cross-cultural entity set     tional folkloristics (Karsdorp and van den Bosch,
+of 27 Thompson-index motifs evaluated across 10           2013), in the spirit of treating LLM evaluation as a
+cultures.                                                 humanities-informed enterprise (Hämäläinen et al.,
+   Our main empirical finding is that Decod-              2024). Our contribution is to localize the behav-
+ingSuppressed (probe right, output wrong) is              ioral gap mechanistically: where the probe sees a
+the largest cell in every one of the 18 models;           strong signal but the lens and the output do not,
+the asymmetry is at the decoder, not the encoder.         the failure is the unembedding’s, not the residual
+Within-family scaling shrinks the probe−output            stream’s.
+gap but does not close it in any family (§4.5).              Closest to us is CultureScope (Yu et al., 2025),
+The unembedding is also language-conditioned:             which also brings mechanistic interpretability to
+cross-language paraphrases decouple while within-         cultural bias: it patches internal representations to
+language ones correlate (rwithin = 0.57 vs rcross =       extract cultural knowledge on everyday cultural-
+0.29), and a bilingual ensemble lifts cell recovery       knowledge prompts and scores how far less-
+at zero training cost (§4.6).                             documented cultures are entangled with dominant
+ones inside the representation, reporting that low-         handful use a contested filler (e.g. Khors vs Dažbog
+resource cultures are less susceptible because the          as sun-disk vs sun-deity in Slavic, Mielikki vs
+model holds less parametric knowledge of them.              Rauni for Finnish T110), where we follow modern
+Our question is complementary and our substrate             scholarly consensus (Łuczyński, 2020; Gieysztor,
+is different: we ask whether the failure is represen-       2006). Per-tradition source repertoire and contest-
+tational or a readout failure, on a parallel citation-      ed/absence rows are documented in Appendix A;
+anchored mythology grid with one unambiguous                per-row citation anchors in Appendix B.
+gold entity per (motif, culture) cell, which lets us          For each entity we build two prompts:
+pair a per-cell probe outcome with a per-cell gen-
+eration outcome. The two studies consequently                  • Contextual (used for E1 hidden-state extrac-
+localize cultural bias at different loci, entanglement           tion): “${name} embodies the role of ${de-
+within the representation vs suppression at decod-               scription}.” The entity comes first, the culture
+ing; the substrate (open-ended cultural knowledge                word is never present, and the entity-token ac-
+vs a closed parallel entity set) and the readout target          tivations cannot trivially copy a culture token
+(a flattening score over representations vs the gold             via causal attention. The probe must derive
+token at the output) are the plausible reasons the               culture from the name and role alone.
+pictures differ, and both mechanisms can coexist in            • Chat (used for EN generation): “In ${culture}
+one model.                                                       mythology, what is the name of the ${descrip-
+                                                                 tion}? Reply with only the proper name, no
+3     Method                                                     explanation, no extra words.” Wrapped in the
+                                                                 model’s chat template where applicable.
+3.1   Parallel cultural entity set
+Our base unit is the (motif, culture) pair. A motif         3.2   Models
+is a Thompson-index entry with a specifiable role,          Table 1 lists the 18 LLMs probed. Selection criteria:
+e.g. A1141.2 “the supreme sky god” or A220 “the             (i) open-source; (ii) decoder-only causal LM; (iii)
+sun god”. We instantiate the role of 27 such mo-            at most 35B parameters at fp16 (single 4× A100
+tifs across ten cultures (Greek, Roman, Norse,              40 GB tensor-parallel slot). All experiments run
+Finnish, Ukrainian, Indian, Egyptian, Chinese,              at fp16 with no further quantization to avoid con-
+Japanese, and Mesopotamian) for a total of 270              founding cultural recall with quantization-induced
+entities. The 10 cultures span six language fam-            degradation, which we treat as a separate study.
+ilies (Indo-European, Uralic, Afro-Asiatic, Sino-
+Tibetan, Japonic, and Akkadian-Sumerian), so that            Family      Model                   Params (B) Layers
+within-family scaling, cross-lingual querying, and           Llama 3.x   Llama-3.2-1B-Instruct         1.2     16
+output decoding are not evaluated on a corpus dom-           Llama 3.x   Llama-3.2-3B-Instruct         3.2     28
+inated by Greco-Roman default-fitting.                       Llama 3.x   Llama-3.1-8B-Instruct         8.0     32
+                                                             Gemma 4     Gemma-4-E2B-it                2.0     35
+   For each (motif, culture) we record the canoni-           Gemma 4     Gemma-4-E4B-it                4.0     42
+cal proper name in romanized English, the native-            Gemma 4     Gemma-4-31B-it               31.0     60
+script form where applicable, the standardized mo-           Gemma 4     Gemma-4-26B-A4B-it           4.0a     30
+                                                             MoE
+tif description, and a per-row source field point-           Phi 4       Phi-4-mini-instruct           3.8     32
+ing to either a primary text (Eddas, Kalevala, Rig           Phi 4       Phi-4                        14.0     40
+                                                             Qwen 1.x    Qwen2.5-1.5B-Instruct         1.5     28
+Veda, Pyramid Texts, Kojiki, Enuma Elish, the Pri-           Qwen 1.x    Qwen2.5-7B-Instruct           7.0     28
+mary Chronicle, etc.) or a modern academic mono-             Qwen 3.6    Qwen3.6-27B                  27.0     64
+graph.3 Four cells are structural absences (Japanese         Qwen 3.6    Qwen3.6-35B-A3B              3.0a     40
+                                                             MoE
+flood A1010, Finnish flood A1010, Mesopotamian               Yi 1.5      Yi-1.5-6B-Chat                6.0     32
+theft-of-fire A1415, Egyptian forest-spirit F460),           Yi 1.5      Yi-1.5-9B-Chat                9.0     48
+excluded from output-accuracy scoring; a further             Yi 1.5      Yi-1.5-34B-Chat              34.0     60
+                                                             OLMo 3.1    Olmo-3.1-32B-Instruct        32.0     64
+   3
+     Native-script forms are resolved via Wikidata. The      Aya         tiny-aya-global               3.0     36
+complete dataset, including all native-script names and
+the NL prompt templates, is released as a Hugging           Table 1: 18 open-source LLMs in the sweep. a Active
+Face dataset card (https://huggingface.co/datasets/         params per token for MoE (total 26B / 35B); layers
+Aragoner/folkmotif); see Appendix A for the release         exclude embedding.
+schema and Appendix B for the canonical name and citation
+anchor of every entity.
+3.3   Mechanistic instruments                            2 × 2 decomposition introduced in §1; per-model
+We apply four complementary measurements to              cell shares are in Appendix C.
+every (entity, culture) pair in every model.
+                                                         4     Results
+Linear probing (E1). For each model and each
+layer we average-pool residual-stream activations        How to read the four instruments. Each instru-
+over the entity span of the contextual prompt and        ment answers one question and, equally important,
+fit a 5-fold-stratified ridge classifier (α = 1.0) to    does not answer the others; the argument of this
+predict the 10-way culture label (Alain and Bengio,      section is the conjunction. The linear probe (E1)
+2018; Hewitt and Liang, 2019). We report layer-          shows that the culture label is linearly decodable
+wise accuracy, the layer at which accuracy peaks,        from the residual stream; it does not show that the
+and a label-shuffled chance ceiling.                     model uses that information downstream, which
+                                                         is why we pair it per cell with generation. The
+Logit lens (E2). Following the standard logit-           logit lens (E2) shows at what depth the gold token
+lens recipe (Belrose et al., 2025), we apply the         enters the vocabulary projection; because interme-
+model’s final norm and unembedding to every in-          diate states are not calibrated for direct decoding
+termediate hidden state and ask at which depth           it gives a relative ordering, not a calibrated proba-
+the gold entity’s first sub-token enters the top-k       bility (see Limitations). Activation patching (E3)
+continuations. We report top-k rather than top-          is the causal instrument: it shows where interven-
+1 because gold-token boundaries are sensitive to         ing on the residual changes which culture’s name
+leading-space tokenization and to morphological          is preferred, though not by what circuit. Output
+variants (Mokoš/Mokosha differ by one edit), a           extraction (E4) shows what the user actually re-
+known instability of subword segmentation for mor-       ceives, and the MCQ control (§4.2) separates that
+phologically rich languages (Chelombitko et al.,         from the format of the task. Read together: culture
+2025), and our depth-of-readout claim is robust to       is encoded (E1), encoded before it is decoded (E2),
+whether one accepts the canonical or alternative         causally bound to the output late (E3), and still not
+filler in the contested rows of Appendix B. We use       emitted (E4) even when the task format is matched
+the raw lens for cross-model comparability; the          (§4.2).
+tuned variant of Belrose et al. (2025) is discussed
+in the Limitations section.                              4.1    RQ1: Decoding flattening is universal
+
+Activation patching (E3). For each motif we              Across all 18 LLMs in the sweep, the cultural iden-
+form pairs of cross-cultural prompts (Greek →            tity of a mythological entity is recoverable from
+Finnish, etc.); at each layer ℓ we replace the resid-    the residual stream at a rate the model never repro-
+ual stream of the source prompt with that of the         duces in its own generation (Table 2). Seventeen of
+target prompt and measure the change in the gold-        the 18 probes clear the 0.60 char-n-gram surface
+target log-probability (Vig et al., 2020; Meng et al.,   baseline (§D), peaking at 0.61–0.88; a one-sided
+2023; Geiger et al., 2024; Wang et al., 2022).           paired bootstrap and an exact McNemar test con-
+                                                         firm significance for all 17 (p < 0.05, App. F), the
+Output extraction (E4). We greedily decode               sole exception being Gemma-4-E2B (+0.011, n.s.).
+up to 256 tokens of the chat-template form.              The same models, asked to emit the name, land at
+Reasoning-style chat templates that emit a               0.09–0.43. The smallest gap in the sweep is 0.26
+<think>...</think> trace by default (Qwen 3.6            (Gemma-4-31B), the largest is 0.70 (Llama-3.2-
+family) are run with the think trace disabled and        1B), and the gap shrinks but never closes within
+any leftover block stripped before scoring. The          any family. The geometric form of this readout is
+cleaned generation is scored by exact match, sub-        the same across the sweep: at each model’s probe-
+string match, and length-normalized Levenshtein          peak layer, the residual stream separates cultures
+similarity (threshold 0.8); a positive on any of the     into visibly distinct clusters under a linear projec-
+three counts as correct. The instrument is applied       tion (Figure 1 shows four representative panels; the
+to two prompt modes per cell: EN (English query,         full 18-model grid is in Appendix S).
+5 paraphrases) and NL (target-culture native lan-           Cell-wise, the loss has a single locus. Decod-
+guage, 5 paraphrases); see §4.6 and Appendix L.          ingSuppressed is the largest cell in every single
+Combining per-cell E1 and E4 outcomes gives the          model, with shares 51–76% (mean 0.65): the probe
+reads the culture but the generation emits a wrong         Model                Par. Pr. MCQ EN Best Gap
+name. RepresentationallyFlat, the cell predicted           Llama-3.2-1B         1.2 .79 .20†     .09 .09     .70
+by a strong “LLMs are translation machines” read-          Llama-3.2-3B         3.2 .83 .60      .18 .18     .65
+                                                           Llama-3.1-8B         8.0 .88 .74      .25 .25     .63
+ing, is consistently smaller (0.10–0.33, mean 0.18):
+the cultural distinction is rarely missing from the        Gemma-4-E2B      2.0 .61        .41   .27   .27   .34
+                                                           Gemma-4-E4B      4.0 .65        .73   .33   .33   .32
+residual stream, it is just rarely produced. Per-          Gemma-4-26B-A4B 4.0∗ .69        .96   .42   .42   .27
+model trajectories, stacked decomposition shares,          Gemma-4-31B     33.0 .69        .95   .43   .43   .26
+per-(model, culture) heatmaps, the direction-of-           Phi-4-mini            3.8 .83   .52   .20 .20     .63
+                                                           Phi-4                14.0 .86   .86   .31 .31     .55
+flattening confusion matrix, per-motif Preserved
+share, and full per-model results are in Appen-            Qwen2.5-1.5B         1.5 .75    .40   .12 .12     .63
+                                                           Qwen2.5-7B           7.0 .80    .67   .24 .24     .56
+dices Q–T.
+                                                           Qwen-3.6-35B-A3B 3.0∗ .83       .93   .38 .38     .45
+                                                           Qwen-3.6-27B     27.0 .88       .95   .35 .35     .53
+Is the measurement itself robust? Three checks
+                                                           Yi-1.5-6B             6.0 .77   .42   .13 .13     .64
+say the gap is not an artefact of how we score. Re-        Yi-1.5-9B             9.0 .77   .70   .18 .18     .59
+scoring all 48,568 generations under three stricter        Yi-1.5-34B           34.0 .83   .83   .26 .26     .57
+criteria (substring-only, first-word exact match,          OLMo-3.1-32B         32.0 .86   .76   .32 .32     .54
+strict exact match) preserves the per-model ranking        Tiny-Aya-Global      3.0 .81    .45   .16 .17     .64
+at Pearson ≥ 0.87 (Table 16), so no model’s stand-
+                                                           Mean (18)                 .79   .67   .26 .26     .53
+ing depends on our leniency. Per-(model, mode)
+95% bootstrap CIs have median half-width 0.046,          Table 2: Decoding flattening and the output-format con-
+well inside every gap we report. And when a cell         trol across the 18-model sweep. Pr. = linear-probe peak
+is wrong across all five paraphrases of a mode, the      (10-way, chance .10, surface baseline .60). MCQ =
+five wrong answers agree on their first word only        selecting the gold entity among the same motif’s 10
+1.1% of the time: the models are exploring, not          parallel fillers (same chance as the probe), scored by
+                                                         restricted first-token log-probability over 5 paraphrases
+converging on one confident substitute.
+                                                         × 3 option orders (§4.2). EN = English free-generation
+                                                         majority-correct; Best = best-of-(NL, EN); Gap = Pr. −
+4.2   Output-format control: selection vs
+                                                         Best, bold marks the smallest. The chain Pr. → MCQ
+      generation                                         → EN localizes the loss at generation: selection recov-
+The probe−output gap could in part be a task-            ers most of what the probe reads, generation does not.
+                                                         ∗
+format artefact: the probe is a 10-way classifica-         Active params for MoE. † Format-compliance floor (4%
+                                                         letters).
+tion while output extraction is open-ended gener-
+ation. To match the output task to the probe, for
+each (motif, culture) cell we pose a multiple-choice     probe reads, 0.86/0.86, yet generates only 0.31).
+question whose options are the parallel fillers of the   The per-culture asymmetry persists under selec-
+same Thompson role across all 10 cultures (per-cell      tion (Roman 0.60, Finnish 0.58 vs Japanese 0.78;
+chance ≈ 0.10, matching the probe). Because ev-          App. G), and on Roman cells 49% of errors land
+ery option instantiates the same role, topical match-    on the same-motif Greek counterpart (vs ∼11%
+ing cannot solve the task; only the culture−entity       under a uniform error model): the collapse onto the
+association the probe measures can. We score by re-      dominant tradition is visible inside a pure selection
+stricted first-token log-probability (a single forward   task. The dominant failure is therefore generation-
+pass, no generation), which is also immune to the        time decoding suppression, not a classification-vs-
+chat-template artefacts of §4.3 and §4.4. Table 2        generation format effect.
+reports the result over 5 paraphrases × 3 option
+orders per cell.                                         4.3   RQ2: Layer-wise emergence
+   Format does explain part of the raw gap: at iden-     Decoding depth is uniformly late, encoding depth
+tical chance, mean selection accuracy (0.67) sits far    varies by family. Across all 18 models, the logit
+above free generation (0.26). But the chain repre-       lens (E2) crosses its 5%-in-top-1 onset in the last
+sentation (0.79) → selection (0.67) → generation         12% of layers on every single model (onset range
+(0.26) localizes the residual loss at the generation     0.88–0.97, median 0.96; for Qwen-3.6-27B the
+step: with the output format matched to the probe,       bare-prompt lens is used because its chat template
+generation still loses ∼41 points, and scale does not    emits a generic “Here” token at every layer, App. I).
+close it (Phi-4 recovers in selection everything its     The linear probe peak depth is more spread across
+Figure 1: Latent-space projection at each model’s probe-peak layer (50-dim PCA → LDA on culture labels) for
+four representative models from the 18-model sweep; the 270 (motif, culture) entities are colored by culture (legend
+on top). Cultures form visibly distinguishable clusters in the residual stream of every model, regardless of family or
+scale, even when the corresponding output accuracy collapses to a Greco-Roman default. The full 18-model grid is
+in Appendix S (Figure 13).
+
+
+families (Figure 2). Every model sits on or above               Per-family pattern. Peak depth is concentrated
+the diagonal of the encoded-vs-decoded scatter: the          near the network end across families (Llama 3.x
+residual stream becomes culturally legible before            0.86–1.00, Gemma 4 0.88–1.00, Phi 4 0.78–0.86,
+the network commits to the output token, and the             Qwen 1.x 0.85–1.00, Qwen 3.6 0.89–0.95, Yi 1.5
+late-decoding band is robust across 1.2B→ 32B,               0.86–1.00, OLMo 0.87). Qwen-3.6-27B is re-
+dense vs MoE, and chat-tuned vs base architec-               ported on a bare-prompt estimate. Chat-template
+tures.                                                       patching scores it as flat ≈ 0% because the swap
+   The per-culture lens schedule is not uniform:             position decodes to the generic token Here in
+Greek and Roman cross the 5%-in-top-5 threshold              320/320 rows (same artefact as its lens, App. I);
+first, while the other eight cultures cross later by ∼       switching to bare-prompt the lens recovers and the
+1.3 layers on a 32-layer model on average (App. I).          layerwise culture-preference rate peaks at 0.95 at
+                                                             depth 0.95 (App. J), matching the other 17 models.
+4.4   RQ3: Causal localization                               Explicit bare-prompt patching for this model is left
+                                                             to a follow-up.
+The causal locus of the cultural readout coincides
+with the lens decoding band, not the probe encod-
+ing band. Activation patching (E3, §3.3) measures,
+for each cross-cultural prompt pair and each layer,          4.5   RQ4: Within-family scaling shrinks but
+whether swapping the source-culture residual into                  does not close the gap
+the target-culture prompt causes the source-culture
+gold name to receive a higher next-token logit than          Scaling helps but does not close the gap. Table 3
+the target-culture one. Across all 18 models, this           reports smallest-to-largest probe peak, output, and
+preference-flip rate sits at the baseline level through      gap for the five families with more than one com-
+the early third of the network, rises through the mid-       pleted size: in every family both probe and output
+dle, and peaks in the last quarter (peak depth 0.75–         rise with parameters and the probe−output gap
+1.00, median 0.89; peak rate 0.40–0.95, median               shrinks; none close it. Llama 3.x gives the clean-
+0.75; median lift over baseline +0.55). The same             est signal across three sizes (1.2B→ 8B): probe
+depth band shows the lens onset (§4.3); the culture          peak 0.79 → 0.88, output 0.09 → 0.25, gap
+direction is therefore not just decoded late but also        0.70 → 0.63 monotonically. Even at 8B the gap is
+causally bound to the output late, at roughly 7× the         still 0.63, and a naive log-parameter extrapolation
+early-network rate. Because patching intervenes              predicts only ≈ +0.10 output gain per decade of
+rather than observes, this makes the encode-vs-              parameters, insufficient to close the gap within an
+decode separation mechanistic rather than merely             order of magnitude. Per-family scaling curves with
+correlational.                                               both NL and EN modes in Appendix K.
+Figure 2: Encoded depth (linear-probe peak) vs decoded depth (logit-lens 5%-in-top-1 onset) per model. Every
+model is on or above the diagonal: culture is read out of the residual stream before the model commits to emitting
+the right token. Encoding depth spreads across families (Gemma early, Yi mid, Phi-mini / Tiny-Aya / Qwen-7B
+late); decoding depth is uniformly in the last 12% of layers. Lens-onset bar chart and per-culture emergence curves
+in Appendix I.
+
+
+  Family            Probe       Output        Gap          not the historical language of original composition
+  Llama 3.x       .79 → .88   .09 → .25    .70 → .63       (Modern Greek over Ancient Greek, Italian over
+  (1B→ 8B)                                                 Latin, Hindi over Sanskrit, etc.); the per-culture
+  Phi 4           .83 → .86   .20 → .31    .63 → .55
+  (3.8B→ 14B)
+                                                           rationale is in Appendix L. The prompt protocol is
+  Gemma 4         .61 → .69   .27 → .36    .34 → .33       in the same appendix.
+  (E2B→ 31B)
+  Yi 1.5          .77 → .83   .13 → .26    .64 → .57       Per-culture asymmetry. Aggregated across the
+  (6B→ 34B)                                                chat-template models with both modes, EN wins
+  Qwen 1.x        .75 → .80   .12 → .24    .63 → .57
+  (1.5B→ 7B)                                               on average by +0.04 majority-accuracy (English
+                                                           mean 0.23, native mean 0.19); three exceptions
+Table 3: Within-family scaling endpoints: probe peak,      (Gemma-4-31B, Qwen-3.6-27B, Tiny-Aya-Global)
+best-of-(NL, EN) majority-correct output, and gap,         prefer NL. That average, however, is the least
+smallest→largest size in each family. The gap shrinks      interesting number here, because the per-culture
+with scale in every family; no family closes it.           deltas run in both directions and track the language
+                                                           in which each canon is documented (Table 4):
+                                                           Greek (+0.24) and Egyptian (+0.18) are strongly
+4.6   RQ5: Cross-lingual querying conditions
+                                                           English-favouring, both traditions being read to-
+      the readout
+                                                           day mostly through English-language classical and
+The cultural readout from the residual stream is           Egyptological scholarship, while Chinese (−0.07)
+language-conditioned: under English query and un-          and Finnish (−0.06) favour the native query, their
+der in-culture query the model gates partially dis-        canons being curated in-language. The six cultures
+joint subsets of the same representation. For each         in between sit within ±0.09 of zero, close to the
+(motif, culture) we pose five paraphrases in English       Mesopotamian control (−0.04), which poses both
+(EN) and five in the target culture’s native language      modes in English and therefore measures pure para-
+(NL): Modern Greek, Italian, Norwegian Bokmål,             phrase noise. Figure 3 shows the same pattern per
+Finnish, Ukrainian, Hindi, Modern Standard Ara-            model.
+bic, Mandarin, Japanese, and, for Mesopotamian,               That the direction flips by culture already argues
+English with an explicit “(Sumerian-Akkadian)”             against a simple “models cannot read the target
+parenthetical (the only fallback case; both substrate      language” account, and three further checks close
+languages extinct without continuous spoken de-            it off. Tokenizer fertility, the standard proxy for
+scendant). In every case the NL language is the liv-       how well a tokenizer serves a language (Chelom-
+ing language of present-day reception of the canon,        bitko et al., 2024), does not predict the per-cell
+delta (r = −0.004, n = 120, on Belebele pas-            culture query gate partially disjoint subsets of the
+sages (Bandarkar et al., 2024; Team et al., 2022)).     same residual. This is a quantitative pushback
+Tiny-Aya-Global (Aryabumi et al., 2024a,b), which       on a strong reading of “LLMs are translation ma-
+covers all eight of our non-CJK non-fallback NL         chines” (Wendler et al., 2024): if the residual were
+languages by design, shows the smallest gap in          genuinely translation-flat, RepresentationallyFlat
+the sweep (0.004) where a capability account pre-       (0.10–0.33) would dominate over DecodingSup-
+dicts the largest. And recomputing the contrast         pressed (0.51–0.76); it does not. “Translation ma-
+on only the 14 models with documented multilin-         chine” describes the unembedding’s behavior, not
+gual pretraining leaves the per-culture ordering un-    the residual stream’s contents.
+changed (Spearman ρ = 0.96; App. E). A missing-
+                                                        Bilingual ensembling. Because the two modes
+capability confound can depress NL accuracy but
+                                                        gate partially disjoint parts of the same represen-
+cannot manufacture the NL advantages we see on
+                                                        tation, simply taking their disjunction (5 NL OR
+Finnish, Norse and Chinese.
+                                                        5 EN paraphrases) lifts cell recovery by +0.08 ab-
+      Culture        ∆EN-NL Reading                     solute, +36% relative over the best single mode,
+                                                        at zero training cost. A same-language control
+      Greek          +0.241   EN canon
+      Egyptian       +0.177   EN canon                  (EN10 vs NL5 ∪ EN5 on the 12 models with a
+      Roman          +0.085   mild EN                   second English paraphrase batch) confirms the lift
+      Japanese       +0.040   mild EN
+      Norse          +0.026   mild EN
+                                                        comes from language-switching rather than para-
+      Ukrainian      +0.016   mild EN                   phrase count, and localizes it: cross-language en-
+      Indian         −0.008   tie                       sembling buys breadth of recovery, not strict con-
+      Mesopotamian   −0.037   within-EN control
+      Finnish        −0.058   native canon
+                                                        sensus (App. P).
+      Chinese        −0.071   native canon
+                                                        5   Discussion and Conclusion
+Table 4: Per-culture EN−NL majority-accuracy delta,
+                                                        The mechanistic locus of cultural flattening is the
+averaged across chat-template models with both modes.
+Positive: English query wins; negative: native query
+                                                        unembedding, not the residual stream, with impli-
+wins.                                                   cations for mitigation targeting. Output-side inter-
+                                                        ventions (retrieval, reranking, instruction tuning on
+                                                        cultural QA, the bilingual ensemble of §4.6) target
+Within-language failures correlate, cross-              the failure locus. Encoder-side interventions like
+language failures decouple. A sharper question          continued pretraining on under-represented corpora
+sits below the aggregate deltas: at the (motif,         (Hämäläinen, 2024) push on a side less broken than
+culture) cell, comparing within-mode correctness        the “low-resource” framing suggests: they help on
+correlation (5 paraphrases of one language) against     RepresentationallyFlat cells (0.10–0.33) but cannot
+cross-mode correlation (5 NL × 5 EN) isolates           directly affect the dominant DecodingSuppressed
+language-conditioning from paraphrase-format            cells (0.51–0.76). The same encoder/decoder split
+sensitivity. Across the 18 chat-template models         is the natural diagnostic for the parallel question of
+with both modes, rwithin = 0.57 and rcross = 0.29       whether post-training compression hits culturally-
+(gap 0.27, p ≤ 0.01 per model by permutation,           grounded knowledge harder than English defaults,
+App. O): cross-language queries are roughly 2×          taken up in a separate study (Siniaev et al., 2026)
+more decoupled than within-language ones. This          anchored in the quantization literature (Dettmers
+structural test is robust to the language-proficiency   et al., 2022; Frantar et al., 2023; Marchisio et al.,
+confound by construction (see the Limitations           2024).
+section). The gap does not exhibit a cross-family          The practical upshot is that cultural equity in
+scaling law (Spearman ρ = −0.08, p = 0.81);             what a model says cannot be read off what it knows:
+it tracks multilingual share of the chat-tuning         the two come apart at the readout, and that is where
+corpus rather than parameter count, consistent          both diagnosis and repair belong.
+with Tiny-Aya-Global’s small gap (0.19) at 3B
+(Table 15 in App. P).                                   Acknowledgments
+Mechanistic interpretation. The within−cross            Computation was performed on the CSC Mahti
+gap is direct evidence that DecodingSuppressed          supercomputer (project 2008167); we thank CSC,
+is language-conditional: English query and in-          IT Center for Science, Finland, for the resources.
+Figure 3: Per-(model, culture) EN−NL majority-accuracy delta. Red: English query wins; blue: native query wins;
+white: tie. The pattern tracks the language in which each mythological canon is documented, not the script of the
+NL language nor the speaker base of the target language. Per-model aggregate NL vs EN and the NL leaderboard in
+Appendix N.
+
+
+Limitations                                               tive American, Polynesian, Australian, and Arctic
+                                                          indigenous traditions; the headline DecodingSup-
+Substrate and ground truth. Canonical entity-             pressed claim is unlikely to reverse on these, but the
+to-culture assignments are genuinely contested at         per-culture NL/EN deltas might, especially on tra-
+boundaries: Odin and Thor are both Norse sky fig-         ditions whose canon is documented predominantly
+ures, the Slavic Perun is shared between Ukrainian        in non-Anglocentric sources.
+and West Slavic traditions, and a number of cells            Substrate size, statistical power, and domain
+use a less-canonical or scholarly-contested filler        scope. The substrate is 270 cells, and all infer-
+(e.g., Khors vs Dažbog as sun-disk vs sun-deity           ence is at the cell level (the five paraphrases per
+in Slavic, Mielikki vs Rauni for the Finnish T110         cell reduce per-cell measurement noise and are
+forest-spirit). We follow modern scholarly con-           never treated as independent observations). Out-
+sensus where it has shifted but cannot make every         put scoring excludes the four structural absences
+assignment unambiguous. Four cells are flagged as         (266 cells); the MCQ control additionally excludes
+structural absences (Japanese flood A1010, Finnish        three cells whose entry is a descriptive phrase rather
+flood A1010, Mesopotamian theft-of-fire A1415,            than a recorded proper name with a native form,
+Egyptian forest-spirit F460) and excluded from            leaving 263, so its accuracies rest on a marginally
+output scoring; we cannot rule out that other ab-         smaller set than the generation accuracies they are
+sences exist that we have catalogued as canonical         compared against. Power is not the binding con-
+fillers. The ten cultures span six language families      straint at this n: the within-model paired probe-vs-
+but deliberately exclude sub-Saharan African, Na-         output contrast has 95% bootstrap CI half-widths of
+±0.05–0.08 against observed differences of 0.34–          gap in the sweep (0.004); if the cross-lingual asym-
+0.79, and the direction replicates on 18/18 models        metry were just non-capability, Aya should be the
+across eight families (sign test p ≈ 4e−6). What          most biased, not the least. (ii) A negative control,
+binds is verification: every cell requires a citation     the Mesopotamian fallback, which uses English
+anchor to a primary text or monograph plus adjudi-        with a culture-marking parenthetical and bounds
+cation of contested attributions (§3.1), and 270 par-     the within-English paraphrase-engineering compo-
+allel cells is what that discipline sustains; a larger    nent of any cross-mode signal at |∆|Mesop ≈ 0.04,
+unverified set would forfeit the unambiguous per-         an order of magnitude below the canon-language
+cell gold that makes the probe-vs-output compari-         extremes. (iii) A structural test, the within-vs-
+son interpretable in the first place. The claim is cor-   cross paraphrase correlation gap (§4.6, App. O),
+respondingly scoped to folklore, the domain where         which is robust to non-capability by construction:
+parallel gold labels are constructible. We expect         a Tier B/C model that cannot read Finnish has its
+the mechanism to transfer wherever the knowledge          five Finnish paraphrases fail together on most cells,
+is attested in pretraining and a dominant-culture de-     which increases the within-mode correlation to-
+fault exists to collapse onto, and we are designing       ward 1, not lowers it; the observed asymmetry
+analogous parallel-substrate studies in two further       within = 0.57 vs cross = 0.29 is the structural sig-
+domains, culturally variable biomedical miscon-           nature of language-conditioned readout, not of non-
+ceptions (where dominant-tradition defaults carry         capability. We further note that the headline RQ1–
+direct safety implications) and emotion concepts;         RQ4 results (§4) use only English (EN) prompts
+until those exist, transfer beyond folklore is a con-     and probe activations from English-rendered in-
+jecture, not a result of this paper.                      puts, so the headline “representation-preserved-but-
+   Native-language prompts. NL prompts are                decoding-suppressed” claim is unaffected by NL
+native re-renderings of the English EN template,          confounds at any tier; English coverage is universal
+not native-speaker-validated translations. The two        across the 18 models.
+authors are native speakers of one NL language               Probe class and decoding policy. The residual-
+each; the remaining seven were translated by LLM-         stream probe is a linear ridge classifier, chosen
+assisted forward-then-back-translation against the        for transparency and to avoid over-fitting probe
+canonical entity name, which preserves the entity         non-linearity to surface co-occurrences (Hewitt and
+but may shift register or naturalness. Per-culture        Liang, 2019). An MLP probe would lift absolute
+EN−NL deltas (§4.6) are therefore directionally           probe-peak accuracy but cannot, by construction,
+trustworthy at the gross level but await a native-        change the qualitative outcome that the residual
+speaker review for absolute calibration on Greek,         is more separable than the output is correct. Out-
+Italian, Norwegian Bokmål, Hindi, Modern Stan-            put extraction is greedy chat-template generation;
+dard Arabic, Mandarin, and Japanese.                      beam search or nucleus sampling would shift out-
+   Language-proficiency confound and how we               put numbers but the per-(model, culture) ranking
+control for it. The NL (target-language) condition        is robust across the strictness audit (V2, §4.1).
+asks each model to read prompts in a language that           Logit-lens calibration. The raw logit lens ap-
+may not be in its pretraining target set. Three of our    plies the final-layer norm and unembedding to inter-
+18 models are Yi-1.5 (6B/9B/34B), explicitly bilin-       mediate hidden states, which are not calibrated for
+gual English+Chinese; OLMo-3.1-32B is explicitly          direct decoding: the residual stream at layer ℓ is not
+English-primary (the OLMo 2 report states “OLMo           trained to be read by the layer-L unembedding, so
+2 is not trained for multilingual tasks”); Phi-4 14B      absolute lens probabilities under-read and the 5%-
+is described as “primarily English.” For these Tier       in-top-k onset is a lower bound on readout depth
+B/C models (Appendix M, Table 13), the NL condi-          rather than a calibrated decoding probability. We
+tion on languages outside the model’s pre-training        therefore use the lens only for the relative encode-
+target is genuinely confounded with non-capability.       before-decode claim (§4.3) and corroborate it with
+We hold the cross-lingual claim in place by means         a lens-independent causal test, activation patching
+of three artefacts that come for free from the experi-    (§4.4), whose late-band peak agrees; we also report
+mental design rather than from new evaluations: (i)       top-k rather than top-1 onset to reduce tokeniza-
+a positive control, Tiny-Aya-Global, with explicit        tion sensitivity. A tuned lens (Belrose et al., 2025)
+pre-training coverage of all 8 of our non-CJK non-        would raise absolute lens numbers but leaves the
+fallback target languages and the smallest NL−EN          encode-before-decode ordering, the only property
+we rely on, unchanged.                                   Muhammad Farid Adilazuarda, Sagnik Mukherjee,
+   Compute and precision. All experiments run             Pradhyumna Lavania, Siddhant Singh, Alham Fikri
+                                                          Aji, Jacki O’Neill, Ashutosh Modi, and Mono-
+at fp16 with no further quantization, to avoid con-       jit Choudhury. 2024. Towards measuring and
+founding cultural recall with quantization-induced        modeling "culture" in llms: A survey. Preprint,
+degradation. The natural follow-up question is            arXiv:2403.15412.
+whether post-training quantization (4-bit, 8-bit) hits
+                                                         Orevaoghene Ahia, Sachin Kumar, Hila Gonen, Jungo
+DecodingSuppressed cells harder than Preserved             Kasai, David R. Mortensen, Noah A. Smith, and Yu-
+cells; this is left to a separate study (see §5). Ac-      lia Tsvetkov. 2023. Do all languages cost the same?
+tivation patching was run with a sparse layer step         tokenization in the era of commercial language mod-
+(every 4th layer) on a default of 5 motifs × 4 cul-        els. Preprint, arXiv:2305.13707.
+ture pairs to stay within the per-model A100 bud-        01. AI, :, Alex Young, Bei Chen, Chao Li, Chengen
+get; a dense full-coverage patching pass might shift       Huang, Ge Zhang, Guanwei Zhang, Guoyin Wang,
+peak-depth estimates by a layer or two but does not        Heng Li, Jiangcheng Zhu, Jianqun Chen, Jing Chang,
+change the late-decoding band claim.                       Kaidong Yu, Peng Liu, Qiang Liu, Shawn Yue,
+                                                           Senbin Yang, Shiming Yang, and 14 others. 2025.
+   Closed-source and frontier models. Every in-            Yi: Open foundation models by 01.ai. Preprint,
+strument we use except EN (output extraction) re-          arXiv:2403.04652.
+quires white-box access. The headline claim (De-
+                                                         Guillaume Alain and Yoshua Bengio. 2018. Under-
+codingSuppressed dominates) is therefore estab-            standing intermediate layers using linear classifier
+lished directly only for the 18 open-source mod-           probes. Preprint, arXiv:1610.01644.
+els. The NL/EN independence prediction, which
+depends only on output behavior, generalizes to          Viraat Aryabumi, John Dang, Dwarak Talupuru,
+                                                           Saurabh Dash, David Cairuz, Hangyu Lin, Bharat
+closed-source frontier models and is the natural           Venkitesh, Madeline Smith, Jon Ander Campos,
+sanity check for the strongest reading of the result.      Yi Chern Tan, Kelly Marchisio, Max Bartolo, Se-
+   Reasoning-mode models. Qwen 3.6 ships a de-             bastian Ruder, Acyr Locatelli, Julia Kreutzer, Nick
+fault “thinking” trace that we disable for scoring         Frosst, Aidan Gomez, Phil Blunsom, Marzieh Fadaee,
+                                                           and 2 others. 2024a. Aya 23: Open weight re-
+(§3); the lens template artifact on Qwen-3.6-27B           leases to further multilingual progress. Preprint,
+(App. I) is also a reasoning-template phenomenon.          arXiv:2405.15032.
+Whether the DecodingSuppressed dominance holds
+when these models are run in their preferred rea-        Viraat Aryabumi, John Dang, Dwarak Talupuru,
+                                                           Saurabh Dash, David Cairuz, Hangyu Lin, Bharat
+soning mode is open; our bare-prompt lens result           Venkitesh, Madeline Smith, Jon Ander Campos,
+for Qwen-3.6-27B is consistent with it holding, but        Yi Chern Tan, Kelly Marchisio, Max Bartolo, Se-
+is not a sufficient test on its own.                       bastian Ruder, Acyr Locatelli, Julia Kreutzer, Nick
+                                                           Frosst, Aidan Gomez, Phil Blunsom, Marzieh Fadaee,
+                                                           and 2 others. 2024b. Aya 23: Open weight re-
+AI Models Usage                                            leases to further multilingual progress. Preprint,
+                                                           arXiv:2405.15032.
+As non-native English speakers, we used Claude
+Opus 4.7 for text editing. GitHub Copilot assisted       Mohammad Atari, Mona J Xue, Peter S Park, Damián E
+with code completion. For research automation, we         Blasi, and Joseph Henrich. 2023. Which humans?
+used Claude Code integrated with html-based re-          Lucas Bandarkar, Davis Liang, Benjamin Muller, Mikel
+ports for experimental pipelines and iterative anal-       Artetxe, Satya Narayan Shukla, Donald Husa, Naman
+ysis. All methodological decisions and scientific          Goyal, Abhinandan Krishnan, Luke Zettlemoyer, and
+interpretations were made by the authors.                  Madian Khabsa. 2024. The belebele benchmark: a
+                                                           parallel reading comprehension dataset in 122 lan-
+                                                           guage variants. In Proceedings of the 62nd Annual
+                                                           Meeting of the Association for Computational Lin-
+References                                                 guistics (Volume 1: Long Papers), page 749–775.
+                                                           Association for Computational Linguistics.
+Marah Abdin, Jyoti Aneja, Harkirat Behl, Sébastien
+ Bubeck, Ronen Eldan, Suriya Gunasekar, Michael          Mary Beard, John North, and Simon Price. 1998. Reli-
+ Harrison, Russell J. Hewett, Mojan Javaheripi, Piero     gions of Rome, volume 1–2. Cambridge University
+ Kauffmann, James R. Lee, Yin Tat Lee, Yuanzhi Li,        Press, Cambridge.
+ Weishung Liu, Caio C. T. Mendes, Anh Nguyen,
+ Eric Price, Gustavo de Rosa, Olli Saarikivi, and        Yonatan Belinkov. 2022. Probing classifiers: Promises,
+ 8 others. 2024. Phi-4 technical report. Preprint,         shortcomings, and advances. Computational Linguis-
+ arXiv:2412.08905.                                         tics, 48(1):207–219.
+Nora Belrose, Igor Ostrovsky, Lev McKinney, Zach Fur-       Gavin Flood. 1996. An Introduction to Hinduism. Cam-
+  man, Logan Smith, Danny Halawi, Stella Biderman,            bridge University Press, Cambridge.
+  and Jacob Steinhardt. 2025. Eliciting latent predic-
+  tions from transformers with the tuned lens. Preprint,    Benjamin R. Foster. 2005. Before the Muses: An An-
+  arXiv:2303.08112.                                           thology of Akkadian Literature, 3rd edition. CDL
+                                                              Press, Bethesda.
+Emily M. Bender and Batya Friedman. 2018. Data
+  statements for natural language processing: Toward        Elias Frantar, Saleh Ashkboos, Torsten Hoefler, and
+  mitigating system bias and enabling better science.          Dan Alistarh. 2023. Gptq: Accurate post-training
+  Transactions of the Association for Computational            quantization for generative pre-trained transformers.
+  Linguistics, 6:587–604.                                      Preprint, arXiv:2210.17323.
+
+Anne Birrell. 1993. Chinese Mythology: An Introduc-         Timnit Gebru, Jamie Morgenstern, Briana Vec-
+  tion. Johns Hopkins University Press, Baltimore.            chione, Jennifer Wortman Vaughan, Hanna Wallach,
+                                                              Hal Daumé III, and Kate Crawford. 2021. Datasheets
+Jeremy Black and Anthony Green. 1992. Gods, Demons            for datasets. Preprint, arXiv:1803.09010.
+   and Symbols of Ancient Mesopotamia: An Illustrated
+   Dictionary. British Museum Press, London.                Atticus Geiger, Zhengxuan Wu, Christopher Potts,
+                                                              Thomas Icard, and Noah D. Goodman. 2024. Find-
+Aleksander Brückner. 1985. Mitologia słowiańska,             ing alignments between interpretable causal vari-
+  reprint edition. Państwowy Instytut Wydawniczy,            ables and distributed neural representations. Preprint,
+  Warsaw. Original published 1918.                            arXiv:2303.02536.
+Walter Burkert. 1985. Greek Religion. Harvard Univer-       Andrew R. George. 2003. The Babylonian Gilgamesh
+  sity Press, Cambridge, MA.                                  Epic: Introduction, Critical Edition and Cuneiform
+                                                              Texts. Oxford University Press, Oxford.
+Iaroslav Chelombitko, Ekaterina Chelombitko, and
+   Aleksey Komissarov. 2025. Samponlp: A self-              Aleksander Gieysztor. 2006. Mitologia Słowian, 3rd
+   referential toolkit for morphological analysis of sub-     edition. Wydawnictwa Uniwersytetu Warszawskiego,
+   word tokenizers. In Proceedings of the 10th Inter-         Warsaw.
+   national Workshop on Computational Linguistics for
+   Uralic Languages.                                        Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri,
+                                                              Abhinav Pandey, Abhishek Kadian, Ahmad Al-
+Iaroslav Chelombitko, Mika Hämäläinen, and Aleksey            Dahle, Aiesha Letman, Akhil Mathur, Alan Schel-
+   Komissarov. 2026. Subword-based comparative lin-           ten, Alex Vaughan, Amy Yang, Angela Fan, Anirudh
+   guistics across 242 languages using wikipedia glot-        Goyal, Anthony Hartshorn, Aobo Yang, Archi Mi-
+   tosets. Preprint, arXiv:2601.18791.                        tra, Archie Sravankumar, Artem Korenev, Arthur
+                                                              Hinsvark, and 542 others. 2024. The llama 3 herd of
+Iaroslav Chelombitko and Aleksey Komissarov. 2024.            models. Preprint, arXiv:2407.21783.
+   Specialized monolingual bpe tokenizers for uralic
+   languages representation in large language models.       Pierre Grimal. 1996. The Dictionary of Classical
+   In Proceedings of the 9th International Workshop on        Mythology. Blackwell, Oxford.
+   Computational Linguistics for Uralic Languages.
+                                                            Wes Gurnee and Max Tegmark. 2024.             Language
+Iaroslav Chelombitko, Egor Safronov, and Aleksey             models represent space and time.              Preprint,
+   Komissarov. 2024. Qtok: A comprehensive frame-            arXiv:2310.02207.
+   work for evaluating multilingual tokenizer quality in
+   large language models. Preprint, arXiv:2410.12989.       Mika Hämäläinen. 2021. Endangered languages are not
+                                                              low-resourced! Multilingual Facilitation: Honoring
+Tim Dettmers, Mike Lewis, Younes Belkada, and                 the Career of Jack Rueter.
+  Luke Zettlemoyer. 2022. Llm.int8(): 8-bit matrix
+  multiplication for transformers at scale. Preprint,       Mika Hämäläinen. 2024. LLMs will be the future of
+  arXiv:2208.07339.                                           NLP for endangered languages. In Lightning Pro-
+                                                              ceedings of the 9th International Workshop on Com-
+Wendy Doniger. 1981. The Rig Veda: An Anthology.              putational Linguistics for Uralic Languages, pages
+ Penguin Classics, London.                                   14–18.
+Nelson Elhage, Neel Nanda, Catherine Olsson, Tom            Mika Hämäläinen, Emily Öhman, So Miyagawa, Khalid
+  Henighan, Nicholas Joseph, Ben Mann, Amanda                 Alnajjar, Yuri Bizzoni, Jack Rueter, and Niko Parta-
+  Askell, Yuntao Bai, Anna Chen, Tom Conerly,                 nen. 2024. The growing importance of humanities
+  Nova DasSarma, Dawn Drain, Deep Ganguli,                    for NLP in the era of LLMs. In Lightning Proceed-
+  Zac Hatfield-Dodds, Danny Hernandez, Andy                   ings of the 4th International Conference on Natural
+  Jones, Jackson Kernion, Liane Lovitt, Kamal                 Language Processing for Digital Humanities, pages
+  Ndousse, and 6 others. 2021.       A mathemati-             2–6.
+  cal framework for transformer circuits. Trans-
+  former Circuits Thread.       Https://transformer-        Robin Hard. 2004. The Routledge Handbook of Greek
+  circuits.pub/2021/framework/index.html.                     Mythology. Routledge, London.
+Daniel Hershcovich, Stella Frank, Heather Lent,             Kevin Meng, David Bau, Alex Andonian, and Yonatan
+  Miryam de Lhoneux, Mostafa Abdou, Stephanie                 Belinkov. 2023. Locating and editing factual associa-
+  Brandl, Emanuele Bugliarello, Laura Cabello Pi-             tions in gpt. Preprint, arXiv:2202.05262.
+  queras, Ilias Chalkidis, Ruixiang Cui, Constanza
+  Fierro, Katerina Margatina, Phillip Rust, and Anders      Tarek Naous, Michael J Ryan, Alan Ritter, and Wei Xu.
+  Søgaard. 2022. Challenges and strategies in cross-          2024. Having beer after prayer? measuring cultural
+  cultural NLP. In Proceedings of the 60th Annual             bias in large language models. In Proceedings of the
+  Meeting of the Association for Computational Lin-           62nd Annual Meeting of the Association for Compu-
+  guistics (Volume 1: Long Papers), pages 6997–7013,          tational Linguistics (Volume 1: Long Papers), pages
+  Dublin, Ireland. Association for Computational Lin-         16366–16393, Bangkok, Thailand. Association for
+  guistics.                                                   Computational Linguistics.
+                                                            Chris Olah, Nick Cammarata, Ludwig Schubert, Gabriel
+John Hewitt and Percy Liang. 2019. Designing and in-
+                                                              Goh, Michael Petrov, and Shan Carter. 2020. Zoom
+  terpreting probes with control tasks. In Proceedings
+                                                              in: An introduction to circuits. Distill, 5.
+  of the 2019 Conference on Empirical Methods in Nat-
+  ural Language Processing and the 9th International        Team OLMo, Pete Walsh, Luca Soldaini, Dirk Groen-
+  Joint Conference on Natural Language Processing             eveld, Kyle Lo, Shane Arora, Akshita Bhagia, Yuling
+  (EMNLP-IJCNLP), pages 2733–2743, Hong Kong,                 Gu, Shengyi Huang, Matt Jordan, Nathan Lambert,
+  China. Association for Computational Linguistics.           Dustin Schwenk, Oyvind Tafjord, Taira Anderson,
+                                                              David Atkinson, Faeze Brahman, Christopher Clark,
+Folgert Karsdorp and Antal van den Bosch. 2013. Iden-         Pradeep Dasigi, Nouha Dziri, and 24 others. 2025. 2
+  tifying motifs in folktales using topic models.             olmo 2 furious. Preprint, arXiv:2501.00656.
+Thomas P. Kasulis. 2004. Shinto: The Way Home. Uni-         Shramay Palta and Rachel Rudinger. 2023. FORK: A
+  versity of Hawaii Press, Honolulu.                          bite-sized test set for probing culinary cultural biases
+                                                              in commonsense reasoning models. In Findings of
+David Kinsley. 1986. Hindu Goddesses: Visions of the          the Association for Computational Linguistics: ACL
+  Divine Feminine in the Hindu Religious Tradition.           2023, pages 9952–9962, Toronto, Canada. Associa-
+  University of California Press, Berkeley.                   tion for Computational Linguistics.
+
+Julia Kreutzer, Isaac Caswell, Lisa Wang, Ahsan Wahab,      Juha Pentikäinen. 1999. Kalevala Mythology, expanded
+   Daan van Esch, Nasanbayar Ulzii-Orshikh, Allah-            edition. Indiana University Press, Bloomington.
+   sera Tapo, Nishant Subramani, Artem Sokolov, Clay-
+                                                            Fabio Petroni, Tim Rocktäschel, Patrick Lewis, An-
+   tone Sikasote, Monang Setyawan, Supheakmungkol
+                                                              ton Bakhtin, Yuxiang Wu, Alexander H. Miller, and
+   Sarin, Sokhar Samb, Benoît Sagot, Clara Rivera,
+                                                              Sebastian Riedel. 2019. Language models as knowl-
+   Annette Rios, Isabel Papadimitriou, Salomey Osei,
+                                                              edge bases? Preprint, arXiv:1909.01066.
+   Pedro Ortiz Suarez, and 33 others. 2022. Quality
+   at a glance: An audit of web-crawled multilingual        Aleksandar Petrov, Emanuele La Malfa, Philip H. S.
+   datasets. Transactions of the Association for Compu-       Torr, and Adel Bibi. 2023. Language model to-
+   tational Linguistics, 10:50–72.                            kenizers introduce unfairness between languages.
+                                                              Preprint, arXiv:2305.15425.
+Jennifer Larson. 2007. Ancient Greek Cults: A Guide.
+  Routledge, London.                                        Donald L. (translator) Philippi. 1968. Kojiki. University
+                                                              of Tokyo Press, Tokyo.
+John Lindow. 2001. Norse Mythology: A Guide to
+  Gods, Heroes, Rituals, and Beliefs. Oxford Univer-        Serhii Plokhy. 2015. The Gates of Europe: A History of
+  sity Press, Oxford.                                         Ukraine. Basic Books, New York.
+                                                            Risto Pulkkinen. 2014. Suomalainen kansanusko:
+Michał Łuczyński. 2020. Bogowie dawnych Słowian:
+                                                              samaaneista saunatonttuihin. Gaudeamus, Helsinki.
+  studium onomastyczne. Kieleckie Towarzystwo
+  Naukowe, Kielce.                                          Qwen, :, An Yang, Baosong Yang, Beichen Zhang,
+                                                             Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan
+Vettam Mani. 1975. Purānic Encyclopaedia. Motilal           Li, Dayiheng Liu, Fei Huang, Haoran Wei, Huan
+  Banarsidass, Delhi.                                        Lin, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin
+                                                             Yang, Jiaxi Yang, Jingren Zhou, and 25 oth-
+Kelly Marchisio, Saurabh Dash, Hongyu Chen, Dennis           ers. 2025. Qwen2.5 technical report. Preprint,
+  Aumiller, Ahmet Üstün, Sara Hooker, and Sebastian          arXiv:2412.15115.
+  Ruder. 2024. How does quantization affect multilin-
+  gual llms? Preprint, arXiv:2407.03211.                    Aida Ramezani and Yang Xu. 2023. Knowledge of
+                                                              cultural moral norms in large language models. In
+Samuel Marks and Max Tegmark. 2024. The geometry              Proceedings of the 61st Annual Meeting of the As-
+  of truth: Emergent linear structure in large language       sociation for Computational Linguistics (Volume 1:
+  model representations of true/false datasets. Preprint,     Long Papers), pages 428–446, Toronto, Canada. As-
+  arXiv:2310.06824.                                           sociation for Computational Linguistics.
+Anna-Leena Siikala. 2012. Itämerensuomalaisten my-        Weihao Xuan, Rui Yang, Heli Qi, Qingcheng Zeng,
+  tologia. Suomalaisen Kirjallisuuden Seura, Helsinki.     Yunze Xiao, Aosong Feng, Dairui Liu, Yun Xing, Jun-
+                                                           jue Wang, Fan Gao, Jinghui Lu, Yuang Jiang, Huitao
+Rudolf Simek. 2007. Dictionary of Northern Mythology.      Li, Xin Li, Kunyu Yu, Ruihai Dong, Shangding
+  Boydell & Brewer, Cambridge.                             Gu, Yuekang Li, Xiaofei Xie, and 13 others. 2025.
+                                                           Mmlu-prox: A multilingual benchmark for ad-
+Viacheslav Siniaev, Iaroslav Chelombitko, and Aleksey      vanced large language model evaluation. Preprint,
+  Komissarov. 2026. Compressed code: the hidden ef-        arXiv:2503.10497.
+  fects of quantization and distillation on programming
+  tokens. Preprint, arXiv:2601.02563.                     An Yang, Anfeng Li, Baosong Yang, Beichen Zhang,
+                                                            Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao,
+Jerzy Strzelczyk. 1998. Mity, podania i wierzenia
+                                                            Chengen Huang, Chenxu Lv, Chujie Zheng, Day-
+   dawnych Słowian. Dom Wydawniczy Rebis, Poz-
+                                                            iheng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao
+   nań.
+                                                            Ge, Haoran Wei, Huan Lin, Jialong Tang, and 41
+Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya          others. 2025. Qwen3 technical report. Preprint,
+  Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin,      arXiv:2505.09388.
+  Tatiana Matejovicova, Alexandre Ramé, Morgane
+  Rivière, Louis Rouillard, Thomas Mesnard, Geoffrey      Lihui Yang and Deming An. 2005. Handbook of Chi-
+  Cideron, Jean bastien Grill, Sabela Ramos, Edouard        nese Mythology. ABC-CLIO, Santa Barbara.
+  Yvinec, Michelle Casbon, Etienne Pot, Ivo Penchev,
+                                                          Haeun Yu, Seogyeong Jeong, Siddhesh Pawar, Jisu Shin,
+  and 197 others. 2025. Gemma 3 technical report.
+                                                            Jiho Jin, Junho Myung, Alice Oh, and Isabelle Augen-
+  Preprint, arXiv:2503.19786.
+                                                            stein. 2025. Entangled in representations: Mechanis-
+NLLB Team, Marta R. Costa-jussà, James Cross, Onur          tic investigation of cultural biases in large language
+  Çelebi, Maha Elbayad, Kenneth Heafield, Kevin Hef-        models. Preprint, arXiv:2508.08879.
+  fernan, Elahe Kalbassi, Janice Lam, Daniel Licht,
+  Jean Maillard, Anna Sun, Skyler Wang, Guillaume         A    Dataset card: 270-entity, 10-culture
+  Wenzek, Al Youngblood, Bapi Akula, Loic Barrault,            extension
+  Gabriel Mejia Gonzalez, Prangthip Hansanti, and
+  20 others. 2022. No language left behind: Scal-         This appendix is a Bender-Friedman-style dataset
+  ing human-centered machine translation. Preprint,
+                                                          card (Bender and Friedman, 2018; Gebru et al.,
+  arXiv:2207.04672.
+                                                          2021) for the 270-entity, 10-culture substrate
+Stith Thompson. 1955. Motif-Index of Folk-Literature.     (Greek, Roman, Norse, Finnish, Ukrainian, Indian,
+   Indiana University Press.                              Egyptian, Chinese, Japanese, Mesopotamian).
+Jesse Vig, Sebastian Gehrmann, Yonatan Belinkov,
+   Sharon Qian, Daniel Nevo, Yaron Singer, and Stu-       Motivation. The dataset is constructed to support
+   art Shieber. 2020. Investigating gender bias in lan-   the four mechanistic experiments (E1/E2/E3/EN)
+   guage models using causal mediation analysis. In       under a parallel cross-cultural alignment sub-
+  Advances in Neural Information Processing Systems,      strate: each row is the canonical filler of a single
+   volume 33, pages 12388–12401. Curran Associates,
+   Inc.
+                                                          Thompson-index motif role in a single culture, so
+                                                          a probe asked to discriminate cultures must do so
+Oleksa Voropay. 1958. Zvychayi nashoho narodu: et-        on cultural rather than topical grounds. The unit of
+  nohrafichnyi narys. Ukrayinske Vydavnytstvo, Mu-        analysis is the (motif, culture) cell.
+  nich.
+
+Kevin Wang, Alexandre Variengien, Arthur Conmy,           Composition. 27 motifs × 10 cultures = 270
+  Buck Shlegeris, and Jacob Steinhardt. 2022. In-         cells. Cell schema: motif_id (Thompson index
+  terpretability in the wild: a circuit for indirect      entry), culture, name (canonical proper name in
+  object identification in gpt-2 small.    Preprint,      romanized English), native (native-script form
+  arXiv:2211.00593.
+                                                          when applicable), description (motif role gloss
+Chris Wendler, Veniamin Veselovsky, Giovanni Monea,       in English), source (per-row citation anchor point-
+  and Robert West. 2024. Do llamas work in English?       ing into Table 5), and a primary-text excerpt where
+  on the latent language of multilingual transformers.    the source is a primary attestation rather than a
+  In Proceedings of the 62nd Annual Meeting of the
+  Association for Computational Linguistics (Volume 1:    monograph. The motif set spans cosmology (A220,
+  Long Papers), pages 15366–15394, Bangkok, Thai-         A411, A420, A510, A671, A710, A1010, A1141.2,
+  land. Association for Computational Linguistics.        A142.1, A1415), tabu and transformation (C310,
+Richard H. Wilkinson. 2003. The Complete Gods and
+                                                          C920, D150, D610, D1080, D1810), the dead
+  Goddesses of Ancient Egypt. Thames & Hudson,            (E200, E400), water/forest/field/household spirits
+  London.                                                 (F420.1.2, F450, F460, F470), giants and demons
+(G300, G303), love and fertility (T110), sacred           range (Indo-European Greek/Roman/Norse/Indi-
+trees (V1), and personified death (Z111).                 an/Ukrainian, Uralic Finnish, Afro-Asiatic Egyp-
+                                                          tian, Sino-Tibetan Chinese, Japonic Japanese, ex-
+Citation provenance. Each row points to either
+                                                          tinct Akkadian/Sumerian Mesopotamian) but ex-
+a primary text or a curated academic monograph
+                                                          clude major traditions (sub-Saharan African, Na-
+(§3.1; per-entity listing in Appendix B). The per-
+                                                          tive American, Polynesian) for the practical reason
+tradition source repertoire is summarized in Ta-
+                                                          that the per-row citation discipline could not be
+ble 5.
+                                                          sustained at scale within the present cycle; we treat
+Contested rows and cultural absences. Three               extending the substrate to those traditions as a clear
+classes of decision are explicit in the dataset. First,   next step in line with the cross-cultural NLP pro-
+where the modern scholarly literature has set-            gram articulated by Hämäläinen et al. (2024).
+tled a contested attribution differently from older
+                                                          Release. The dataset, the prompt protocol, all
+sources, we follow the modern reading: Lada
+                                                          per-model E1/E2/E3/E4 outputs, and the rescored
+(T110, Ukrainian) is replaced by Mokoš follow-
+                                                          aggregates ship under MIT for code and CC-BY-4.0
+ing Łuczyński (2020), who shows that Lada is a
+                                                          for the dataset. Three artefacts are published in par-
+Slavic folk-song refrain word reinterpreted as a
+                                                          allel: the code release with prompts and per-model
+theonym in 19th-century scholarship; the Khors /
+                                                          outputs; the Hugging Face dataset card; and the
+Dažbog distinction (sun-disk A220 vs sun-as-deity
+                                                          complete per-entity listing in Appendix B of this
+A710) is preserved as two separate motif rows fol-
+                                                          paper, which contains the canonical name, native-
+lowing Gieysztor (2006). Second, a small number
+                                                          script form, and per-row citation anchor for every
+of cells use a less-canonical or scholarly-contested
+                                                          one of the 270 entities.4
+filler (notably Mielikki / Rauni for the Finnish T110
+cell, sitting on a still-debated boundary in current      Citation anchors. Of the 270 (motif, culture)
+Finno-Ugric scholarship, flagged for the second au-       pairs, every row carries a non-empty source field an-
+thor’s native-fluent reading rather than fixed in this    choring it to either a modern academic monograph
+release). Third, four cells are recorded as structural    or a primary-text reference (Kalevala runa, Pyra-
+absences where the source tradition genuinely lacks       mid Texts spell, Hypatian Codex annal entry, Ovid
+a parallel to the Thompson motif role (Japanese           Metamorphoses book and lines, and so on). The
+flood A1010, Finnish flood A1010, Mesopotamian            full mapping appears in Appendix B; in this paper
+theft-of-fire A1415, Egyptian forest-spirit F460);        we cite the academic sources collectively per tradi-
+they are excluded from output-accuracy scoring,           tion, not per entity, but the per-row trace is in the re-
+and the treatment of cultural absences as first-class     leased artefact. A summary by tradition: 13 sources
+entries follows Hämäläinen et al. (2024).                 for Greek/Roman, 4 for Norse, 4 for Finnish, 6 for
+                                                          Ukrainian/Slavic (Polish + Ukrainian + Plokhy his-
+Languages and scripts. Native-script forms
+                                                          torical), 4 for Indian, 1 (Wilkinson) plus per-row
+cover Greek, Latin (Italian, Norwegian Bok-
+                                                          Pyramid/Coffin/Book-of-the-Dead spell pointers
+mål, Finnish, romanized Indian/Egyptian/Me-
+                                                          for Egyptian, 2 for Chinese, 2 for Japanese, 3 for
+sopotamian/Roman), Cyrillic (Ukrainian), Devana-
+                                                          Mesopotamian.
+gari (Hindi for Indian), Modern Standard Arabic
+(for Egyptian, despite no continuous descendant),
+Han (Mandarin for Chinese), and a Han/Kana mix-
+ture (Japanese). The per-culture NL query lan-
+guage is named inline in Appendix L.
+Limitations. The canonical assignment of an en-
+tity to a culture is contested at boundaries (see
+the Limitations section of the main paper); the
+dataset records the most-cited canonical figure per
+culture. Cross-tradition borrowings are not sepa-
+rately tracked, a Norse entity that is structurally
+a continuation of a Proto-Indo-European figure               4
+                                                               Code and prompts: https://github.com/AragonerUA/
+shared with Vedic is recorded only on the Norse           folkmotif. Dataset card: https://huggingface.co/
+side. The ten cultures span a deliberately wide           datasets/Aragoner/folkmotif.
+ Culture               Primary texts                               Academic monographs
+ Greek                 Hesiod, Homer, Ovid Met.                    Hard (2004), Burkert (1985), Larson (2007)
+ Roman                 Virgil, Ovid, Livy                          Grimal (1996), Beard et al. (1998)
+ Norse                 Poetic Edda, Prose Edda                     Lindow (2001), Simek (2007)
+ Finnish               Kalevala (Lönnrot 1849, named runot)        Pentikäinen (1999), Siikala (2012), Pulkkinen (2014)
+ Ukrainian             Primary Chronicle, Hypatian Codex           Gieysztor (2006), Łuczyński (2020), Brückner (1985),
+                                                                   Strzelczyk (1998), Voropay (1958), Plokhy (2015)
+ Indian                Rig Veda, Purānas, Mahābhārata           Mani (1975), Doniger (1981), Flood (1996),
+                                                                   Kinsley (1986)
+ Egyptian              Pyramid Texts, Coffin Texts,                Wilkinson (2003)
+                       Book of the Dead
+ Chinese               Shan Hai Jing, Huainanzi                    Birrell (1993), Yang and An (2005)
+ Japanese              Kojiki, Nihon Shoki                         Philippi (1968), Kasulis (2004)
+ Mesopotamian          Enuma Elish, Epic of Gilgamesh              Black and Green (1992), Foster (2005), George (2003)
+
+Table 5: Per-tradition source repertoire for the ground-truth dataset. The per-entity source field anchors each of the
+270 rows to a specific entry in either column (e.g. Hard 2004 for Greek Zeus, Kalevala 9:1-13 for the Finnish
+thunder god); the full mapping appears in Appendix B.
+B    Per-entity dataset listing
+This appendix lists all 270 rows of the dataset described in §3.1 and Appendix A. Each row carries:
+the Thompson-index motif identifier (SMALL CAPS); the role description (English gloss); the culture
+label; the canonical proper name in romanized form (with diacritical marks where applicable to the
+source language); and the per-row source-citation anchor (modern academic monograph or primary text).
+Native-script forms (Greek polytonic, Cyrillic Ukrainian, Devanāgarı̄ Hindi, Modern Standard Arabic,
+Han characters for Mandarin, Japanese kanji/kana, and historical Norse forms) are stored in the released
+CSV/JSON artefact; this table reproduces only the Latin-script names so it renders cleanly on any reader.
+The mapping from source field to bibliographic entry is implicit in the references of this paper for the
+modern-academic citations; primary-text citations follow the conventions of each tradition (e.g. Kalevala
+n:m-k = runo n, lines m through k, in the Lönnrot 1849 standard text; PT n = Pyramid Texts spell n).
+    Table 6: Full per-entity dataset listing for the 270-entity, 10-culture Thompson-motif substrate. Native-script forms
+    are in the released CSV/JSON artefact. Superscripts mark contested or structural-absence rows (footnoted after the
+    table).
+
+Motif      Role                    Culture         Name                     Source
+A1010      Deluge/Great Flood      Greek           Deucalion        Hard 2004
+                                   Roman           Deucalion        Grimal 1996
+                                   Norse           Bergelmir        Lindow 2001
+                                   Finnish         (structural absence)13
+                                                                    (no    canonical     Finnish   flood-survivor
+                                                                    narrative)
+                                 Ukrainian    Noi                   Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                    Hnatyuk        *Etnohrafichnyi        zbirnyk*
+                                                                    (Christianized    flood-hero   in    Ukrainian
+                                                                    folk tradition)
+                                 Indian       Matsya                Matsya Purana 1-2; Bhagavata Purana 8.24;
+                                                                    Mahabharata 3.187 (flood narrative)
+                                 Egyptian     Hathor (Sekhmet)      *The Book of the Heavenly Cow* (New Kingdom
+                                                                    funerary text)
+                                 Chinese      Yu the Great          *Shujing* (Book of Documents, Yugong chapter);
+                                                                    *Mengzi*; *Shanhaijing*
+                                 Japanese     (structural absence)6 (no canonical Japanese deluge narrative)
+                                 Mesopotamian Atrahasis (Utnapish- *Atrahasis Epic*; *Epic of Gilgamesh* tablet
+                                              tim)                  XI
+A1141.2    Thunder-god’s weapon Greek         Zeus                  Hard 2004
+           (thunderbolt, hammer,
+           axe)
+                                                                                                      continued on next page
+(continued)
+Motif     Role                  Culture       Name                 Source
+                                Roman         Jupiter                Grimal 1996
+                                Norse         Thor                   Lindow 2001
+                                Finnish       Ukko                   Pentikäinen 1999
+                                Ukrainian     Perun                  Brückner 1918/1985 *Mitologia słowiańska*;
+                                                                     Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                     UP)
+                                 Indian       Vajra                  Rig Veda 1.32 (Indra slays Vritra with vajra);
+                                                                     Mahabharata
+                                 Egyptian     Set                    Pyramid Texts; Coffin Texts; Book of the Dead
+                                                                     (storm and disorder god)
+                                 Chinese      Lei Gong (Duke of *Shanhaijing* (Classic of Mountains and Seas,
+                                              Thunder)               c. 4 c. BCE); folk iconography
+                                 Japanese     Takemikazuchi          *Kojiki* (712 CE) Kamiumi episode; *Nihon
+                                                                     Shoki* (720 CE)
+                                 Mesopotamian Adad                   *Enuma Elish*;     storm-god hymns;      royal
+                                                                     inscriptions throughout Mesopotamian history
+A1415     Theft of fire          Greek        Prometheus             Hard 2004
+                                 Roman        Prometheus             Grimal 1996
+                                 Norse        Loki                   Lindow 2001
+                                 Finnish      Väinämöinen            Kalevala runo 47
+                                 Ukrainian    Svarog7                Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                     UP)
+                                 Indian       Mātariśvan           Rig Veda 1.31, 3.5, 3.9, 10.46 (Mātariśvan
+                                                                     brings fire from heaven to the Bhrigus)
+                                 Egyptian     Prometheus-            (no Egyptian fire-thief narrative)
+                                              equivalent8
+                                 Chinese      Suiren-shi             *Hanshu* (Han history); *Han Feizi*; folk
+                                                                     tradition
+                                 Japanese     Kagutsuchi9            *Kojiki*; *Nihon Shoki*
+                                 Mesopotamian (structural absence)10 (no Mesopotamian theft-of-fire narrative)
+A142.1    Smith of the gods (di- Greek        Hephaestus             Hard 2004
+          vine craftsman)
+                                 Roman        Vulcan                 Grimal 1996
+                                 Norse        Brokkr                 Lindow 2001
+                                 Finnish      Ilmarinen              Pentikäinen 1999
+                                 Ukrainian    Svarog                 Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                     UP)
+                                 Indian       Tvashtar               Rig Veda 1.32, 10.81 (forges Indra’s vajra;
+                                                                     ’all-fashioner’)
+                                 Egyptian     Ptah                   Memphite Theology (Shabaka Stone, c. 700 BCE);
+                                                                     Pyramid Texts
+                                 Chinese      Lu Ban                 *Lüshi Chunqiu*; *Mozi*; folk patron of
+                                                                     craftsmen since Spring & Autumn period
+                                 Japanese     Amatsumara             *Kojiki* (712 CE)
+                                 Mesopotamian Ea (Enki)              Sumerian *Enki and the World Order*;
+                                                                     *Atrahasis*; *Enuma Elish*
+A220      Sun-god                Greek        Apollo                 Hard 2004
+                                 Roman        Apollo                 Grimal 1996
+                                 Norse        Baldr                  Lindow 2001
+                                 Finnish      Päivä                  Pentikäinen 1999
+                                 Ukrainian    Khors1                 Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                     UP)
+                                 Indian       Surya                  Rig Veda 1.50 (Surya hymn); Surya Upanishad;
+                                                                     Mahabharata
+                                 Egyptian     Ra                     Pyramid Texts; Litany of Ra; Book of the Dead
+                                 Chinese      Xihe                   *Shanhaijing*; *Huainanzi* (2 c. BCE)
+                                 Japanese     Amaterasu              *Kojiki*; *Nihon Shoki*; *Engishiki*
+                                 Mesopotamian Utu (Shamash)          Sumerian and Akkadian sun-god hymns; *Code of
+                                                                     Hammurabi* prologue
+A411      Household god (domes- Greek         Hestia                 Hard 2004
+          tic protective deity)
+                                 Roman        Lares                  Grimal 1996
+                                                                                             continued on next page
+(continued)
+Motif     Role                   Culture       Name                  Source
+                                 Norse         Tomte                 Lindow 2001
+                                 Finnish       Tonttu                Pentikäinen 1999
+                                 Ukrainian     Domovyk               Voropay 1958 *Zvychayi nashoho narodu*
+                                                                     (Customs of our people, Ukrainian diaspora
+                                                                     ethnography); Brückner 1918/1985
+                                 Indian        Vāstos.pati          Rig Veda 7.54-55 (Vāstos.pati hymn — protector
+                                                                     of dwellings)
+                                 Egyptian      Bes                   Egyptian household amulets, popular religion
+                                                                     (Middle Kingdom onwards)
+                                 Chinese       Zao Jun (Stove God)   *Liji* (Book of Rites, 1 c.         BCE); folk
+                                                                     household tradition continuous since Han
+                                                                     dynasty
+                                 Japanese     Kamado-no-Kami         *Engishiki* (10 c. CE); folk tradition
+                                 Mesopotamian Lamassu                Mesopotamian protective-amulet inscriptions;
+                                                                     royal palace gateway figures (Assyrian)
+A420      God of war             Greek         Ares                  Hard 2004
+                                 Roman         Mars                  Grimal 1996
+                                 Norse         Tyr                   Lindow 2001
+                                 Finnish       Turisas               Finnish mythology
+                                 Ukrainian     Perun                 Brückner 1918/1985; Gieysztor 2006 *Mitologia
+                                                                     Słowian* (Warsaw UP)
+                                 Indian        Skanda                Mahabharata Vana Parva (Skanda’s birth);
+                                                                     Skanda Purana
+                                 Egyptian      Montu                 Pyramid Texts; royal Theban war-cult (Middle
+                                                                     Kingdom)
+                                 Chinese       Guandi (Guan Yu)      *Sanguozhi* (3 c. CE historical); *Sanguo
+                                                                     Yanyi* (14 c. novel); state cult deification
+                                                                     (Ming-Qing)
+                                 Japanese      Hachiman              *Shoku Nihongi* (797 CE); Iwashimizu Hachiman
+                                                                     shrine cult
+                                 Mesopotamian Ninurta                *Anzu Epic*; *Lugal-e* (Sumerian); royal
+                                                                     inscriptions
+A510      Origin of the culture Greek          Heracles              Hard 2004
+          hero
+                                Roman          Romulus               Grimal 1996
+                                Norse          Sigurd                Lindow 2001
+                                Finnish        Väinämöinen           Pentikäinen 1999
+                                Ukrainian      Kyi                   Primary Chronicle s.a.      6th c. (Cross &
+                                                                     Sherbowitz-Wetzor 1953); Plokhy 2017
+                                 Indian        Manu                  Manusmriti; Matsya Purana 1-2; Mahabharata
+                                                                     3.187 (flood-survivor — progenitor of
+                                                                     humanity)
+                                 Egyptian      Osiris                Pyramid Texts (Heliopolitan Osiris cycle);
+                                                                     Plutarch *De Iside et Osiride* (1c. CE)
+                                 Chinese       Fuxi                  *Shiji* (Sima Qian, 1 c. BCE); *Yijing*
+                                                                     attribution; *Huainanzi*
+                                 Japanese     Ninigi-no-Mikoto       *Kojiki*; *Nihon Shoki*
+                                 Mesopotamian Gilgamesh              *Epic of Gilgamesh* (Old Babylonian + Standard
+                                                                     Babylonian versions); Sumerian Bilgames poems
+A671      Hell/Underworld (realm Greek         Hades                 Hard 2004
+          of the dead)
+                                 Roman         Pluto                 Grimal 1996
+                                 Norse         Hel                   Lindow 2001
+                                 Finnish       Tuoni                 Pentikäinen 1999 (Tuoni, lord of Tuonela)
+                                 Ukrainian     Veles                 Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                     UP); Strzelczyk 1998 *Mity, podania i
+                                                                     wierzenia dawnych Słowian* (Poznań) (Veles as
+                                                                     ruler of Nav)
+                                 Indian        Yama                  Rig Veda 10.14 (Yama-Yami hymn); Garuda Purana
+                                                                     (preta-kalpa, narakas)
+                                 Egyptian      Osiris                Pyramid Texts; Coffin Texts; Book of the Dead
+                                                                                               continued on next page
+(continued)
+Motif     Role                  Culture        Name                 Source
+                                Chinese         Yanluo Wang (Yama- Buddhist sutras (transmission of Yama as
+                                                King)                  Yanluo); Daoist *Diyu* texts; folk *Yu Li
+                                                                       Bao Chao*
+                                   Japanese     Izanami                *Kojiki* book 1 (Izanami becomes ruler of Yomi
+                                                                       after death); *Nihon Shoki*
+                                   Mesopotamian Ereshkigal             *Descent of Inanna*; *Nergal and Ereshkigal*;
+                                                                       *Epic of Gilgamesh* tablet XII
+A710      Creation/origin of the Greek          Helios                 Hard 2004
+          sun
+                                   Roman        Sol                    Grimal 1996
+                                   Norse        Sól                    Lindow 2001
+                                   Finnish      Päivätär               Pentikäinen 1999
+                                   Ukrainian    Dazhboh                Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                       UP); Strzelczyk 1998
+                                   Indian       Vivasvant              Rig Veda 10.17.1-2 (origin of Vivasvant);
+                                                                       1.115 (his radiant chariot)
+                                   Egyptian     Atum                   Heliopolitan creation account; Pyramid Texts;
+                                                                       Coffin Texts; Book of the Dead
+                                   Chinese      Pangu                  *Sanwu Liji* (3 c. CE, Xu Zheng); *Wuyun
+                                                                       Linian Ji*
+                                   Japanese     Amaterasu        (cave *Kojiki*; *Nihon Shoki*
+                                                myth)
+                                   Mesopotamian Utu’s daily journey    Sumerian Utu hymns; Akkadian Shamash hymns
+C310      Tabu: looking at certain Greek        Orpheus                Hard 2004
+          person or thing
+                                   Roman        Orpheus                Grimal 1996
+                                   Norse        Baldr                  Lindow 2001
+                                   Finnish      Lemminkäinen           Kalevala
+                                   Ukrainian    Kupala12               Strzelczyk 1998 *Mity, podania i wierzenia
+                                                                       dawnych Słowian*; Voropay 1958
+                                   Indian       Ahalya                 Ramayana Bala Kanda 47-48 (Ahalya’s curse and
+                                                                       stoning)
+                                   Egyptian     Hathor (mirror-tabu) Egyptian wisdom literature; *The Tale of the
+                                                                       Two Brothers* (Papyrus d’Orbiney, c. 1185
+                                                                       BCE)
+                                   Chinese      Niulang and Zhinü      Han dynasty *Gushi Shijiu Shou* (Nineteen Old
+                                                                       Poems); Tang/Song *Qixi* festival traditions
+                                   Japanese     Izanagi at Yomi        *Kojiki* book 1; *Nihon Shoki*
+                                   Mesopotamian Adapa                  *Adapa Epic* (Akkadian, c. 14 c. BCE)
+C920      Death for breaking tabu Greek         Semele                 Hard 2004
+                                   Roman        Semele                 Grimal 1996
+                                   Norse        Baldr                  Lindow 2001
+                                   Finnish      Kullervo               Kalevala runo 31-36
+                                   Ukrainian    Marena                 Brückner 1918/1985 *Mitologia słowiańska*;
+                                                                       Strzelczyk 1998
+                                   Indian       Daksha                 Linga Purana; Vayu Purana 30; Bhagavata Purana
+                                                                       4.2-7
+                                   Egyptian     Bata                   *The Tale of the Two Brothers* (Papyrus
+                                                                       d’Orbiney, c. 1185 BCE)
+                                   Chinese      Houyi                  *Huainanzi* (2 c. BCE); *Shanhaijing*
+                                   Japanese     Izanami                *Kojiki*; *Nihon Shoki*
+                                   Mesopotamian Etana                  *Etana Epic* (Old Babylonian + Middle
+                                                                       Assyrian)
+D1080     Magic weapon             Greek        Aegis                  Hard 2004
+                                   Roman        Ancile                 Grimal 1996
+                                   Norse        Gram                   Lindow 2001
+                                   Finnish      Sampo                  Pentikäinen 1999
+                                   Ukrainian    Mech-kladenets5        Strzelczyk 1998 *Mity, podania i wierzenia
+                                                                       dawnych    Słowian*     (Poznań);      Hnatyuk
+                                                                       *Etnohrafichnyi zbirnyk*
+                                   Indian       Sudarshana Chakra      Mahabharata; Bhagavata Purana; Vishnu Purana
+                                   Egyptian     Was scepter            Pyramid Texts; royal regalia from earliest
+                                                                       dynasties
+                                                                                               continued on next page
+(continued)
+Motif     Role                  Culture         Name                  Source
+                                Chinese         Ruyi Jingu Bang       *Xiyou Ji* (Journey to the West)
+                                Japanese        Kusanagi-no-Tsurugi   *Kojiki*; *Nihon Shoki*; one of three Imperial
+                                                                      Regalia
+                                 Mesopotamian   Sharur                *Lugal-e* (Sumerian); *Anzu Epic*
+D150      Transformation: man to Greek          Ceyx                  Ovid Met. 11
+          bird
+                                 Roman          Picus                 Grimal 1996
+                                 Norse          Odin                  Lindow 2001
+                                 Finnish        Lemminkäinen          Kalevala runo 12
+                                 Ukrainian      Finist                Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                      Strzelczyk 1998
+                                Indian          Garuda                Mahabharata Adi Parva 16-34 (Garuda’s birth
+                                                                      and quest for amrita); Bhagavata Purana
+                                Egyptian        Horus                 Pyramid Texts; Coffin Texts; Book of the Dead
+                                Chinese         Jingwei               *Shanhaijing* (Beishan Jing); *Shuyi Ji*
+                                Japanese        Yatagarasu            *Kojiki*; *Nihon Shoki*
+                                Mesopotamian    Etana                 *Etana Epic*
+D1810     Magic knowledge (wis- Greek           Athena                Hard 2004
+          dom)
+                                Roman           Minerva               Grimal 1996
+                                Norse           Odin                  Lindow 2001
+                                Finnish         Väinämöinen           Pentikäinen 1999
+                                Ukrainian       Veles                 Gieysztor 2006 *Mitologia Słowian* (Warsaw
+                                                                      UP); Łuczyński 2020 *Bogowie dawnych Słowian*
+                                Indian          Brihaspati            Rig    Veda    4.50   (Brahmanaspati    hymn);
+                                                                      Mahabharata; Brahmanas
+                                Egyptian        Thoth                 Pyramid Texts; Book of the Dead; Hermopolitan
+                                                                      theology
+                                Chinese         Wenchang Wang         Daoist *Yu Li Bao Chao*; popular literacy-cult
+                                                                      since Tang dynasty
+                                Japanese     Omoikane                 *Kojiki*; *Nihon Shoki*
+                                Mesopotamian Ea (Enki)                Sumerian and Akkadian wisdom literature;
+                                                                      *Atrahasis*; *Enuma Elish*
+D610      Repeated transforma- Greek            Proteus               Hard 2004
+          tion (shifting)
+                               Roman            Vertumnus         Grimal 1996
+                               Norse            Loki              Lindow 2001
+                               Finnish          Joukahainen       Kalevala runo 3
+                               Ukrainian        Vodianyk          Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                  Brückner 1918/1985
+                                 Indian       Vishnu              Bhagavata Purana 1.3 (ten avatars listed);
+                                                                  Garuda Purana
+                                 Egyptian     Khepri              Pyramid Texts; Book of the Dead
+                                 Chinese      Sun Wukong          *Xiyou Ji* (Journey to the West, 16 c. CE, Wu
+                                                                  Cheng’en)
+                                 Japanese     Kitsune             *Konjaku Monogatari* (12 c.);         *Kojiki*
+                                                                  references; folk *kitsune-tsuki*
+                                 Mesopotamian Inanna (descent and *Descent of Inanna* (Sumerian); *Descent of
+                                              ascent)             Ishtar* (Akkadian)
+E200      Malevolent return from Greek        Lamia               Hard 2004 *Routledge Handbook of Greek
+          the dead                                                Mythology*, pp. 116-117 (Lamia myth); cf.
+                                                                  Aristophanes *Wasps* 1035 and scholia on
+                                                                  Aristophanes *Frogs* 285
+                                 Roman        Lemures             Grimal 1996
+                                 Norse        Draugr              Lindow 2001
+                                 Finnish      Kalma               Pentikäinen 1999
+                                 Ukrainian    Upyr                Brückner 1918/1985; Voropay 1958 *Zvychayi
+                                                                  nashoho narodu*
+                                 Indian       Vetala              Vetala Panchavimshati (Twenty-five tales of
+                                                                  Vetala); Kathasaritsagara
+                                 Egyptian     Apophis (Apep)      Pyramid Texts; Book of the Dead; Coffin Texts;
+                                                                  *Book of Apophis* (Bremner-Rhind Papyrus)
+                                                                                               continued on next page
+(continued)
+Motif     Role                   Culture        Name                 Source
+                                 Chinese        Jiangshi             Qing dynasty *Zibuyu* (Yuan Mei, 18 c.); folk
+                                                                     hopping-vampire tradition
+                                 Japanese       Onryō               *Konjaku Monogatari*; Heian-period yūrei
+                                                                     tradition; Edo-period *Yotsuya Kaidan*
+                                 Mesopotamian   Lamashtu             Akkadian incantation series *Lamashtu*
+E400      Ghosts and revenants   Greek          Eidolon4             Greek belief
+                                 Roman          Manes                Grimal 1996
+                                 Norse          Haugbui              Lindow 2001
+                                 Finnish        Kalma                Finnish belief
+                                 Ukrainian      Mertviaky            Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                     Brückner 1918/1985
+                                 Indian         Preta                Garuda Purana (preta-kalpa); Mahabharata
+                                                                     Anushasana Parva; Manusmriti 3.226-249
+                                 Egyptian       Akh                  Pyramid Texts; Coffin Texts
+                                 Chinese        Gui                  *Shijing*; *Liji*; *Yu Li Bao Chao*
+                                 Japanese       Yūrei               *Genji Monogatari* (11 c.); Edo-period kaidan
+                                 Mesopotamian   Etemmu               Akkadian funerary incantations; *Epic of
+                                                                     Gilgamesh* tablet XII
+F420.1.2 Water-spirit as woman Greek            Naiad                Hard 2004
+         (female water entity)
+                               Roman            Nympha        Grimal 1996
+                               Norse            Nixie         Lindow 2001
+                               Finnish          Näkki         Pentikäinen 1999
+                               Ukrainian        Rusalka       Voropay 1958 *Zvychayi nashoho narodu*;
+                                                              Strzelczyk 1998
+                                 Indian       Apsaras         Rig    Veda     10.95    (Urvashi-Pururavas);
+                                                              Mahabharata; Ramayana
+                                 Egyptian     Anuket          Pyramid Texts; Aswan / First-Cataract cult
+                                 Chinese      Long Nü (Dragon *Liu Yi Zhuan* (Tang chuanqi, 9 c.); Tang
+                                              Princess)       Buddhist Longwang traditions
+                                 Japanese     Mizuchi         *Nihon Shoki* (720 CE); folk tradition
+                                 Mesopotamian Tiamat          *Enuma Elish*
+F450      Household/domestic     Greek        Agathos Daimon  Greek belief
+          spirits
+                                 Roman          Penates                  Grimal 1996
+                                 Norse          Tomte                    Lindow 2001
+                                 Finnish        Tonttu                   Finnish belief
+                                 Ukrainian      Domovyk                  Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                         Brückner 1918/1985
+                                     Indian       Grihya devatas         Grihya Sutras (Ashvalayana,       Apastamba);
+                                                                         Manusmriti 3.80-90 (panchayajna ritual)
+                                     Egyptian     Bes                    Egyptian household amulet tradition
+                                     Chinese      Zao Jun (Stove God) *Liji*; folk household tradition
+                                     Japanese     Zashiki-warashi        Tōno region folk tradition; Yanagita Kunio
+                                                                         *Tōno Monogatari* (1910)
+                                     Mesopotamian Lamassu                Akkadian incantations; royal-palace gateway
+                                                                         figures
+F460      Forest spirits             Greek        Dryad                  Hard 2004
+                                     Roman        Silvanus               Grimal 1996
+                                     Norse        Skogsfru               Scandinavian belief
+                                     Finnish      Metsänhaltija          Finnish belief
+                                     Ukrainian    Lisovyk                Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                         Brückner 1918/1985
+                                     Indian       Yaksha                 Mahabharata Vana Parva 313 (Yaksha-Prashna);
+                                                                         Atharvaveda; Buddhist Jatakas
+                                     Egyptian     (structural absence)11 (no canonical Egyptian forest-spirit)
+                                     Chinese      Shanshen (Mountain *Shanhaijing*;         folk tradition;     Daoist
+                                                  God)                   mountain cults
+                                     Japanese     Kodama                 *Wakan Sansai Zue* (1712); folk tradition
+                                     Mesopotamian Humbaba (Huwawa) *Epic of Gilgamesh* tablets II-V; Sumerian
+                                                                         *Bilgames and Huwawa*
+F470      Field/agricultural spirits Greek        Demeter                Hard 2004
+                                                                                                continued on next page
+(continued)
+Motif     Role                     Culture        Name                Source
+                                   Roman          Ceres                Grimal 1996
+                                   Norse          Freyr                Lindow 2001
+                                   Finnish        Pellon-Pekko         Finnish belief
+                                   Ukrainian      Polevyk              Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                       Brückner 1918/1985
+                                   Indian         Bhūmi Devi          Atharvaveda 12.1 (Pr.thivı̄ Sūkta — hymn to
+                                                                       earth/soil); Vishnu Purana
+                                   Egyptian       Min                  Pyramid Texts;      Min temple at Coptos
+                                                                       (predynastic origin)
+                                   Chinese        Tudi Gong (Earth *Shijing* references to *she*; folk tradition
+                                                  God)                 continuous since pre-Han period
+                                   Japanese       Inari                *Engishiki* (10 c.); Fushimi Inari shrine cult
+                                                                       since 711 CE
+                                   Mesopotamian   Ninhursag            Sumerian *Enki and Ninhursag*; *Atrahasis*
+G300      Ogres/Giants             Greek          Cyclops              Hard 2004, 269-270
+                                   Roman          Cacus                Grimal 1996
+                                   Norse          Jötunn               Lindow 2001
+                                   Finnish        Hiisi                Pentikäinen 1999
+                                   Ukrainian      Chudo-Yudo           Hnatyuk *Etnohrafichnyi zbirnyk* (Lviv, early
+                                                                       20c.); Brückner 1918/1985
+                                   Indian         Rakshasa             Ramayana (Ravana, Kumbhakarna, Ravana’s
+                                                                       army); Mahabharata (Hidimba)
+                                   Egyptian       Apophis (Apep)       *Book of Apophis*; Pyramid Texts; Coffin Texts
+                                   Chinese        Niu Mowang (Bull De- *Xiyou Ji* (Journey to the West)
+                                                  mon King)
+                                   Japanese       Oni                  *Konjaku Monogatari*; *Otogizōshi*; folk
+                                                                       tradition
+                                   Mesopotamian   Humbaba (Huwawa) *Epic of Gilgamesh*
+G303      Devil/demon figure       Greek          Typhon               Hard 2004
+                                   Roman          Orcus                Grimal 1996
+                                   Norse          Loki                 Lindow 2001
+                                   Finnish        Piru                 Finnish belief
+                                   Ukrainian      Chort                Voropay 1958 *Zvychayi nashoho narodu*;
+                                                                       Brückner 1918/1985
+                                   Indian         Mahishasura          Devi Mahatmya 2-3 (Markandeya Purana 81-93)
+                                   Egyptian       Set (Seth)           Pyramid Texts; Book of the Dead; Plutarch *De
+                                                                       Iside et Osiride*
+                                   Chinese        Yaoguai              *Shanhaijing*; *Soushen Ji* (Gan Bao, 4 c.
+                                                                       CE); *Xiyou Ji*
+                                   Japanese       Akuma                Buddhist    transmission   texts;     *Konjaku
+                                                                       Monogatari*; folk tradition
+                                   Mesopotamian   Pazuzu               Akkadian incantations; bronze-amulet figures
+                                                                       (Neo-Assyrian and later)
+T110      Goddess of love/fertility Greek         Aphrodite            Hard 2004
+                                    Roman         Venus                Grimal 1996
+                                    Norse         Freyja               Lindow 2001
+                                    Finnish       Rauni3               Mikael Agricola 1551 (Tavastian gods list,
+                                                                       preface to Psalter); Haavio 1959 *Karjalan
+                                                                       jumalat*
+                                   Ukrainian      Mokosh2              Gieysztor 2006 [pages pending]
+                                   Indian         Lakshmi              Sri Sukta (Rig Veda khila); Atharvaveda;
+                                                                       Vishnu Purana 1.8-9
+                                   Egyptian       Hathor               Pyramid Texts; Coffin Texts; Dendera temple
+                                                                       inscriptions
+                                   Chinese        Yue Lao (Old Man un- *Sui Tang Jiahua* (Tang anecdotes); *Yu Li
+                                                  der the Moon)        Bao Chao*
+                                   Japanese       Konohanasakuya-      *Kojiki*; *Nihon Shoki*
+                                                  hime
+                                   Mesopotamian   Inanna (Ishtar)      Sumerian *Inanna* hymns; Akkadian *Ishtar*
+                                                                       hymns; *Epic of Gilgamesh* tablet VI
+V1        Sacred trees/groves      Greek          Dodona Oak           Hard 2004
+                                   Roman          Lucus                Roman religion
+                                                                                                continued on next page
+(continued)
+Motif     Role                  Culture        Name                Source
+                                Norse          Yggdrasil          Lindow 2001
+                                Finnish        Maailmanpuu        Pentikäinen 1999 (Finnish *maailmanpuu* /
+                                                                  cosmological world-pillar)
+                                Ukrainian    Perunov dub          Constantine Porphyrogenitus *De Administrando
+                                                                  Imperio* 9.70-80 (Moravcsik & Jenkins 1967);
+                                                                  Gieysztor 2006 (Perun’s sacred oak at
+                                                                  Khortytsia)
+                                Indian       Aśvattha            Bhagavad Gita 15.1 (urdhva-mūla aśvattha —
+                                                                  cosmic tree); Rig Veda 1.135.8
+                                Egyptian     Ished tree (Sycamore Pyramid Texts; Book of the Dead spell 109;
+                                             of Hathor)           royal annal inscriptions
+                                Chinese      Fusang               *Shanhaijing* (Hai Wai Dong Jing); *Huainanzi*
+                                                                  Tianwen Xun
+                                Japanese     Sakaki               *Engishiki*; *Kojiki* (Ame-no-Iwato cave
+                                                                  episode); Shinto ritual continuous to present
+                                Mesopotamian Huluppu tree         Sumerian    *Bilgames,    Enkidu    and    the
+                                                                  Netherworld* (Huluppu Tree prologue)
+Z111      Death personified     Greek        Thanatos             Hard 2004
+                                Roman        Mors                 Grimal 1996
+                                Norse        Hel                  Lindow 2001
+                                Finnish      Kalma                Pentikäinen 1999
+                                Ukrainian    Mara                 Brückner 1918/1985 *Mitologia słowiańska*;
+                                                                  Strzelczyk 1998 *Mity, podania i wierzenia
+                                                                  dawnych Słowian*
+                                Indian       Yama                 Rig Veda 10.14; Katha Upanishad 1 (Yama as
+                                                                  death personified, instructs Nachiketa)
+                                Egyptian     Anubis               Pyramid Texts; Book of the Dead (esp.
+                                                                  weighing-of-the-heart)
+                                Chinese      Yanluo Wang          Daoist underworld bureaucracy texts; *Yu Li
+                                                                  Bao Chao*
+                                Japanese     Shinigami            Edo period folk tradition; modern *kaidan*
+                                                                  literature
+                                Mesopotamian Mamitu (Namtar)      *Atrahasis*; *Epic of Gilgamesh*; Akkadian
+                                                                  death-personification incantations
+
+
+
+Footnotes on contested or structural-absence attributions. Thirteen of the 270 cells carry a superscript
+marker in Table 6. The five cases with specific scholarly contention concern the choice of figure within a
+tradition; the eight structural-absence cases mark cells where the motif role has no canonical filler in the
+source tradition and are preserved as flagged rows rather than forced near-miss substitutions, in line with
+the cross-cultural NLP program articulated by Hämäläinen et al. (2024).
+
+1. Khors (A220, sun-god). Solar identification is contested: Łuczyński (2020) argues for lunar reading
+   on Iranian-etymological grounds (xuršı̄d); Gieysztor (2006) retains the canonical solar-disk reading
+   from the Hypatian Codex s.a. 6622 (1114) interpolation of John Malalas. We follow Gieysztor and
+   the Hypatian gloss because it is the earliest and only continuous medieval attestation of the entity in a
+   solar context. We separately retain Dažbog as the sun-as-deity filler of A710 (creation/origin of the
+   sun), which is the same Hypatian passage’s other named figure.
+2. Mokoš (T110, goddess of love/fertility), replaced our v1 entity Lada. Modern Slavicist consensus
+   holds Lada to be a refrain word in folk wedding songs misinterpreted as a theonym from the 15th
+   century onward; Łuczyński (2020) traces the historiography of the misattribution. Mokoš is the only
+   female deity in the canonical Vladimirian pantheon (Primary Chronicle 980) and is attested in the East
+   Slavic continuum across the medieval–modern transition; we use her as the fertility-and-female-domain
+   filler.
+3. Rauni (T110, goddess of love/fertility), replaced our v1 entity Mielikki. Mielikki is a forest-goddess in
+   the Kalevala, not a fertility figure; we corrected to Rauni following Mikael Agricola’s 1551 Tavastian
+   list of pre-Christian Finnish deities, where Rauni is glossed as Ukko’s wife. Identity contested in
+   modern Finnish folkloristics: Siikala (2012) treats Rauni as a possible epithet of Ukko himself (cf.
+    rauni, “rowan tree”); we adopt the Agricola canonical reading, pending native-speaker validation by
+    the second author.
+ 4. Eidolon (E400, ghosts/revenants). The plural eidola is more standard in modern Greek-philological
+    practice (cf. Odyssey 11), but the singular eidolon is what an LLM is most likely to emit if asked for
+    a name; we use the singular for tokenizer-friendliness and to bias the test toward modern English-
+    classical-tradition usage. Either form scores correctly under our substring/Levenshtein metric.
+ 5. Mech-kladenets (D1080, magic weapon) is a generic East Slavic folktale name for a self-wielding
+    sword (lit. “treasure-sword”), not a specific named weapon as Aegis (Greek), Ancile (Roman), or
+    Gram (Norse) are. Specific named alternatives exist (Dobrynya’s saber; Volga’s sword) but are tale-
+    type-bound rather than canonically cultural; we keep the generic East Slavic term as a more honest
+    representation of how the motif is realized in the Slavic continuum.
+ 6. Structural absence: Japanese mythology lacks a canonical flood-myth parallel to Deucalion (Greek)
+    or Bergelmir (Norse); the Kojiki and Nihon Shoki narrate cosmic events (Ame-no-iwato, the world-tree,
+    the heavenly retreat) without a primordial deluge. We mark this cell as a documented cultural absence
+    rather than force a near-miss attribution.
+ 7. Structural absence: Slavic mythology has no Prometheus-parallel theft-of-fire narrative. Svarog is
+    the smith-deity associated with the heavenly fire (Hypatian Codex s.a. 6622) but does not steal fire on
+    humanity’s behalf. The absence is itself culturally meaningful and is preserved as a flagged row rather
+    than substituted with a near-miss.
+ 8. Structural absence: Egyptian tradition has no Prometheus-equivalent. Fire is divine domain (especially
+    Ra’s solar fire and the Eye of Ra) but is never thieved on humanity’s behalf in the Egyptian literary
+    corpus.
+ 9. Partial-fit: Kagutsuchi is the fire-deity born from Izanami (who dies giving birth to him in Kojiki
+    book 1); this is a fire-origin narrative but not a theft narrative. We mark the row partial-fit rather than
+    full-fit and let the row be evaluated as a structural near-miss.
+10. Structural absence: Mesopotamian tradition has no theft-of-fire narrative. Fire is divine (Gibil, Nuska
+    as fire-gods) but is not stolen on humanity’s behalf.
+11. Structural absence: Egypt’s geography (desert plus Nile floodplain) lacks dense forest, hence has no
+    canonical forest-spirit class comparable to Greek Dryad or Norse Skogsrå. The absence is geographical,
+    not literary.
+12. Partial-fit: Kupala is a midsummer ritual complex (with a ritual herb/effigy of the same name), not
+    a personified figure comparable to Orpheus (looking-back tabu), Lemminkäinen (Tuonela tabu), or
+    Baldr. We retain Kupala as a flagged row to mark the cultural realization of the looking-tabu motif as
+    ritual-collective rather than personal-narrative.
+13. Structural absence: Finnish folk tradition lacks a canonical flood-survivor figure comparable to
+    Deucalion or Atrahasis; the Kalevala does not narrate a primordial deluge. The flood event itself
+    (vedenpaisumus) is named but no personified hero is documented in the canonical corpus.
+C    Per-model 2 × 2 decomposition shares                 baseline; all 18 models clear it, the smallest mar-
+                                                          gin is Gemma 4 (∆ ∈ [+0.02, +0.09]; Gemma-4-
+The 2 × 2 decomposition (§3.3) crosses the linear-
+                                                          E2B’s +0.019 is within the V3 bootstrap CI half-
+probe outcome (E1) with the output-extraction out-
+                                                          width 0.046 (§4.1) and is borderline-cleared, the
+come (E4) per (entity, model) cell, giving four
+                                                          other three Gemma 4 sizes clear by ≥ +0.06), the
+cells whose mean shares across the sweep are
+                                                          largest is Llama-3.1-8B and Qwen-3.6-27B (both
+summarized in Figure 4. Figure 5 adds the per-
+                                                          ∆ = +0.29), mean ∆ = +0.19.
+model breakdown. DecodingSuppressed (orange)
+dominates every model with shares 51–76%; Pre-             Input             Char-n-gram acc.     Majority null
+served (green) ranges from 5% (Llama-3.2-1B)
+                                                           romanized name          0.596              0.100
+to 24% (Gemma-4-26B-A4B); Representational-                native script           0.804              0.100
+lyFlat (red) ranges from 10% to 33%; SurfaceLuck
+(grey) is consistently small (≤ 6%).                      Table 7: Char-n-gram (2–4) baseline on entity-name
+                                                          strings alone, 5-fold CV, on the 10-culture substrate.
+
+
+                                                           Model                 Probe peak    ∆ vs char-n-gram
+                                                           Llama-3.1-8B             0.881           +0.285
+                                                           Qwen-3.6-27B             0.881           +0.285
+                                                           OLMo-3.1-32B             0.863           +0.267
+                                                           Phi-4                    0.856           +0.260
+                                                           Llama-3.2-3B             0.833           +0.237
+                                                           Qwen-3.6-35B-A3B         0.833           +0.237
+                                                           Phi-4-mini               0.833           +0.237
+                                                           Yi-1.5-34B               0.830           +0.234
+                                                           Tiny-Aya-Global          0.807           +0.211
+                                                           Qwen2.5-7B               0.804           +0.208
+                                                           Llama-3.2-1B             0.793           +0.197
+                                                           Yi-1.5-9B                0.774           +0.178
+                                                           Yi-1.5-6B                0.767           +0.171
+                                                           Qwen2.5-1.5B             0.752           +0.156
+                                                           Gemma-4-26B-A4B          0.689           +0.093
+                                                           Gemma-4-31B              0.689           +0.093
+                                                           Gemma-4-E4B              0.652           +0.056
+                                                           Gemma-4-E2B              0.615           +0.019
+
+                                                          Table 8: Residual-stream probe peak (5-fold CV) on
+                                                          the 10-culture, 270-entity substrate vs the char-n-gram
+Figure 4: Mean per-cell shares of the 2 × 2 decompo-      surface baseline (0.596, Table 7). All 18 models clear
+sition across the sweep. The probe asks “is the culture   the baseline; mean ∆ = +0.190.
+linearly readable from the residual stream?” (E1, x-
+axis); generation asks “does the model emit the correct
+name?” (EN, y-axis). DecodingSuppressed is the domi-
+                                                          E    Tier-A restriction control for the
+nant cell in every model individually.
+                                                               per-culture NL/EN asymmetry
+                                                          The per-culture NL−EN deltas of §4.6 could in
+D    V1 detail: probe vs char-n-gram
+                                                          principle be produced by models that cannot read
+     baseline per model
+                                                          the target language at all rather than by a language-
+Table 7 reports the char-n-gram (2–4) leakage             conditioned readout. We therefore recompute the
+baseline on entity-name strings alone, 5-fold CV.         per-culture delta on the 14 Tier-A models only,
+The native-script baseline is near-ceiling because        i.e. those whose technical reports document multi-
+Cyrillic vs Latin vs Greek vs Devanagari vs CJK           lingual pretraining coverage (Table 13), excluding
+glyphs trivially separate; we therefore use roman-        every model for which a capability barrier is plausi-
+ized names for all probe and lens analyses. The           ble: Yi-1.5 (explicitly bilingual English+Chinese)
+romanized baseline on the 10-culture substrate is         and OLMo-3.1 (explicitly English-primary). Ta-
+0.596 (the value rounded to 0.60 in §4.1 and Ta-          ble 9 shows the pattern is essentially unchanged:
+ble 2). Table 8 reports the residual-stream probe         Spearman ρ = 0.96 against the same contrast com-
+peak for each model alongside the delta above this        puted over all 18 models, with the same extremes
+Figure 5: 2 × 2 decomposition cell shares per model on the 270-entity, 10-culture substrate. Per-model shares sum
+to 1.0.
+
+
+(Greek and Egyptian strongly EN-favouring; Chi-                  Culture         Tier-A (14)   Tier-B/C (4)
+nese and Finnish NL-favouring). Both columns                     Greek              +0.18         +0.21
+are computed on the unrescored majority-correct                  Egyptian           +0.18         +0.09
+                                                                 Japanese           +0.06         -0.01
+aggregates, so individual values differ slightly from            Roman              +0.02         +0.06
+the rescored figures of Table 4; only the ordering               Ukrainian          +0.02         +0.00
+matters for this control. If non-capability drove                Indian             -0.01         -0.01
+                                                                 Mesopotamian       -0.05         +0.01
+the asymmetry, dropping the English-primary mod-                 Finnish            -0.04         -0.06
+els would reshape the ordering; it does not. The                 Norse              -0.08         -0.02
+confound is also one-sided by construction: an in-               Chinese            -0.07         -0.16
+ability to read the NL prompt can only depress
+                                                          Table 9: Language-proficiency control (§E): per-culture
+NL accuracy, so it can inflate an EN advantage but
+                                                          EN−NL majority-accuracy delta (positive = English
+never manufacture the NL advantages we observe            query wins) recomputed on the 14 Tier-A models
+on Finnish, Norse and Chinese.                            with documented multilingual pretraining, vs the Tier-
+                                                          B/C models (Yi-1.5 EN+ZH only; OLMo-3.1 English-
+F   Probe stability: fold variance, learning              primary). The Tier-A ordering matches the same con-
+    curves, and baseline significance                     trast computed over all 18 models (Spearman ρ = 0.96),
+                                                          so the per-culture asymmetry is not an artefact of lan-
+Addressing whether a 10-way probe trained on              guage non-capability in English-primary models. Val-
+∼216 examples per fold is stable rather than over-        ues are computed on the unrescored majority-correct
+                                                          aggregates and so differ slightly from the rescored fig-
+fit, Table 10 reports, at each model’s peak layer:
+                                                          ures in Table 4.
+per-fold accuracy std, learning-curve accuracy at
+25/50/75/100% of the training folds, and the mar-
+gin over the char-n-gram surface baseline with a
+one-sided paired bootstrap CI and p-value (exact          McNemar agrees). Per-fold std is small (0.007–
+0.051, no outlier fold) and learning curves rise        single model on the bare-completion form of the
+monotonically and plateau, the signature of a sta-      prompt (“In <C> mythology, the proper name
+ble signal; 17/18 models clear the baseline at          of the <desc> is”) which constrains the next
+p < 0.05 (16 at p < 0.001), the sole exception          token to be a name. The lens criterion (rank of the
+being Gemma-4-E2B (∆ = +0.011, p = 0.37),               gold’s first BPE sub-token, taking the minimum
+consistent with its borderline flag in App. D.          over the with- and without-leading-space variants)
+                                                        is otherwise unchanged.
+G    MCQ per-culture breakdown
+                                                        J   Activation patching
+Table 11 reports the per-culture mean MCQ selec-
+tion accuracy underlying the output-format control      Figure 8 reports the layer-wise patching pass (Sec-
+of §4.2.                                                tion 3, E3): patching the residual stream of a
+                                                        source-culture prompt into a target-culture prompt
+H    Per-(model, culture) output heatmap                and measuring whether the source-culture gold
+Figure 6 disaggregates the cell-level best-of-          name’s next-token logit rises above the target-
+NL/EN output accuracy by culture across the chat-       culture one’s. Across the 17 working models the
+template models. Greek tops every model; Ro-            effect is concentrated in the last third of the net-
+man is the second-strongest column. Finnish and         work, the same depth band where the logit lens
+Ukrainian are consistent low-resource columns;          shows gold tokens emerging, confirming that the
+multiple sub-10B models score ≤ 0.04 on                 cultural identity becomes causally relevant to out-
+Ukrainian. Indian sits in the middle (0.15–0.41);       put exactly where it becomes decoded, not where
+Egyptian is the lowest-scoring column outside           it becomes represented.
+Ukrainian/Finnish (0–0.48, large per-model vari-        Choice of patching criterion. The natural top-1
+ance); Chinese is bimodal across families. Gemma-       flip criterion (does argmax(patched logits) at the
+4-26B-A4B (4B active via MoE routing) is the most       swap position equal tgt_first_id?) is brittle to
+uniformly strong model in the table, with no culture    chat-template artefacts: a model whose chat tem-
+below 0.26, and is the only chat-template model to      plate causes the swap position to decode through
+break 0.55 on Chinese.                                  the unembedding to a generic lead-in token (e.g.
+                                                        Qwen-3.6-27B emits Here at every chat-template
+I   Logit lens onset depth
+                                                        last position, App. I) is scored as a flat 0% top-1 flip
+Figure 7 reports, for each model, the normalized        rate at every layer, regardless of how strongly the
+depth at which the gold token first appears in the      patched residual carries the source-culture signal.
+model’s top-1 continuation for at least 5 % (and        We therefore use a logit-preference criterion: for
+for at least 25 % where applicable) of the 270          each (motif, src, tgt, layer), did patching produce
+(entity, culture) pairs. In every model the lens        patched_logit_src > patched_logit_tgt?
+crosses the 5 % threshold in the last quarter of        This separates the causal signal we want to mea-
+the network. The encoded-vs-decoded scatter that        sure (is the source-culture gold name now preferred
+contrasts probe-peak depth against this lens-onset      over the target-culture gold name at this position?)
+depth is in the main body (Figure 2).                   from the chat-template noise in the absolute top-1.
+
+Prompt form for the lens. For all models we             Per-model results, logit-preference criterion.
+read the lens at the last input token of the chat-      Table 12 reports per-model peak rate and depth
+templated prompt used in EN, except Qwen-3.6-           on 18 models. Across the 17 non-Qwen-3.6-27B
+27B. For Qwen-3.6-27B the chat-templated form           models the peak preference-flip rate spans 0.40–
+causes the last-position residual stream to decode      0.90 (median 0.75), the peak depth spans 0.75–
+through the model’s own unembedding to the              1.00 (median 0.89), and the median lift over the
+generic token Here (the first word of a template-       baseline (pre-patching) preference is +0.55. Yi-
+completion lead-in, “Here is the answer:                1.5-6B/9B/34B were flat under the legacy top-
+. . . ”) for all 270 rows at every one of the 65        1 criterion but recover cleanly under the logit-
+layers, so the lens never places any gold-name first    preference one (peak rates 0.60, 0.60, 0.75 re-
+sub-token in the top-1 of the next-token distribution   spectively): the residual stream of these models
+at any depth. We therefore re-run the lens for this     does carry a causally-bound culture signal, the top-
+       Family      Model                    fold std LC.25 LC.50 LC.75 LC1.0          ∆base [95% CI]        p
+                   Llama-3.2-1B             0.027   0.62      0.70   0.75    0.79   +0.189 [+0.13, +0.25] <.001
+       Llama 3.x   Llama-3.2-3B             0.017   0.67      0.76   0.82    0.83   +0.230 [+0.17, +0.29] <.001
+                   Llama-3.1-8B             0.019   0.75      0.82   0.85    0.88   +0.278 [+0.22, +0.33] <.001
+                   Gemma-4-E2B              0.041   0.37      0.49   0.55    0.61   +0.011 [-0.04, +0.06] 0.368
+                   Gemma-4-E4B              0.032   0.41      0.50   0.58    0.65   +0.048 [-0.00, +0.10] 0.040
+       Gemma 4
+                   Gemma-4-26B-A4B          0.046   0.45      0.56   0.61    0.69   +0.085 [+0.03, +0.14] <.001
+                   Gemma-4-31B              0.032   0.46      0.57   0.62    0.69   +0.085 [+0.04, +0.13] <.001
+                   Phi-4-mini               0.020   0.71      0.77   0.80    0.83   +0.230 [+0.18, +0.29] <.001
+       Phi 4
+                   Phi-4                    0.007   0.74      0.81   0.85    0.86   +0.252 [+0.20, +0.31] <.001
+                   Qwen2.5-1.5B             0.015   0.62      0.71   0.74    0.75   +0.148 [+0.10, +0.20] <.001
+       Qwen 1.x
+                   Qwen2.5-7B               0.019   0.67      0.74   0.78    0.80   +0.200 [+0.14, +0.26] <.001
+                   Qwen-3.6-35B-A3B         0.012   0.65      0.78   0.81    0.83   +0.230 [+0.17, +0.29] <.001
+       Qwen 3.6
+                   Qwen-3.6-27B             0.019   0.74      0.82   0.87    0.88   +0.278 [+0.22, +0.33] <.001
+                   Yi-1.5-6B                0.051   0.59      0.66   0.71    0.77   +0.163 [+0.11, +0.21] <.001
+       Yi 1.5      Yi-1.5-9B                0.040   0.61      0.72   0.74    0.77   +0.170 [+0.12, +0.22] <.001
+                   Yi-1.5-34B               0.040   0.63      0.75   0.79    0.83   +0.222 [+0.17, +0.27] <.001
+       OLMo 3.1 OLMo-3.1-32B                0.025   0.73      0.81   0.85    0.86   +0.259 [+0.21, +0.31] <.001
+       Tiny Aya    Tiny-Aya-Global          0.022   0.64      0.73   0.76    0.81   +0.204 [+0.15, +0.26] <.001
+
+Table 10: Probe stability and surface-baseline significance at each model’s peak layer (§F); probe accuracy itself is
+in Table 2. fold std: std across the 5 folds; LC.x: accuracy with x of the training folds subsampled (learning curve).
+∆base: margin over the char-n-gram surface baseline with a one-sided paired bootstrap 95% CI (10k resamples over
+entities), computed against a baseline refit on the identical folds (0.604), so it differs slightly from the 0.596-based
+margins of Table 8; p: bootstrap p-value (exact McNemar agrees). Learning curves rise monotonically and plateau
+and per-fold std is small, so the probes learn a stable signal, not fitted noise; 17/18 models clear the baseline at
+p < 0.05 (Gemma-4-E2B does not: ∆=+0.011, p=0.37).
+
+
+        Culture          MCQ (mean, 18 models)                  its lens; switching the same model to bare-prompt
+        Japanese                     0.78                       lens recovers 22/135 top-1 hits at the last layer
+        Indian                       0.74                       with median rank 20 (App. I), so the residual stream
+        Greek                        0.73
+        Egyptian                     0.68
+                                                                carries the cultural representation in this model too.
+        Norse                        0.67                       Re-running patching on the bare-prompt form for
+        Ukrainian                    0.67                       Qwen-3.6-27B is left to a follow-up.
+        Mesopotamian                 0.66
+        Chinese                      0.61
+        Roman                        0.59
+        Finnish                      0.58                       K    Within-family scaling, per family
+
+Table 11: Per-culture MCQ selection accuracy (plurality         Figure 9 expands the family-grouping of Table 2
+vote), averaged over the 18 models. The Greco-Roman             into per-family probe and output trajectories over
+advantage of the free-generation setting persists under
+                                                                active parameters, with EN (English query) solid
+selection (Roman 0.60, Finnish 0.58 at the bottom vs
+Japanese 0.78, Greek 0.74): on Roman cells 49% of               and NL (native-language query) dashed. Four qual-
+errors land on the same-motif Greek counterpart (vs             itatively distinct trajectories emerge. Llama 3.x
+∼11% under uniform error), so the collapse onto the             (1.2B/3.2B/8B): monotonic emergence, with EN
+dominant tradition is visible inside a selection task, with     rising 0.09 → 0.25 and NL rising 0.09 → 0.15.
+no generation involved.                                         Phi 4 (3.8B→ 14B) and Gemma 4 (E2B/E4B/26B-
+                                                                MoE/31B): parameter-efficient jumps; Gemma-4-
+                                                                31B reaches 0.36 on NL, our best chat-template
+1 argmax just lands on a chat-template-induced                  result. Yi 1.5 (6B/9B/34B) and Qwen 1.x (1.5B→
+first-letter BPE rather than the multi-character                7B): sub-linear improvements in 6B→ 9B. Qwen
+tgt_first_id. Only Qwen-3.6-27B remains flat                    3.6 (27B-dense ≈ 35B-A3B): the MoE variant
+(peak rate 0.450 = its baseline preference; lift                matches the dense model to within 0.01, suggest-
+0). The Qwen-3.6-27B flat-flip is the same chat-                ing that the cultural answer space is not strongly
+template-decodes-to-Here artefact documented for                conditioned on the active-experts head.
+Figure 6: Per-(model, culture) output accuracy on the 270-entity, 10-culture substrate; each cell is the best-of-NL/EN
+majority-correct (≥ 3/5 paraphrases). Rows grouped by architecture family; columns ordered as Greek, Roman,
+Norse, Finnish, Ukrainian, Indian, Egyptian, Chinese, Japanese, Mesopotamian.
+
+
+
+
+Figure 7: Logit lens: normalized depth at which the gold token first reaches top-1 for at least 5% of test entities, per
+model, family-colored and sorted by depth. The 25% threshold is omitted because most models do not reach it at
+any depth (DecodingSuppressed dominates).
+Figure 8: Per-model activation-patching: peak preference-flip rate (y-axis) vs the normalized depth at which the
+peak occurs (x-axis), family-colored. The grey band on the right marks the late-decoding region claimed by RQ3
+(depth ≥ 0.66); all 18 models fall inside it (median peak depth 0.89, peak rate 0.40–0.95, median 0.75). Rendered
+on the logit-preference criterion patched_logit_src > patched_logit_tgt (App. J); Qwen-3.6-27B uses the
+bare-prompt lens estimate of the same criterion (chat-template patching emits the lead-in token Here at every layer,
+App. I).
+
+
+
+
+Figure 9: Within-family parameter scaling. (a) Linear-probe peak accuracy. (b) Best-of-(NL, EN) majority-correct
+output accuracy. The x-axis is a discrete categorical scale over the active parameter sizes in the sweep (no log-
+compression); each family is a line connecting its models. Char-n-gram surface baseline (0.60) drawn in panel (a)
+for reference.
+
+
+L    Prompt protocol                                        leased alongside the dataset), and {culture} is
+                                                            filled with the English culture name. The contex-
+This appendix reproduces the prompt protocol                tual prompt used for E1 hidden-state extraction is
+used for the 270-entity, 10-culture sweep (§4.6–            shared across both modes and is given separately
+4.6). Each cell in the dataset is queried under             at the end.
+five paraphrase variants per language (EN: English;
+NL: target-culture native language), and a cell is
+counted as correct if ≥ 3/5 paraphrases yield the
+gold name. Below we show each paraphrase tem-
+plate; the slot {desc} is filled with the per-motif
+role description (motif-level translations are re-
+      Model
+                            peak peak lift over               Italian (Roman), Norwegian Bokmål (Norse),
+                            rate depth baseline               Finnish, Ukrainian (Cyrillic), Hindi (Indian), Mod-
+      Llama-3.2-1B          0.55    1.00    +0.30             ern Standard Arabic (Egyptian), Simplified Chi-
+      Llama-3.2-3B          0.65    1.00    +0.50
+      Llama-3.1-8B          0.65    0.86    +0.55
+                                                              nese, Japanese, and English with a “(Sumerian-
+      Gemma-4-E2B           0.75    0.88    +0.55             Akkadian)” parenthetical for Mesopotamian. The
+      Gemma-4-E4B           0.85    0.90    +0.80             structural schema mirrors EN (V1 question + for-
+      Gemma-4-26B-A4B       0.90    1.00    +0.90
+      Gemma-4-31B           0.40    1.00    +0.35             mat anchor; V2 label + format anchor; V3 who-
+      Phi-4-mini            0.85    0.86    +0.80             is; V4 completion; V5 attribution prefix); the full
+      Phi-4                 0.80    0.78    +0.75             5 × 10 set of language-specific templates is repro-
+      Qwen2.5-1.5B          0.65    1.00    +0.40
+      Qwen2.5-7B            0.85    0.85    +0.80             duced below in the native scripts.
+      Qwen-3.6-35B-A3B      0.55    0.89    +0.50
+      Qwen-3.6-27B∗         0.95    0.95    +0.50             Choice of target language per culture. For each
+      Yi-1.5-6B             0.60    0.86    +0.35             culture we use the living language in which the
+      Yi-1.5-9B             0.60    0.91    +0.30
+      Yi-1.5-34B            0.75    1.00    +0.60             canon is most actively read, discussed, and indexed
+      OLMo-3.1-32B          0.80    0.87    +0.75             today rather than the historical language in which it
+      Tiny-Aya-Global       0.75    0.75    +0.55
+                                                              was first composed. The reasoning is empirical, not
+                                                              philological: modern open-source LLM pretraining
+Table 12: Per-model activation-patching results under
+the logit-preference criterion. peak rate: maximum            corpora overwhelmingly draw from contemporary
+over layers of the share of (motif, src, tgt) rows on which   web text, Wikipedia, news, books, and modern
+patched_logit_src > patched_logit_tgt. peak                   academic writing about the canon, not from mono-
+depth: normalized depth of that layer. lift: peak rate        lingual classical-philology corpora. Reading the
+minus the pre-patching baseline preference. ∗ Qwen-3.6-       cultural recall under the language a present-day
+27B is reported using a bare-prompt lens estimate of          reader of that tradition would use is therefore the
+the patching effect (App. I, last-layer bare-prompt lens
+                                                              operative cross-lingual test for a deployed model.
+reads the same residual stream the patching pass would
+swap in): for each (motif, src, tgt) pair at each layer we    Concretely:
+check logit_gold_src > logit_gold_tgt in the src-
+prompt’s bare-lens row, the per-layer rate peaks at 0.95         • Greek → Modern Greek (not Ancient/Koine
+at depth 0.95 (+0.50 over the chat-template baseline               Greek): Ancient Greek is a closed corpus
+of 0.45). Chat-template patching for this model is a               largely confined to specialised philological
+legacy-criterion artefact; a full bare-prompt patching             text; Modern Greek is the language of present-
+run is left to a follow-up.                                        day Greek-language reception of Olympian
+                                                                   myth.
+EN: English query (5 paraphrases)                                • Roman → Italian (not Latin): Latin is litur-
+V1 (interrogative + format anchor)                                 gical/scholastic; Italian is the modern con-
+In {culture} mythology, what is the name of the {desc}?            tinuation in which the Roman pantheon is
+Answer with only the proper name, no explanation.
+                                                                   taught, discussed, and translated in Italy and
+V2 (label + format anchor)
+{culture} mythology, name of the {desc}? Reply with the            the Italian-speaking academy.
+entity name only, nothing else.                                  • Norse → Norwegian Bokmål (not Old Norse):
+V3 (who-is question)                                               Old Norse has no living speech community;
+Who is the {desc} in {culture} mythology? Give just the
+proper name, no explanation.                                       Bokmål is the most-represented Mainland
+V4 (completion)                                                    Scandinavian variety in the pretraining cor-
+Name of the {desc} in {culture} mythology:                         pora of every model we test and the language
+V5 (according-to attribution)                                      of modern Norwegian-language editions of
+According to {culture} mythology, the {desc} is called:
+                                                                   the Eddas.
+   The five paraphrases are designed to cover the
+                                                                 • Finnish → Finnish: a single living language
+most common zero-shot question shapes: a direct
+                                                                   continues the tradition, and the Kalevala is
+interrogative (V1), a label-style nominal phrase
+                                                                   read in standard Finnish today.
+(V2), a who-is variant (V3), a sentence-completion
+                                                                 • Ukrainian → Ukrainian: the East Slavic
+(V4), and an attribution prefix (V5).
+                                                                   substrate of the Kyivan Rus’ canon (Perun,
+NL, target-language query. The NL mode                             Mokoš, Veles, etc.) is documented pri-
+poses the same five paraphrases in the target cul-                 marily in Ukrainian-language academic and
+ture’s native language: Modern Greek (Greek),                      Wikipedia sources; Ukrainian preserves the
+     local-tradition framing closest to the medieval      Per-language NL templates. The following ten
+     canon of Kyivan Rus’.                                panels reproduce the NL prompt set in the na-
+   • Indian → Hindi (not Sanskrit): Sanskrit cor-         tive script of each target language. Greek, Hindi,
+     pora in current LLMs are vanishingly thin            Arabic, Chinese, Japanese, and Ukrainian (Cyril-
+     compared to Hindi; Hindi is the largest liv-         lic) are rendered as figures because the pdflatex
+     ing language of present-day reception of the         pipeline used for this paper does not natively sup-
+     Vedic and Purān.ic canon.                           port those scripts; the source-of-truth strings live in
+   • Egyptian → Modern Standard Arabic (not               pipeline/prompts_v3.py. The Roman, Norwe-
+     Ancient Egyptian or Coptic): Ancient Egyp-           gian Bokmål, Finnish, and Mesopotamian (English-
+     tian is extinct and Coptic is essentially liturgi-   fallback) panels are rendered identically for visual
+     cal with negligible web presence; MSA is the         consistency. The structural schema (V1–V5) is the
+     language in which modern Egyptian-language           same as the EN schema above; only the surface
+     reception of the Pyramid Texts and the Book          phrasing changes.
+     of the Dead is written. We acknowledge that
+     MSA is not a genealogical descendant of An-
+     cient Egyptian and the choice is purely opera-
+     tional.
+   • Chinese → Simplified Mandarin (not Clas-
+     sical Chinese): Classical Chinese is read but
+     rarely produced; Simplified Mandarin is the
+     contemporary written-and-spoken language in
+     which Shanhaijing, Huainanzi, and the Daoist
+     canon are taught and discussed today.
+   • Japanese → Japanese: Old Japanese, Clas-
+     sical Japanese, and Modern Japanese share
+     enough continuity (and Modern Japanese pre-
+     training mass) that the contemporary form is
+     the natural choice for the canon documented
+     in the Kojiki and Nihon Shoki.
+   • Mesopotamian → English with a “(Sumerian-
+     Akkadian)” parenthetical (fallback): both sub-
+     strate languages are extinct without contin-
+     uous spoken descendants, and modern Iraqi
+     Arabic is not the natural language of present-
+     day reception of Sumero-Akkadian myth
+     (which is read in English, French, and German
+     Assyriological editions). We document the
+     NL/EN delta for Mesopotamian explicitly as
+     the bound on the within-English paraphrase-
+     engineering component of the cross-mode sig-
+     nal (|∆|Mesop ≈ 0.04, §4.6).
+
+
+
+The pattern is consistent: where a single living
+descendant exists with strong modern corpus sup-
+port, we use it; where the historical language is ex-
+tinct without a clear modern continuation in current
+LLM pretraining (Mesopotamian), we fall back to
+English with a culture-marking parenthetical and
+treat that fallback as a within-English noise floor
+for the cross-lingual comparison.
+Contextual prompt: E1 hidden-state extraction (shared      All 18 models read English; the multilin-
+across all modes)
+                                                        gual confound is one-sided. Every model in
+{name} embodies the role of {desc}.                     the sweep clears non-trivial English benchmarks
+   The contextual prompt is deliberately culture-       (MMLU, BBH at ≫ chance) and English is in the
+free (the culture word never appears) and entity-       pre-training target of every family. The headline
+first (the entity span sits at the beginning, so its    representation-vs-decoding claim (RQ1–RQ4, §4)
+causal-attention context is empty). This forces the     is based on probe-vs-EN comparisons within model
+linear probe to derive the cultural identity from       on English prompts and is therefore unaffected by
+the name and the role description, not from a cul-      Tier B/C status. The NL/EN contrast (RQ5) is
+ture token leaked through attention, the standard       where the language-proficiency confound can in
+probing-leakage failure mode (Hewitt and Liang,         principle bite: NL generations from a Tier B/C
+2019). We pool hidden states over the entity span       model on a language the model was not pretrained
+and fit the probe at every layer.                       on may be confounded with non-capability. Three
+                                                        controls hold the cross-lingual claim in place
+M    V6 detail: tokenizer fertility vs NL/EN            even so. (a) Positive control: Tiny-Aya-Global
+     delta + per-family multilingual support            (Aryabumi et al., 2024a,b) explicitly targets all 8 of
+                                                        our non-CJK non-fallback languages and produces
+Tokenizer vs. model: two separate levels. Fer-          N L ≈ EN (gap 0.004), the smallest in the sweep;
+tility is a tokenizer-level property: it counts how     if NL<EN were just non-capability, Aya should be
+many sub-word tokens the model’s BPE/Sentence-          the most biased, not the least. (b) Negative con-
+Piece vocabulary spends per character of source         trol: the Mesopotamian fallback poses NL as En-
+text, a published-literature proxy for the relative     glish with an explicit “(Sumerian-Akkadian)” par-
+share of that language in pre-training data (Petrov     enthetical, bounding the within-English paraphrase-
+et al., 2023; Ahia et al., 2023). It is not a direct    engineering component of any cross-mode sig-
+measure of whether the trained model can read the       nal at |∆|Mesop ≈ 0.04, well below the canon-
+language, and it says nothing about whether the         language extremes (≥ 0.20). (c) Structural test:
+language was a pre-training target. We confirm this     the within−cross paraphrase-correctness correla-
+empirically: Yi-1.5-6B/9B/34B share a single 64K        tion gap (§4.6) is robust to language-proficiency
+tokenizer trained on bilingual English+Chinese          by construction: a Tier B model that cannot read
+data and therefore receive identical fertility on ev-   Finnish has all five Finnish paraphrases fail to-
+ery language, yet on our NL/EN grid the three           gether on most cells, which maximizes within-
+Yi-1.5 sizes produce different per-(model, culture)     mode correlation (pushing it toward 1), not low-
+deltas. The fertility − delta correlation averages      ers it; the observed asymmetry within = 0.57 vs
+across 9 unique tokenizers in the 18-model sweep        cross = 0.29 is the structural signature of language-
+and is pooled to r = −0.004.                            conditioned readout, not of non-capability.
+    What the technical reports actually say. Ta-
+ble 13 separates three levels per family: (i) the          Tokenizer fertility on the per-cell delta.
+tokenizer (type and vocabulary size), (ii) the pre-     Pooled across the n = 120 (model, language)
+training language design (the report’s own de-          pairs in our 12-tokenizer × 10-language grid, per-
+scription of which languages were targeted; only        (model, language) tokenizer fertility (tokens per
+Llama 3 publishes a numeric share, 8% multilin-         character on 100 Belebele (Bandarkar et al., 2024)
+gual), and (iii) independently published multilin-      FLORES-200 (Team et al., 2022) passages) does
+gual benchmark scores against which the family or       not correlate with the per-(model, culture) EN−NL
+its lineage has been evaluated. Three discrete tiers    delta: Pearson r = −0.004 (p = 0.97); Spear-
+fall out: Tier A: multilingual-by-design (Llama         man ρ = +0.025 (p = 0.78). Per-culture corre-
+3.x, Gemma 4, Phi 4 mini, Qwen 1.x, Qwen 3.6,           lations are uniformly small (|ρ| < 0.5, p > 0.1)
+Aya); Tier B: explicitly bilingual EN+ZH (Yi            with one exception (Japanese, ρ = −0.80, p =
+1.5); Tier C: explicitly English-primary (OLMo          0.002), which goes in the opposite direction to the
+3.1, with the report itself stating “OLMo 2 is not      language-proficiency hypothesis: models that tok-
+trained for multilingual tasks”; Phi 4 14B sits at      enize Japanese more efficiently exhibit a stronger
+the A/C boundary, kept in A because MMLU-ProX           English advantage on Japanese cultural questions,
+shows it above chance on every covered language).       not weaker.
+N   NL vs EN aggregate, per-model wins,                separate language-switching from paraphrase count
+    and NL leaderboard                                 we use the 12 chat-template models for which
+                                                       we collected a second batch of 5 same-language
+Figure 10 shows the NL vs EN picture at two levels.    English paraphrases (App. L) and compare the
+Panel (a) is per-model aggregate accuracy across all   bilingual ensemble NL5 ∪ EN5 against the same-
+10 cultures: most chat-template models with both       language EN10 ensemble. The two ensembles dis-
+modes prefer EN in the aggregate (English mean         sociate by metric. Under any-of-10 cell recovery,
+0.23, native mean 0.19, +0.04 on average), with        NL5 ∪ EN5 beats EN10 by +0.053 absolute on
+three exceptions (Gemma-4-31B, Qwen-3.6-27B,           every model (mean 0.50 vs 0.45); under the per-
+Tiny-Aya-Global) where native-language querying        mode majority union (≥ 3/5 in NL OR ≥ 3/5 in
+narrowly wins. Panel (b) re-disaggregates the same     EN) the same direction holds with +0.052 (0.28
+data as the count of cultures in which each side       vs 0.23). Conversely, under a strict majority-of-
+wins, out of 10, for the chat-template models with     10 threshold (≥ 6/10 paraphrases correct), EN10
+both modes. The aggregation paradox is symp-           wins by 0.038 (0.13 vs 0.17): same-language dou-
+tomatic: every chat-template model has some cul-       bling builds strict consensus that cross-language
+tures where native-language querying outperforms       ensembling does not. The language-switching con-
+English, and Tiny-Aya-Global (the most multilin-       tribution is therefore to breadth of recovery, not to
+gual model in our sweep) tops the per-culture count    strict consensus.
+with 6/10 cultures where native wins despite a near-
+zero aggregate mean. The NL leaderboard reads          Q    Per-model probe trajectories
+Gemma-4-31B (0.36), Gemma-4-26B-A4B (0.33),
+Qwen-3.6-27B (0.31), Llama-3.1-8B (0.25): the          Figure 11 shows the layer-wise culture-probe ac-
+top models are not strong because they recover one     curacy across all models, with the depth axis nor-
+culture especially well, but because they spread       malized to [0, 1] so that models of different depths
+retrieval more evenly across the 10 cultures than      are directly comparable. Two cross-model regu-
+smaller models do (the top row of the heatmap          larities are visible: (i) for almost every model the
+in Appendix H shows Gemma-4-26B-A4B and                probe accuracy starts well above the chance ceil-
+Gemma-4-31B with no culture below 0.26). The           ing at the embedding (≥ 0.5), reaches its peak in
+leaders lose the Greek default less, not the Norse     the first half of the network, and remains roughly
+advantage more.                                        flat thereafter; (ii) the larger models in each family
+                                                       generally peak slightly later, consistent with the
+O    V4 detail: per-model permutation                  within-family scaling result in the main text.
+     p-values
+                                                       R    Per-motif Preserved share
+Table 14 reports, per chat-template model with both
+                                                       Figure 12 ranks the 27 Thompson motifs by the
+modes, the observed within−cross independence
+                                                       share of models for which the (motif, culture) pair
+gap, the mean±std of the permuted-null distribu-
+                                                       lands in the Preserved cell of the decomposition
+tion (5,000 shuffles of the 10 paraphrase-column
+                                                       (probe and output both correct). The top motifs
+labels), and the one-sided p-value. The gap is sig-
+                                                       (e.g. T110 “the world tree”, A420 “the god of the
+nificant at p ≤ 0.005 on every model.
+                                                       sea”) survive flattening across most models; the
+P   Cross-lingual independence and                     bottom motifs (D610 “repeated transformations”,
+    bilingual lift per model                           C310 “tabu against looking”, D150 “transforma-
+                                                       tion: man to bird”) are nearly never recovered. The
+Table 15 reports the within-mode and cross-mode        split largely tracks how strongly each motif is asso-
+paraphrase correlations, the within−cross gap,         ciated with a single named entity in popular refer-
+the best-single-mode majority-correct rate, the        ence works, rather than how culturally important
+NL∪EN bilingual disjunction, and the per-model         the motif is in the source tradition.
+lift, for every chat-template model with both
+modes.
+Same-language control for the bilingual lift.
+The bilingual lift of §4.6 could in principle come
+from simply asking ten questions instead of five. To
+Figure 10: Cross-lingual querying: NL (target-language) vs EN (English). (a) Per-model aggregate accuracy across
+all 10 cultures. (b) Per-model count of cultures in which each side wins, out of 10, for chat-template models with
+both modes; NL-only rows are shown as a hatched “no EN comparison available” bar.
+
+
+
+
+Figure 11: Layer-wise culture-probe accuracy across all models. Each row is one model; the depth axis is normalized
+to [0, 1]. The probe rises early and stays high, with the peak typically before mid-network.
+Figure 12: Per-motif Preserved share, sorted descending. Each row is one Thompson-index motif (role description
+on the left, motif ID inside the bar); the bar shows the mean across models of the share of (motif, culture) cells in
+the Preserved decomposition cell (both probe and output correct). Color tier: top third (green) survives flattening;
+middle third (amber); bottom third (red) collapses. Asterisked motifs (A1010, A1415, F460) are the four structural
+absences where not all 10 cultures provide a canonical filler (§3.1).
+Family (models in Tokenizer (type, vocab)          Pretraining language design (from Independent proxy evi- Tier
+our sweep)                                         the technical report)             dence
+Llama 3.x           tiktoken BPE, 128K (+28K 8 supported langs: EN, DE, FR, IT,       MMLU per-lang from the         A
+(1.2B, 3.2B, 8B)    non-EN tokens) (Grattafiori PT, HI, ES, TH; 8% multilingual       official card: IT 61.6, HI
+                    et al., 2024)               of ∼15T tokens (the only family that  50.9; BELEBELE cover-
+                                                publishes the share) (Grattafiori et al.,
+                                                                                      age at 70B-scale clears
+                                                2024)                                 chance for all 10 (Ban-
+                                                                                      darkar et al., 2024)
+Gemma 4          SentencePiece,         262K “140+ languages,” no explicit list, no Global-MMLU-Lite (ag-            A
+(E2B, E4B, 26B- (Gemini-2.0         tokenizer) % reported; report says “more bal- gregate over 8 of our
+A4B, 31B)        (Team et al., 2025)           anced for non-English” (Team et al., 10 langs):         27B 75.1,
+                                               2025)                                  12B 69.5, 4B 54.5, 1B
+                                                                                      34.2 (Team et al., 2025);
+                                                                                      MMLU-ProX 27B 66.5 on
+                                                                                      EN/IT/UK/HI/AR/ZH/JA
+                                                                                      (Xuan et al., 2025)
+Phi 4            tiktoken BPE, 200K (Phi-4- 22 supported langs including EN + Multilingual-MMLU 49.3,                A
+(mini)           mini, expanded for multi) 8 of our 10 (no EL, FI, NO, UK MGSM 63.9 (aggregate,
+                 (Abdin et al., 2024)          enumerated; Hindi, Arabic, Man- no per-lang) (Abdin et al.,
+                                               darin, Japanese present at the speech- 2024); MMLU-ProX 14B
+                                               modality level) (Abdin et al., 2024) per-lang (Xuan et al., 2025)
+Phi 4            tiktoken BPE, 100K (Abdin “Trained primarily on English” MMLU-ProX 14B: EN                          A†
+(14B)            et al., 2024)                 (HuggingFace card); incidental mul- 71.5, IT 60.2, UK 61.3, HI
+                                               tilingual data (DE, ES, FR, PT, IT, 47.8, AR 56.8, ZH 62.3,
+                                               HI, JA) but no support claim (Abdin JA 56.5 (Xuan et al., 2025)
+                                               et al., 2024)                          (above chance on all 7)
+Qwen 1.x         byte-level BPE (BBPE), 29 supported langs (incl. all 10 of Multi-Understanding                      A
+(1.5B, 7B; Qwen 151K (Qwen et al., 2025)       ours except NO and FI), 18T pretrain- aggregate (BELEBELE,
+2.5)                                           ing tokens; % not reported (Qwen XCOPA,                XWinograd,
+                                               et al., 2025)                          XStoryCloze, PAWS-X):
+                                                                                      7B 79.3, 1.5B 65.1 (Qwen
+                                                                                      et al., 2025); okapi-MMLU
+                                                                                      7B 66.98
+Qwen 3.6         BBPE, 151K (Yang et al., 119 languages and dialects, 36T to- MMMLU                     81.5–83.8,   A
+(27B, 35B-A3B; 2025)                           kens; explicit per-language list not MGSM                79.1–83.1,
+Qwen 3)                                        enumerated in the report (Yang et al., INCLUDE-44 67.0–67.9
+                                               2025)                                  for 30B/32B (Yang et al.,
+                                                                                      2025)
+Yi 1.5           BPE/SentencePiece, 64K Bilingual EN + ZH only; the re- C-Eval, CMMLU, Gaokao-                       B
+(6B, 9B, 34B)    (AI et al., 2025)             port frames Yi as English + Chinese Bench (ZH); MMLU, BBH
+                                               throughout, no other languages (AI (EN). No XNLI / XCOPA
+                                               et al., 2025)                          / MGSM run (AI et al.,
+                                                                                      2025)
+OLMo 3.1         cl100k (tiktoken family), “OLMo 2 is not trained for multi- No multilingual benchmark               C
+(32B)            ∼100K (OLMo et al., 2025) lingual tasks” (explicit, OLMo 2 re- reported by the authors; En-
+                                               port); pretraining is Dolma/DCLM/- glish MMLU + OLMES
+                                               Dolmino, English-primary by design only (OLMo et al., 2025)
+                                               (OLMo et al., 2025)
+Tiny Aya         BPE, 256K (Aryabumi et al., 23 supported languages enumer- XWinograd,                    XCOPA,     A‡
+(Global, 3B; Aya 2024b)                        ated, incl. all 8 of our non-fallback XStoryCloze, M-MMLU,
+23 family)                                     non-CJK targets (EN, EL, IT, UK, HI, FLORES-200, MGSM run
+                                               AR, ZH, JA), explicitly symmetric by the authors over all 23
+                                               coverage (Aryabumi et al., 2024a,b) langs (Aryabumi et al.,
+                                                                                      2024b)
+
+Table 13: Per-family tokenizer + pretraining language design + independent multilingual benchmark evidence, and
+our tier classification: A = multilingual-by-design; B = explicitly bilingual EN+ZH only; C = English-primary,
+multilinguality explicitly disclaimed by the authors. † Phi-4 14B is the borderline case: classified A because the same
+family’s mini variant is overtly multilingual and MMLU-ProX shows Phi-4 14B above chance on every covered
+language, but the card declares “primarily English.” ‡ Aya-Tiny is the family’s positive control: explicitly symmetric
+coverage of all 8 of our non-CJK non-fallback target languages. Tokenizer and pretraining design are distinct levels:
+even an English-primary model (OLMo) can have a multilingual-vocabulary tokenizer (cl100k), and conversely a
+multilingual tokenizer does not guarantee per-language pretraining coverage.
+                      Model                Observed gap Perm. null mean ± std p (one-sided)
+                      Gemma-4-26B-A4B         0.254           −0.001 ± 0.052       0.0010
+                      Tiny-Aya-Global         0.191           −0.001 ± 0.045       0.0010
+                      Llama-3.2-3B            0.306           −0.000 ± 0.054       0.0010
+                      Qwen-7B                 0.225           +0.001 ± 0.052       0.0010
+                      Phi-4                   0.276           −0.002 ± 0.047       0.0010
+                      Qwen-3.6-35B-A3B        0.217           −0.001 ± 0.049       0.0020
+                      Gemma-4-31B             0.235           −0.000 ± 0.054       0.0025
+                      Gemma-4-E4B             0.226           +0.002 ± 0.051       0.0025
+                      OLMo-3.1-32B            0.208           −0.000 ± 0.044       0.0040
+                      Gemma-4-E2B             0.189           −0.000 ± 0.045       0.0040
+                      Yi-1.5-9B               0.359           +0.001 ± 0.062       0.0045
+                      Qwen-1.5B               0.438           +0.002 ± 0.081       0.0055
+                      Yi-1.5-6B               0.337           +0.000 ± 0.058       0.0060
+                      Llama-3.2-1B            0.388           +0.001 ± 0.070       0.0070
+                      Yi-1.5-34B              0.331           −0.000 ± 0.057       0.0070
+                      Qwen-3.6-27B            0.218           −0.001 ± 0.053       0.0075
+                      Llama-3.1-8B            0.277           +0.000 ± 0.053       0.0075
+                      Phi-4-mini              0.274           +0.002 ± 0.055       0.0090
+
+Table 14: Permutation test for the within-vs-cross paraphrase correlation gap (App. O). For each model we shuffle
+the 10 paraphrase column labels (5 NL + 5 EN) and recompute the within−cross correlation gap 5,000 times. The
+observed gap exceeds the permutation null at p ≤ 0.01 for every chat-template model in the bilingual sweep.
+
+
+
+
+             Family      Model                Par. rwithin rcross Gap Best-single NL ∪ EN      +∆
+                         Llama-3.2-1B          1.2    0.56   0.17   0.39   0.09      0.16     +0.07
+             Llama 3.x   Llama-3.2-3B          3.2    0.59   0.29   0.31   0.18      0.24     +0.06
+                         Llama-3.1-8B          8.0    0.58   0.30   0.28   0.25      0.30     +0.06
+                         Gemma-4-E2B           2.0    0.56   0.37   0.19   0.27      0.34     +0.07
+                         Gemma-4-E4B           4.0    0.59   0.36   0.23   0.33      0.40     +0.07
+             Gemma 4
+                         Gemma-4-26B-A4B       4.0    0.57   0.31   0.25   0.42      0.53     +0.10
+                         Gemma-4-31B            33    0.56   0.33   0.24   0.43      0.54     +0.11
+                         Phi-4-mini            3.8    0.54   0.26   0.27   0.20      0.27     +0.07
+             Phi 4
+                         Phi-4                  14    0.57   0.29   0.28   0.31      0.40     +0.10
+                         Qwen2.5-1.5B          1.5    0.55   0.12   0.44   0.12      0.20     +0.09
+             Qwen 1.x
+                         Qwen2.5-7B            7.0    0.52   0.30   0.23   0.24      0.32     +0.08
+                         Qwen-3.6-35B-A3B      3.0    0.55   0.33   0.22   0.38      0.47     +0.10
+             Qwen 3.6
+                         Qwen-3.6-27B          27     0.59   0.37   0.22   0.35      0.46     +0.11
+                         Yi-1.5-6B             6.0    0.54   0.20   0.34   0.13      0.19     +0.07
+             Yi 1.5      Yi-1.5-9B             9.0    0.55   0.19   0.36   0.18      0.26     +0.09
+                         Yi-1.5-34B             34    0.62   0.29   0.33   0.26      0.35     +0.09
+             OLMo 3.1 OLMo-3.1-32B              32    0.55   0.35   0.21   0.32      0.37     +0.06
+             Tiny Aya    Tiny-Aya-Global       3.0    0.58   0.39   0.19   0.17      0.24     +0.07
+             Mean                                     0.57   0.29   0.27   0.26      0.34     +0.08
+
+Table 15: Cross-lingual independence and bilingual-ensemble lift, per chat-template model with both NL and EN
+modes. rwithin : mean pairwise per-cell correctness correlation across the 5 paraphrases of one language, averaged
+over NL and EN; rcross : same across NL×EN pairs. Gap = within − cross. Best-single: best of (NL, EN)
+majority-correct (≥ 3/5 paraphrases); NL ∪ EN: bilingual disjunction over 5+5 paraphrases; +∆ is the absolute
+lift over best-single. Cross-language queries are roughly 2× more decoupled than within-language ones (mean gap
+0.27, p ≤ 0.01 per model by permutation, App. O); mean bilingual lift +0.08 absolute, +36% relative.
+Figure 13: Probe-peak-layer latent-space projection (LDA on culture labels, 50-dim PCA preprocessing) for every
+model in our 18-model sweep. Each panel is one model; panel title gives the peak layer index, the probe peak
+accuracy, and the n entities. Points are the 270 (motif, culture) entities, colored by culture (legend at top). The
+cultural-cluster geometry is reproducible across all model families and scales: the residual stream encodes a clean,
+linearly-separable culture signal at mid-network in every model in our sweep.
+S   Per-model latent-space visualization
+Figure 13 shows the peak-layer LDA projection for every model in our sweep (n = 18). Each panel
+uses the same projection pipeline: 50-dimensional PCA preprocessing of the hidden states at the model’s
+own probe-peak layer, followed by Linear Discriminant Analysis on the 10 culture labels to extract
+the top-2 class-separating directions. The peak-layer index ranges from 3 (Gemma-4-26B-A4B, very
+early) to 37 (Yi-1.5-34B, late mid-network), with most chat-template models peaking between layer 7
+and layer 20. Probe peak accuracies are annotated per panel and span 0.62 (Gemma-4-E2B) to 0.88
+(Llama-3.1-8B, Qwen-3.6-27B). Cultures form distinguishable clusters in every model: the residual
+stream encodes a clean, linearly-separable culture signal at mid-network in every model in our sweep.
+Panels are family-grouped: rows 1–2 contain Llama 3.x and Gemma 4, row 3 starts with Phi 4 then Qwen
+1.x and 3.6, row 4 has Yi 1.5 and OLMo 3.1, and the last panel is Tiny-Aya-Global.
+
+                                                    Mean      Mean      Pearson Spearman
+                            Metric
+                                                   (all 36) (chat, 34) vs paper† vs paper†
+                            Substring              0.180     0.178      1.00       1.00
+                            Levenshtein ≤ 0.2      0.188     0.186      1.00       1.00
+                            Paper metric
+                                                   0.188     0.186      1.00       1.00
+                            (substr. ∪ Lev.)
+                            First-word EM          0.072     0.070      0.92       0.87
+                            Strict EM
+                                                   0.061     0.059      0.87       0.80
+                            (normalized)
+
+Table 16: Scoring strictness audit: per-row scoring of the 48 568 generations (36 (model, mode) × 1 350) under five
+metrics. The paper metric and substring/Levenshtein components rank models identically. Stricter EM-style metrics
+correlate well within chat-template models (Spearman ≥ 0.80) but lower across the full 36 cells. Headline rankings
+stable; absolute strict-EM levels ∼0.13 lower. † Chat-template subset (34 cells).
+
+
+                                     Metric pair               Pearson Spearman
+                                     paper ↔ first-word EM       0.90      0.91
+                                     paper ↔ substring-only      0.97      0.96
+                                     paper ↔ strict EM           0.81      0.84
+
+Table 17: Per-model cross-metric correlation on chat-template models. Strict-EM rankings preserved at r ≥ 0.81.
+T    Full per-model results
+Table 18 reports the full per-model results across the 18-model sweep on the 270-entity, 10-culture
+substrate: residual-stream depth, probe accuracy at layer 0, probe peak accuracy and peak layer index,
+the label-shuffled null ceiling, and per-mode (NL, EN) majority-correct output accuracy with the best-of-
+(NL, EN) aggregate. This is the source-of-truth artefact for all per-model numbers cited throughout the
+paper; the per-(model, culture) output breakdown is in Figure 6 (App. H).
+
+          Family      Model                Par.   L probe0 probepeak peak L null        NL     EN     best
+                      Llama-3.2-1B          1.2 17     0.53     0.79       6     0.13 0.09 0.09 0.09
+          Llama 3.x   Llama-3.2-3B          3.2 29     0.56     0.83       8     0.15 0.14 0.18 0.18
+                      Llama-3.1-8B          8.0 33     0.53     0.88       8     0.14 0.15 0.25 0.25
+                      Gemma-4-E2B           2.0   36   0.53     0.61       4     0.12   0.19   0.27   0.27
+                      Gemma-4-E4B           4.0   43   0.54     0.65       5     0.14   0.22   0.33   0.33
+          Gemma 4
+                      Gemma-4-26B-A4B       4.0   31   0.53     0.69       3     0.14   0.33   0.42   0.42
+                      Gemma-4-31B            33   61   0.51     0.69       9     0.13   0.36   0.43   0.43
+                      Phi-4-mini            3.8 33     0.54     0.83       18    0.12 0.15 0.20 0.20
+          Phi 4
+                      Phi-4                  14 41     0.55     0.86       13    0.13 0.24 0.31 0.31
+                      Qwen2.5-1.5B          1.5 29     0.53     0.75       25    0.14 0.11 0.12 0.12
+          Qwen 1.x
+                      Qwen2.5-7B            7.0 29     0.54     0.80       27    0.14 0.18 0.24 0.24
+                      Qwen-3.6-35B-A3B      3.0 41     0.52     0.83        7    0.13 0.30 0.38 0.38
+          Qwen 3.6
+                      Qwen-3.6-27B           27 65     0.54     0.88       11    0.15 0.31 0.35 0.35
+                      Yi-1.5-6B             6.0 33     0.54     0.77       20    0.14 0.11 0.13 0.13
+          Yi 1.5      Yi-1.5-9B             9.0 49     0.53     0.77       28    0.14 0.13 0.18 0.18
+                      Yi-1.5-34B             34 61     0.53     0.83       37    0.15 0.19 0.26 0.26
+          OLMo 3.1 OLMo-3.1-32B             32 65      0.57     0.86       20    0.14 0.19 0.32 0.32
+          Tiny Aya    Tiny-Aya-Global       3.0 37     0.48     0.81       25    0.13 0.17 0.16 0.17
+
+Table 18: Full per-model results across the 18-model sweep on the 270-entity, 10-culture substrate. L = total
+residual-stream depth (incl. embedding); probe0 = culture-probe accuracy at layer 0; probepeak = best across layers;
+peak L = layer index of the peak; null = best label-shuffled probe accuracy. NL, EN: per-mode majority-correct
+(≥ 3/5 paraphrases) output accuracy; best: best-of-(NL, EN). Per-(model, culture) breakdown is in Figure 6
+(App. H).
+
