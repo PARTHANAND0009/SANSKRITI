@@ -69,8 +69,8 @@ KEEP_ACTS=0 bash scripts/gpu_run.sh             # delete each model's activation
 
 Per model: download weights; `run.forward` on the full analysis set (19,742 questions) for
 the four cyclic option orders `cyc0..cyc3` and the random permutation `perm`; `run.tune_lens`;
-depth tables for the logit and tuned lens; the 4-rotation aggregate; split-half and cyc0-vs-perm
-reliability; `run.patch` on the stratified sample (1,248 questions); smoke. Then
+depth tables for the logit and tuned lens; the 4-rotation aggregate; split-half and original-vs-perm
+reliability (the original order is cyc{gold_idx}); `run.patch` on the stratified sample (1,248 questions); smoke. Then
 `analysis.stats --agg cyc`. Step durations are logged to `results/gpu_run_log.tsv`.
 
 Estimates (not measured on a GPU; derived from FLOP counts and the CPU pilot; the log will
