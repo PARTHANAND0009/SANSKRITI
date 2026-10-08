@@ -1,6 +1,6 @@
 # Analysis plan (pre-registered)
 
-Written 2026-10-08T17:20Z, before any results from the full GPU run exist. The commit that
+Written 2026-10-08 (registered by commit c05260c at 2026-10-08T17:16Z), before any results from the full GPU run exist. The commit that
 adds this file is the registration. After GPU results arrive this file is not edited; any
 change of plan goes in the Deviations section at the end, dated, with the reason.
 
