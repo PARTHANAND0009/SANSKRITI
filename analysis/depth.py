@@ -36,6 +36,7 @@ letter. Use the 4-rotation aggregate.
   python -m analysis.depth table --model llama31_8b --variant cyc0 [--cpu-layers 0]
   python -m analysis.depth aggregate --model llama31_8b --variants cyc0 cyc1 cyc2 cyc3
   python -m analysis.depth reliability --model llama31_8b --variants prompt prompt_permuted
+  python -m analysis.depth reliability --model llama31_8b --variants orig perm   # orig = cyc{gold_idx}
   python -m analysis.depth split-half --model llama31_8b      # cyc0+cyc2 vs cyc1+cyc3
 """
 from __future__ import annotations
@@ -300,7 +301,21 @@ def spearman_brown(r: float, k: int) -> float:
 
 # ------------------------------------------------------------------ CLI
 
+def orig_from_cyclic(tables: dict, prompts: pd.DataFrame) -> pd.DataFrame:
+    """The original option order is the rotation that puts gold at its original letter,
+    i.e. cyc{gold_idx}. Assemble that per-question table from the four cyclic tables
+    (no extra forward pass needed)."""
+    T = {v: t.set_index("qid") for v, t in tables.items()}
+    qids = sorted(set.intersection(*[set(t.index) for t in T.values()]))
+    rows = [T[f"cyc{int(prompts.loc[q, 'gold_idx'])}"].loc[[q]] for q in qids]
+    return pd.concat(rows).reset_index()
+
+
 def _load_table(out, model, variant, readout):
+    if variant == "orig":
+        prompts = load_prompts().set_index("qid")
+        return orig_from_cyclic({v: _load_table(out, model, v, readout) for v in ("cyc0", "cyc1", "cyc2", "cyc3")},
+                                prompts)
     return pd.read_parquet(out / f"depth_{model}_{variant}_{readout}.parquet")
 
 
@@ -361,8 +376,9 @@ def cmd_reliability(args, cfg):
     prompts = load_prompts().set_index("qid")
     # rebuild per-variant metrics from stored probabilities so older tables get every metric
     prior = letter_prior(probs_of(a), probs_of(b))   # pooled over both orders
-    a = recompute_from_probs(a, prompts.loc[a.qid, variant_columns(args.variants[0])[1]].to_numpy(), prior)
-    b = recompute_from_probs(b, prompts.loc[b.qid, variant_columns(args.variants[1])[1]].to_numpy(), prior)
+    gcol = lambda v: variant_columns("prompt" if v == "orig" else v)[1]   # noqa: E731
+    a = recompute_from_probs(a, prompts.loc[a.qid, gcol(args.variants[0])].to_numpy(), prior)
+    b = recompute_from_probs(b, prompts.loc[b.qid, gcol(args.variants[1])].to_numpy(), prior)
     res = pd.concat([reliability(a, b, subset=s) for s in ("correct_both", "defined")])
     res.insert(0, "model", args.model)
     res.insert(1, "orders", " vs ".join(args.variants))

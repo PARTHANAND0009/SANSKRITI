@@ -95,3 +95,16 @@ def test_split_half_runs_and_is_high_for_noiseless_data():
               for v in ["cyc0", "cyc1", "cyc2", "cyc3"]}
     r = split_half(tables, pr, SEED).set_index("metric")
     assert r.loc["d_soft", "spearman"] > 0.95 and r.loc["l_star_cyc", "within_1_layer"] == 1.0
+
+
+def test_orig_from_cyclic_matches_original_order():
+    from analysis.depth import orig_from_cyclic
+
+    rng = np.random.default_rng(5)
+    pr = _prompts(30, rng)
+    cryst = rng.integers(2, 8, len(pr))
+    cyc = {v: table_from_probs(pr.index.tolist(), _variant_probs(pr, v, cryst), np.full(len(pr), int(v[3])))
+           for v in ["cyc0", "cyc1", "cyc2", "cyc3"]}
+    orig = table_from_probs(pr.index.tolist(), _variant_probs(pr, "prompt", cryst), pr.gold_idx.to_numpy())
+    got = orig_from_cyclic(cyc, pr).set_index("qid").loc[orig.qid]
+    np.testing.assert_allclose(np.stack(got.option_probs_by_layer.to_numpy()), np.stack(orig.option_probs_by_layer.to_numpy()))

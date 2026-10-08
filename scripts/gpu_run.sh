@@ -91,7 +91,9 @@ EOF
     done
     step "$m" "aggregate_$readout" $PY -m analysis.depth aggregate --model "$m" --variants cyc0 cyc1 cyc2 cyc3 --readout "$readout"
     step "$m" "splithalf_$readout" $PY -m analysis.depth split-half --model "$m" --readout "$readout"
-    step "$m" "reliability_$readout" $PY -m analysis.depth reliability --model "$m" --variants cyc0 perm --readout "$readout"
+    # orig = cyc{gold_idx} per question; orig vs perm is the pilot's test-retest design and
+    # both orders have balanced gold letters, so the pooled letter prior is valid
+    step "$m" "reliability_$readout" $PY -m analysis.depth reliability --model "$m" --variants orig perm --readout "$readout"
   done
 
   step "$m" patch $PY -m run.patch --model "$m" --device cuda
