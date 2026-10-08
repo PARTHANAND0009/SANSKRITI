@@ -1,9 +1,9 @@
-# Status (2026-10-08)
+# Status (2026-10-09)
 
 ## Environment
 - Python 3.13.16, torch 2.14.1 (CPU), transformers 5.18.0. No CUDA (expected). 4 CPUs, 15 GB RAM.
-- Hugging Face token: provided by the user, stored in the HF credential file outside the
-  repo (never committed). All three gated/ungated models accessible.
+- Hugging Face token: read only from the `HF_TOKEN` environment variable (the stored
+  credential file was deleted). Not set in this session; gated models need it on the GPU host.
 - Network: huggingface.co (+ CDN), en/hi.wikipedia.org, wikimedia.org, api.infini-gram.io all reachable.
 - Weights: Llama-3.1-8B 4 shards 16.06 GB bf16; Qwen2.5-7B ~15.2 GB bf16; gemma-2-9b ships
   **fp32, 8 shards, 36.97 GB**, converted to a local bf16 copy (18 GB) by
@@ -17,9 +17,13 @@
 | 1a entities | done | 84.4% entity, 68.3% stem span (analysis set) |
 | 1b frequency | done except pageviews | corpus_count complete; pageviews 108/877 (`pageviews_complete: false`) |
 | lens | done | lens(last layer) == model output, bit-exact on proxy |
-| 2 forward | done; CPU pilot run | `--cpu-layers` disk offload, `--sample N`; see pilot below |
-| 4a depth | logit lens done | `analysis/depth.py`: l*, d, plus letter-prior calibrated l*_cal |
-| 3, 4b | stubs | tuned lens, patching, stats |
+| design | done | 4 cyclic option orders per question (`cyc0..cyc3`, gold at A..D) + `perm` |
+| 2 forward | done; CPU pilot run | `--variant cyc0..3/perm`, `--cpu-layers`, `--sample N` |
+| 3a tuned lens | done, CPU-tested | `run/tune_lens.py`; Qwen2.5-0.5B: beats logit lens at every layer < L, identity at L |
+| 3b patching | done, CPU-tested | `run/patch.py`; sample 1,014 questions (`patch_sample_cells.csv`) |
+| 4a depth | done | l_star, l_star_cal, l_star_cyc, d_margin, d_soft; aggregate, reliability, split-half |
+| 4b stats | PRELIMINARY | `analysis/stats.py`, `results/prelim/` (Llama + Qwen pilot) |
+| GPU runbook | ready | `scripts/gpu_run.sh`, README section with estimates |
 
 ## CPU pilot (no GPU available): 2000 sampled questions per model
 Seeded random sample (seed 1234) of the analysis set (ambiguous + leaks excluded), bf16 on a
@@ -68,6 +72,26 @@ Findings that matter for stage 4:
 3. Exploratory (Llama, raw d, correct only): entity log_freq vs d Spearman -0.07 (p=0.008);
    low vs high tier d 0.651 vs 0.624. Accuracy unrelated to log_freq. Not controlled.
 
+## Session 2026-10-09: design, metrics, preliminary stats, tuned lens, patching
+- **Primary depth metric: `d_soft`** (expected layer under the normalised increase in debiased
+  gold probability), chosen on test-retest reliability (original vs permuted order, questions
+  correct in both): Spearman 0.39 (Llama) / 0.32 (Qwen) vs l_star 0.10 / 0.28 and l_star_cal
+  0.17 / 0.24. All single-order reliabilities are low; Spearman-Brown projects 0.72 / 0.65 for
+  4 orders. The 4-rotation metrics (l_star_cyc, d_margin) are measured by `split-half` on the
+  GPU run.
+- Letter-prior calibration must use a prior pooled over balanced rows (all 4 rotations): in a
+  single cyclic variant every gold is the same letter and its own prior erases the signal.
+- PRELIMINARY effects (`results/prelim/README.md`), per +1 SD log_freq, d_soft, layers:
+  entity Llama -0.18 [-0.32, -0.03], Qwen +0.17 [+0.01, +0.34] (opposite signs); state
+  -0.06 [-0.22, 0.09] / -0.03 [-0.16, 0.10], permutation p 0.50 / 0.73. State random
+  effect at the boundary (variance ~0) in every mixed fit; OLS with clustered SEs reported.
+- Tuned lens: per-layer input scaling was needed (residual norms 0.4 -> 84 across Qwen2.5-0.5B's
+  layers made plain SGD diverge at the last layer).
+- Patching: Country Prediction (answer always India) and stems naming a state are excluded,
+  since an entity swap cannot change their answer; 30 dangling-tail entities dropped from the
+  swap pool. On Qwen2.5-0.5B only 1 of 20 corruptions moved the answer by >= 1 logit (12 clean
+  answers already wrong); mechanics verified (recovery 0 at layer 0, 1 at layer L).
+
 ## Data quality findings (data/processed/data_quality.md, for the SANSKRITI authors)
 1. 127 rows: answer matches no option (dropped).
 2. 10 rows: gold text appears in two options (excluded).
@@ -99,7 +123,7 @@ pageviews API rate-limits this cloud IP to about 4 requests/min (429, Retry-Afte
 so the remaining 769 take roughly 3 hours.
 
 ## Next
-- GPU run on the full analysis set with 4 option rotations (the CPU host now lacks AMX, so
-  further CPU runs are impractical); finish Gemma permuted there.
+- `HF_TOKEN=... bash scripts/gpu_run.sh` on an A100 (README: ~6-8 h on 40 GB, ~4-6 h on 80 GB,
+  ~160 GB disk). Then check split-half reliability before fixing the primary metric.
 - Decide whether `corpus_count` should be normalised (whitespace, phrase length) before
   stage 4; hand-check `entity_audit.csv`.
