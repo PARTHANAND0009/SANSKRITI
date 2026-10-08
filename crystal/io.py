@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 from pathlib import Path
 
@@ -36,8 +37,13 @@ def variant_columns(variant: str) -> tuple[str, str]:
 
 
 def load_run_config(path: str | Path | None = None) -> dict:
+    """config/run.yaml. The environment variable CRYSTAL_ACTS_DIR overrides paths.acts
+    (used by scripts/preflight.py to keep its test activations out of acts/)."""
     with open(path or ROOT / "config" / "run.yaml") as f:
-        return yaml.safe_load(f)
+        cfg = yaml.safe_load(f)
+    if os.environ.get("CRYSTAL_ACTS_DIR"):
+        cfg["paths"]["acts"] = os.environ["CRYSTAL_ACTS_DIR"]
+    return cfg
 
 
 def load_models_config(path: str | Path | None = None) -> dict:

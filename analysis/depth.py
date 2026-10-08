@@ -459,6 +459,17 @@ def cmd_split_half(args, cfg):
     print(f"wrote {path}")
 
 
+def cmd_choose_primary(args, cfg):
+    out = resolve(args.out)
+    tabs = {m: pd.read_csv(out / f"reliability_{m}_splithalf_logit.csv") for m in args.models}
+    metric, reason = choose_primary(tabs)
+    rec = {"primary_metric": metric, "reason": reason, "rule": "ANALYSIS_PLAN.md section 2",
+           "reliability": {m: t[["metric", "spearman_brown_full", "sb_full_ci_low", "sb_full_ci_high"]]
+                           .to_dict("records") for m, t in tabs.items()}}
+    (out / "primary_metric.json").write_text(json.dumps(rec, indent=2))
+    print(f"primary metric: {metric} ({reason})")
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0].startswith("-"):
@@ -482,15 +493,17 @@ def main(argv=None):
     r.add_argument("--variants", nargs=2, default=["prompt", "prompt_permuted"])
     h = sub.add_parser("split-half", help="reliability of the 4-rotation metrics (needs cyc0..cyc3 tables)")
     h.add_argument("--model", required=True)
+    c = sub.add_parser("choose-primary", help="apply the pre-registered primary-metric rule")
+    c.add_argument("--models", nargs="+", required=True)
     for s in (a, r, h):
         s.add_argument("--readout", choices=["logit", "tuned"], default="logit")
-    for s in (t, a, r, h):
+    for s in (t, a, r, h, c):
         s.add_argument("--out", default="results")
     args = ap.parse_args(argv)
     cfg = load_run_config()
     set_seed(cfg["seed"])
     {"table": cmd_table, "aggregate": cmd_aggregate, "reliability": cmd_reliability,
-     "split-half": cmd_split_half}[args.cmd](args, cfg)
+     "split-half": cmd_split_half, "choose-primary": cmd_choose_primary}[args.cmd](args, cfg)
 
 
 if __name__ == "__main__":
