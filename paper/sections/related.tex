@@ -1,0 +1,29 @@
+\section{Related Work}
+
+\paragraph{Layer-wise readouts.}
+The logit lens decodes intermediate residual states with the model's own final norm and unembedding \citep{nostalgebraist2020logitlens}.
+It is biased in early layers, whose representations are not in the basis the unembedding expects; the tuned lens fixes this with an affine translator per layer, trained so that each layer's decoded distribution matches the final one \citep{belrose2023tuned}.
+\citet{wendler-etal-2024-llamas} used the logit lens to show that Llama-2 passes through an English-like latent space when translating between other languages.
+We use both lenses and report the tuned lens as a secondary readout.
+
+\paragraph{Prediction depth.}
+\citet{baldock2021difficulty} defined the prediction depth of an example as the first layer after which a nearest-neighbour probe agrees with the final prediction, and found that it tracks example difficulty, consistency of learning and margin.
+Our crystallization depth is the analogue for a language model's multiple-choice answer, read through a lens rather than a probe.
+
+\paragraph{Where facts are recalled.}
+Causal tracing locates factual recall in middle-layer MLPs at the last subject token \citep{meng2022locating}.
+\citet{geva-etal-2023-dissecting} describe recall as subject enrichment in early and middle layers followed by attribute extraction by attention at the final position.
+\citet{zhang2024patching} compare activation-patching choices and recommend logit-difference metrics and same-distribution corruptions (replacing the subject with another real subject) over Gaussian noise.
+Our patching follows that advice: we swap the entity for a same-attribute entity from another state and measure normalised logit-difference recovery.
+
+\paragraph{Frequency and knowledge.}
+Question-answering accuracy rises with the number of pretraining documents that mention the relevant entities \citep{kandpal2023longtail}, and with entity popularity measured by Wikipedia pageviews \citep{mallen-etal-2023-trust}.
+We use both kinds of signal: exact-string counts in an open pretraining corpus, Dolma \citep{soldaini-etal-2024-dolma}, through the infini-gram engine \citep{liu2024infinigram}, and Wikipedia pageviews as a check.
+These studies relate frequency to whether the answer is right; we ask whether it relates to where the answer forms when it is right.
+
+\paragraph{Culture inside the model.}
+SANSKRITI \citep{maji-etal-2025-sanskriti} evaluates knowledge of Indian culture across states, union territories and cultural attributes; we use it as released.
+CulTrace \citep{yu2025cultrace} traces how cultural knowledge is processed inside models.
+CultureScope \citep{zhang2025culturescope} probes cultural understanding along a set of cultural dimensions, as a benchmark.
+\citet{chelombitko2026cultural} trace mythological knowledge across 18 open models and find that it is represented in internal layers even when it is not decoded at the output.
+We add a frequency-controlled, layer-resolved measure for a single, large regional benchmark.

@@ -1,0 +1,295 @@
+{
+  "baldock2021": {
+    "arxiv_id": "2106.09647v2",
+    "title": "Deep Learning Through the Lens of Example Difficulty",
+    "authors": [
+      "Robert J. N. Baldock",
+      "Hartmut Maennel",
+      "Behnam Neyshabur"
+    ],
+    "published": "2021-06-17",
+    "updated": "2021-06-18",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "Main paper: 15 pages, 8 figures. Appendix: 31 pages, 40 figures"
+  },
+  "belrose2023": {
+    "arxiv_id": "2303.08112v6",
+    "title": "Eliciting Latent Predictions from Transformers with the Tuned Lens",
+    "authors": [
+      "Nora Belrose",
+      "Igor Ostrovsky",
+      "Lev McKinney",
+      "Zach Furman",
+      "Logan Smith",
+      "Danny Halawi",
+      "Stella Biderman",
+      "Jacob Steinhardt"
+    ],
+    "published": "2023-03-14",
+    "updated": "2025-11-11",
+    "journal_ref": null,
+    "doi": null,
+    "comment": null
+  },
+  "wendler2024": {
+    "arxiv_id": "2402.10588v4",
+    "title": "Do Llamas Work in English? On the Latent Language of Multilingual Transformers",
+    "authors": [
+      "Chris Wendler",
+      "Veniamin Veselovsky",
+      "Giovanni Monea",
+      "Robert West"
+    ],
+    "published": "2024-02-16",
+    "updated": "2024-06-08",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "12 pages. 28 with appendix"
+  },
+  "geva2023": {
+    "arxiv_id": "2304.14767v3",
+    "title": "Dissecting Recall of Factual Associations in Auto-Regressive Language Models",
+    "authors": [
+      "Mor Geva",
+      "Jasmijn Bastings",
+      "Katja Filippova",
+      "Amir Globerson"
+    ],
+    "published": "2023-04-28",
+    "updated": "2023-10-13",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "Accepted at EMNLP 2023"
+  },
+  "meng2022": {
+    "arxiv_id": "2202.05262v5",
+    "title": "Locating and Editing Factual Associations in GPT",
+    "authors": [
+      "Kevin Meng",
+      "David Bau",
+      "Alex Andonian",
+      "Yonatan Belinkov"
+    ],
+    "published": "2022-02-10",
+    "updated": "2023-01-13",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "NeurIPS 2022. 35 pages, 30 figures. Code and data at https://rome.baulab.info/"
+  },
+  "zhang2024": {
+    "arxiv_id": "2309.16042v2",
+    "title": "Towards Best Practices of Activation Patching in Language Models: Metrics and Methods",
+    "authors": [
+      "Fred Zhang",
+      "Neel Nanda"
+    ],
+    "published": "2023-09-27",
+    "updated": "2024-01-17",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "27 pages. ICLR 2024"
+  },
+  "kandpal2023": {
+    "arxiv_id": "2211.08411v2",
+    "title": "Large Language Models Struggle to Learn Long-Tail Knowledge",
+    "authors": [
+      "Nikhil Kandpal",
+      "Haikang Deng",
+      "Adam Roberts",
+      "Eric Wallace",
+      "Colin Raffel"
+    ],
+    "published": "2022-11-15",
+    "updated": "2023-07-27",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "ICML 2023 Camera Ready Version"
+  },
+  "mallen2023": {
+    "arxiv_id": "2212.10511v4",
+    "title": "When Not to Trust Language Models: Investigating Effectiveness of Parametric and Non-Parametric Memories",
+    "authors": [
+      "Alex Mallen",
+      "Akari Asai",
+      "Victor Zhong",
+      "Rajarshi Das",
+      "Daniel Khashabi",
+      "Hannaneh Hajishirzi"
+    ],
+    "published": "2022-12-20",
+    "updated": "2023-07-02",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "ACL 2023; Code and data available at https://github.com/AlexTMallen/adaptive-retrieval"
+  },
+  "chelombitko2026": {
+    "arxiv_id": "2608.02486v1",
+    "title": "Cultural Awareness is Represented but Not Decoded: Tracing Mythological Knowledge across 18 Open-Source LLMs",
+    "authors": [
+      "Iaroslav Chelombitko",
+      "Ekaterina Chelombitko",
+      "Mika H\u00e4m\u00e4l\u00e4inen"
+    ],
+    "published": "2026-08-03",
+    "updated": "2026-08-03",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "45 pages, 23 figures, 18 tables. Dataset: https://huggingface.co/datasets/Aragoner/folkmotif Code: https://github.com/AragonerUA/folkmotif"
+  },
+  "culturescope2025": {
+    "arxiv_id": "2508.08879v4",
+    "title": "CulTrace: Tracing Internal Cultural Reasoning in Large Language Models",
+    "authors": [
+      "Haeun Yu",
+      "Arnav Arora",
+      "Seogyeong Jeong",
+      "Nadav Borenstein",
+      "Siddhesh Pawar",
+      "Jisu Shin",
+      "Jiho Jin",
+      "Junho Myung",
+      "Alice Oh",
+      "Isabelle Augenstein"
+    ],
+    "published": "2025-08-12",
+    "updated": "2026-08-21",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "22 pages, 15 figures"
+  },
+  "maji2025": {
+    "arxiv_id": "2506.15355v2",
+    "title": "SANSKRITI: A Comprehensive Benchmark for Evaluating Language Models' Knowledge of Indian Culture",
+    "authors": [
+      "Arijit Maji",
+      "Raghvendra Kumar",
+      "Akash Ghosh",
+      " Anushka",
+      "Sriparna Saha"
+    ],
+    "published": "2025-06-18",
+    "updated": "2025-10-28",
+    "journal_ref": null,
+    "doi": null,
+    "comment": "ACL 2025 Findings"
+  },
+  "culturescope_by_title": {
+    "2509.16188v1": {
+      "title": "CultureScope: A Dimensional Lens for Probing Cultural Understanding in LLMs",
+      "authors": [
+        "Jinghao Zhang",
+        "Sihang Jiang",
+        "Shiwei Guo",
+        "Shisong Chen",
+        "Yanghua Xiao",
+        "Hongwei Feng",
+        "Jiaqing Liang",
+        "Minggui HE",
+        "Shimin Tao",
+        "Hongxia Ma"
+      ],
+      "published": "2025-09-19",
+      "updated": "2025-09-19",
+      "comment": null
+    },
+    "2508.08879v4": {
+      "title": "CulTrace: Tracing Internal Cultural Reasoning in Large Language Models",
+      "authors": [
+        "Haeun Yu",
+        "Arnav Arora",
+        "Seogyeong Jeong",
+        "Nadav Borenstein",
+        "Siddhesh Pawar",
+        "Jisu Shin",
+        "Jiho Jin",
+        "Junho Myung",
+        "Alice Oh",
+        "Isabelle Augenstein"
+      ],
+      "published": "2025-08-12",
+      "updated": "2026-08-21",
+      "comment": "22 pages, 15 figures"
+    }
+  },
+  "methods_refs": {
+    "2407.21783": {
+      "arxiv_id": "2407.21783v3",
+      "title": "The Llama 3 Herd of Models",
+      "n_authors": 561,
+      "first_authors": [
+        "Aaron Grattafiori",
+        "Abhimanyu Dubey",
+        "Abhinav Jauhri",
+        "Abhinav Pandey"
+      ],
+      "published": "2024-07-31",
+      "comment": null
+    },
+    "2402.00159": {
+      "arxiv_id": "2402.00159v2",
+      "title": "Dolma: an Open Corpus of Three Trillion Tokens for Language Model Pretraining Research",
+      "n_authors": 36,
+      "first_authors": [
+        "Luca Soldaini",
+        "Rodney Kinney",
+        "Akshita Bhagia",
+        "Dustin Schwenk"
+      ],
+      "published": "2024-01-31",
+      "comment": "Accepted at ACL 2024; Dataset: https://hf.co/datasets/allenai/dolma; Code: https://github.com/allenai/dolma"
+    },
+    "2408.00118": {
+      "arxiv_id": "2408.00118v3",
+      "title": "Gemma 2: Improving Open Language Models at a Practical Size",
+      "n_authors": 198,
+      "first_authors": [
+        " Gemma Team",
+        "Morgane Riviere",
+        "Shreya Pathak",
+        "Pier Giuseppe Sessa"
+      ],
+      "published": "2024-07-31",
+      "comment": null
+    },
+    "2412.15115": {
+      "arxiv_id": "2412.15115v2",
+      "title": "Qwen2.5 Technical Report",
+      "n_authors": 44,
+      "first_authors": [
+        " Qwen",
+        " :",
+        "An Yang",
+        "Baosong Yang"
+      ],
+      "published": "2024-12-19",
+      "comment": null
+    },
+    "2401.17377": {
+      "arxiv_id": "2401.17377v4",
+      "title": "Infini-gram: Scaling Unbounded n-gram Language Models to a Trillion Tokens",
+      "n_authors": 5,
+      "first_authors": [
+        "Jiacheng Liu",
+        "Sewon Min",
+        "Luke Zettlemoyer",
+        "Yejin Choi"
+      ],
+      "published": "2024-01-30",
+      "comment": "Published at COLM 2024, spotlight paper"
+    },
+    "1609.07843": {
+      "arxiv_id": "1609.07843v1",
+      "title": "Pointer Sentinel Mixture Models",
+      "n_authors": 4,
+      "first_authors": [
+        "Stephen Merity",
+        "Caiming Xiong",
+        "James Bradbury",
+        "Richard Socher"
+      ],
+      "published": "2016-09-26",
+      "comment": null
+    }
+  }
+}

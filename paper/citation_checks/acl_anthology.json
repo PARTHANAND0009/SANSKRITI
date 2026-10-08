@@ -1,0 +1,34 @@
+{
+  "wendler2024": {
+    "doi": "10.18653/v1/2024.acl-long.820",
+    "anthology_id": "2024.acl-long.820",
+    "bib": "@inproceedings{wendler-etal-2024-llamas,\n    title = \"Do Llamas Work in {E}nglish? On the Latent Language of Multilingual Transformers\",\n    author = \"Wendler, Chris  and\n      Veselovsky, Veniamin  and\n      Monea, Giovanni  and\n      West, Robert\",\n    editor = \"Ku, Lun-Wei  and\n      Martins, Andre  and\n      Srikumar, Vivek\",\n    booktitle = \"Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)\",\n    month = aug,\n    year = \"2024\",\n    address = \"Bangkok, Thailand\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2024.acl-long.820/\",\n    doi = \"10.18653/v1/2024.acl-long.820\",\n    pages = \"15366--15394\"\n}\n\n",
+    "container": [
+      "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)"
+    ]
+  },
+  "geva2023": {
+    "doi": "10.18653/v1/2023.emnlp-main.751",
+    "anthology_id": "2023.emnlp-main.751",
+    "bib": "@inproceedings{geva-etal-2023-dissecting,\n    title = \"Dissecting Recall of Factual Associations in Auto-Regressive Language Models\",\n    author = \"Geva, Mor  and\n      Bastings, Jasmijn  and\n      Filippova, Katja  and\n      Globerson, Amir\",\n    editor = \"Bouamor, Houda  and\n      Pino, Juan  and\n      Bali, Kalika\",\n    booktitle = \"Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing\",\n    month = dec,\n    year = \"2023\",\n    address = \"Singapore\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2023.emnlp-main.751/\",\n    doi = \"10.18653/v1/2023.emnlp-main.751\",\n    pages = \"12216--12235\"\n}\n\n",
+    "container": [
+      "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing"
+    ]
+  },
+  "mallen2023": {
+    "doi": "10.18653/v1/2023.acl-long.546",
+    "anthology_id": "2023.acl-long.546",
+    "bib": "@inproceedings{mallen-etal-2023-trust,\n    title = \"When Not to Trust Language Models: Investigating Effectiveness of Parametric and Non-Parametric Memories\",\n    author = \"Mallen, Alex  and\n      Asai, Akari  and\n      Zhong, Victor  and\n      Das, Rajarshi  and\n      Khashabi, Daniel  and\n      Hajishirzi, Hannaneh\",\n    editor = \"Rogers, Anna  and\n      Boyd-Graber, Jordan  and\n      Okazaki, Naoaki\",\n    booktitle = \"Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)\",\n    month = jul,\n    year = \"2023\",\n    address = \"Toronto, Canada\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2023.acl-long.546/\",\n    doi = \"10.18653/v1/2023.acl-long.546\",\n    pages = \"9802--9822\"\n}\n\n",
+    "container": [
+      "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)"
+    ]
+  },
+  "maji2025": {
+    "doi": "10.18653/v1/2025.findings-acl.228",
+    "anthology_id": "2025.findings-acl.228",
+    "bib": "@inproceedings{maji-etal-2025-sanskriti,\n    title = \"{SANSKRITI}: A Comprehensive Benchmark for Evaluating Language Models' Knowledge of {I}ndian Culture\",\n    author = \"Maji, Arijit  and\n      Kumar, Raghvendra  and\n      Ghosh, Akash  and\n      Anushka  and\n      Saha, Sriparna\",\n    editor = \"Che, Wanxiang  and\n      Nabende, Joyce  and\n      Shutova, Ekaterina  and\n      Pilehvar, Mohammad Taher\",\n    booktitle = \"Findings of the Association for Computational Linguistics: ACL 2025\",\n    month = jul,\n    year = \"2025\",\n    address = \"Vienna, Austria\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2025.findings-acl.228/\",\n    doi = \"10.18653/v1/2025.findings-acl.228\",\n    pages = \"4434--4451\",\n    ISBN = \"979-8-89176-256-5\"\n}\n\n",
+    "container": [
+      "Findings of the Association for Computational Linguistics: ACL 2025"
+    ]
+  }
+}

@@ -1,0 +1,315 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/ruKMBABGRtDoOxCiCEF1GkvQlus</id>
+  <title>arXiv Query: search_query=&amp;id_list=2106.09647,2303.08112,2402.10588,2304.14767,2202.05262,2309.16042,2211.08411,2212.10511,2608.02486,2508.08879,2506.15355&amp;start=0&amp;max_results=20</title>
+  <updated>2026-10-08T17:32:00Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=20&amp;id_list=2106.09647,2303.08112,2402.10588,2304.14767,2202.05262,2309.16042,2211.08411,2212.10511,2608.02486,2508.08879,2506.15355" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>20</opensearch:itemsPerPage>
+  <opensearch:totalResults>11</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2106.09647v2</id>
+    <title>Deep Learning Through the Lens of Example Difficulty</title>
+    <updated>2021-06-18T16:36:37Z</updated>
+    <link href="https://arxiv.org/abs/2106.09647v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2106.09647v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Existing work on understanding deep learning often employs measures that compress all data-dependent information into a few numbers. In this work, we adopt a perspective based on the role of individual examples. We introduce a measure of the computational difficulty of making a prediction for a given input: the (effective) prediction depth. Our extensive investigation reveals surprising yet simple relationships between the prediction depth of a given input and the model's uncertainty, confidence, accuracy and speed of learning for that data point. We further categorize difficult examples into three interpretable groups, demonstrate how these groups are processed differently inside deep models and showcase how this understanding allows us to improve prediction accuracy. Insights from our study lead to a coherent view of a number of separately reported phenomena in the literature: early layers generalize while later layers memorize; early layers converge faster and networks learn easy data and simple functions first.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2021-06-17T16:48:12Z</published>
+    <arxiv:comment>Main paper: 15 pages, 8 figures. Appendix: 31 pages, 40 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Robert J. N. Baldock</name>
+    </author>
+    <author>
+      <name>Hartmut Maennel</name>
+    </author>
+    <author>
+      <name>Behnam Neyshabur</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2309.16042v2</id>
+    <title>Towards Best Practices of Activation Patching in Language Models: Metrics and Methods</title>
+    <updated>2024-01-17T04:07:06Z</updated>
+    <link href="https://arxiv.org/abs/2309.16042v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2309.16042v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Mechanistic interpretability seeks to understand the internal mechanisms of machine learning models, where localization -- identifying the important model components -- is a key step. Activation patching, also known as causal tracing or interchange intervention, is a standard technique for this task (Vig et al., 2020), but the literature contains many variants with little consensus on the choice of hyperparameters or methodology. In this work, we systematically examine the impact of methodological details in activation patching, including evaluation metrics and corruption methods. In several settings of localization and circuit discovery in language models, we find that varying these hyperparameters could lead to disparate interpretability results. Backed by empirical observations, we give conceptual arguments for why certain metrics or methods may be preferred. Finally, we provide recommendations for the best practices of activation patching going forwards.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-09-27T21:53:56Z</published>
+    <arxiv:comment>27 pages. ICLR 2024</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Fred Zhang</name>
+    </author>
+    <author>
+      <name>Neel Nanda</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2304.14767v3</id>
+    <title>Dissecting Recall of Factual Associations in Auto-Regressive Language Models</title>
+    <updated>2023-10-13T19:01:20Z</updated>
+    <link href="https://arxiv.org/abs/2304.14767v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2304.14767v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Transformer-based language models (LMs) are known to capture factual knowledge in their parameters. While previous work looked into where factual associations are stored, only little is known about how they are retrieved internally during inference. We investigate this question through the lens of information flow. Given a subject-relation query, we study how the model aggregates information about the subject and relation to predict the correct attribute. With interventions on attention edges, we first identify two critical points where information propagates to the prediction: one from the relation positions followed by another from the subject positions. Next, by analyzing the information at these points, we unveil a three-step internal mechanism for attribute extraction. First, the representation at the last-subject position goes through an enrichment process, driven by the early MLP sublayers, to encode many subject-related attributes. Second, information from the relation propagates to the prediction. Third, the prediction representation "queries" the enriched subject to extract the attribute. Perhaps surprisingly, this extraction is typically done via attention heads, which often encode subject-attribute mappings in their parameters. Overall, our findings introduce a comprehensive view of how factual associations are stored and extracted internally in LMs, facilitating future research on knowledge localization and editing.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-04-28T11:26:17Z</published>
+    <arxiv:comment>Accepted at EMNLP 2023</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Mor Geva</name>
+    </author>
+    <author>
+      <name>Jasmijn Bastings</name>
+    </author>
+    <author>
+      <name>Katja Filippova</name>
+    </author>
+    <author>
+      <name>Amir Globerson</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2212.10511v4</id>
+    <title>When Not to Trust Language Models: Investigating Effectiveness of Parametric and Non-Parametric Memories</title>
+    <updated>2023-07-02T07:21:59Z</updated>
+    <link href="https://arxiv.org/abs/2212.10511v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2212.10511v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Despite their impressive performance on diverse tasks, large language models (LMs) still struggle with tasks requiring rich world knowledge, implying the limitations of relying solely on their parameters to encode a wealth of world knowledge. This paper aims to understand LMs' strengths and limitations in memorizing factual knowledge, by conducting large-scale knowledge probing experiments of 10 models and 4 augmentation methods on PopQA, our new open-domain QA dataset with 14k questions. We find that LMs struggle with less popular factual knowledge, and that scaling fails to appreciably improve memorization of factual knowledge in the long tail. We then show that retrieval-augmented LMs largely outperform orders of magnitude larger LMs, while unassisted LMs remain competitive in questions about high-popularity entities. Based on those findings, we devise a simple, yet effective, method for powerful and efficient retrieval-augmented LMs, which retrieves non-parametric memories only when necessary. Experimental results show that this significantly improves models' performance while reducing the inference costs.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-12-20T18:30:15Z</published>
+    <arxiv:comment>ACL 2023; Code and data available at https://github.com/AlexTMallen/adaptive-retrieval</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Alex Mallen</name>
+    </author>
+    <author>
+      <name>Akari Asai</name>
+    </author>
+    <author>
+      <name>Victor Zhong</name>
+    </author>
+    <author>
+      <name>Rajarshi Das</name>
+    </author>
+    <author>
+      <name>Daniel Khashabi</name>
+    </author>
+    <author>
+      <name>Hannaneh Hajishirzi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2202.05262v5</id>
+    <title>Locating and Editing Factual Associations in GPT</title>
+    <updated>2023-01-13T15:16:16Z</updated>
+    <link href="https://arxiv.org/abs/2202.05262v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2202.05262v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We analyze the storage and recall of factual associations in autoregressive transformer language models, finding evidence that these associations correspond to localized, directly-editable computations. We first develop a causal intervention for identifying neuron activations that are decisive in a model's factual predictions. This reveals a distinct set of steps in middle-layer feed-forward modules that mediate factual predictions while processing subject tokens. To test our hypothesis that these computations correspond to factual association recall, we modify feed-forward weights to update specific factual associations using Rank-One Model Editing (ROME). We find that ROME is effective on a standard zero-shot relation extraction (zsRE) model-editing task, comparable to existing methods. To perform a more sensitive evaluation, we also evaluate ROME on a new dataset of counterfactual assertions, on which it simultaneously maintains both specificity and generalization, whereas other methods sacrifice one or another. Our results confirm an important role for mid-layer feed-forward modules in storing factual associations and suggest that direct manipulation of computational mechanisms may be a feasible approach for model editing. The code, dataset, visualizations, and an interactive demo notebook are available at https://rome.baulab.info/</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-02-10T18:59:54Z</published>
+    <arxiv:comment>NeurIPS 2022. 35 pages, 30 figures. Code and data at https://rome.baulab.info/</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Kevin Meng</name>
+    </author>
+    <author>
+      <name>David Bau</name>
+    </author>
+    <author>
+      <name>Alex Andonian</name>
+    </author>
+    <author>
+      <name>Yonatan Belinkov</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2402.10588v4</id>
+    <title>Do Llamas Work in English? On the Latent Language of Multilingual Transformers</title>
+    <updated>2024-06-08T11:15:14Z</updated>
+    <link href="https://arxiv.org/abs/2402.10588v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2402.10588v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We ask whether multilingual language models trained on unbalanced, English-dominated corpora use English as an internal pivot language -- a question of key importance for understanding how language models function and the origins of linguistic bias. Focusing on the Llama-2 family of transformer models, our study uses carefully constructed non-English prompts with a unique correct single-token continuation. From layer to layer, transformers gradually map an input embedding of the final prompt token to an output embedding from which next-token probabilities are computed. Tracking intermediate embeddings through their high-dimensional space reveals three distinct phases, whereby intermediate embeddings (1) start far away from output token embeddings; (2) already allow for decoding a semantically correct next token in the middle layers, but give higher probability to its version in English than in the input language; (3) finally move into an input-language-specific region of the embedding space. We cast these results into a conceptual model where the three phases operate in "input space", "concept space", and "output space", respectively. Crucially, our evidence suggests that the abstract "concept space" lies closer to English than to other languages, which may have important consequences regarding the biases held by multilingual language models.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-02-16T11:21:28Z</published>
+    <arxiv:comment>12 pages. 28 with appendix</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Chris Wendler</name>
+    </author>
+    <author>
+      <name>Veniamin Veselovsky</name>
+    </author>
+    <author>
+      <name>Giovanni Monea</name>
+    </author>
+    <author>
+      <name>Robert West</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2211.08411v2</id>
+    <title>Large Language Models Struggle to Learn Long-Tail Knowledge</title>
+    <updated>2023-07-27T08:01:42Z</updated>
+    <link href="https://arxiv.org/abs/2211.08411v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2211.08411v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The Internet contains a wealth of knowledge -- from the birthdays of historical figures to tutorials on how to code -- all of which may be learned by language models. However, while certain pieces of information are ubiquitous on the web, others appear extremely rarely. In this paper, we study the relationship between the knowledge memorized by large language models and the information in pre-training datasets scraped from the web. In particular, we show that a language model's ability to answer a fact-based question relates to how many documents associated with that question were seen during pre-training. We identify these relevant documents by entity linking pre-training datasets and counting documents that contain the same entities as a given question-answer pair. Our results demonstrate strong correlational and causal relationships between accuracy and relevant document count for numerous question answering datasets (e.g., TriviaQA), pre-training corpora (e.g., ROOTS), and model sizes (e.g., 176B parameters). Moreover, while larger models are better at learning long-tail knowledge, we estimate that today's models must be scaled by many orders of magnitude to reach competitive QA performance on questions with little support in the pre-training data. Finally, we show that retrieval-augmentation can reduce the dependence on relevant pre-training information, presenting a promising approach for capturing the long-tail.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-11-15T18:49:27Z</published>
+    <arxiv:comment>ICML 2023 Camera Ready Version</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Nikhil Kandpal</name>
+    </author>
+    <author>
+      <name>Haikang Deng</name>
+    </author>
+    <author>
+      <name>Adam Roberts</name>
+    </author>
+    <author>
+      <name>Eric Wallace</name>
+    </author>
+    <author>
+      <name>Colin Raffel</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.15355v2</id>
+    <title>SANSKRITI: A Comprehensive Benchmark for Evaluating Language Models' Knowledge of Indian Culture</title>
+    <updated>2025-10-28T07:12:22Z</updated>
+    <link href="https://arxiv.org/abs/2506.15355v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.15355v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language Models (LMs) are indispensable tools shaping modern workflows, but their global effectiveness depends on understanding local socio-cultural contexts. To address this, we introduce SANSKRITI, a benchmark designed to evaluate language models' comprehension of India's rich cultural diversity. Comprising 21,853 meticulously curated question-answer pairs spanning 28 states and 8 union territories, SANSKRITI is the largest dataset for testing Indian cultural knowledge. It covers sixteen key attributes of Indian culture: rituals and ceremonies, history, tourism, cuisine, dance and music, costume, language, art, festivals, religion, medicine, transport, sports, nightlife, and personalities, providing a comprehensive representation of India's cultural tapestry. We evaluate SANSKRITI on leading Large Language Models (LLMs), Indic Language Models (ILMs), and Small Language Models (SLMs), revealing significant disparities in their ability to handle culturally nuanced queries, with many models struggling in region-specific contexts. By offering an extensive, culturally rich, and diverse dataset, SANSKRITI sets a new standard for assessing and improving the cultural understanding of LMs.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-18T11:19:25Z</published>
+    <arxiv:comment>ACL 2025 Findings</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Arijit Maji</name>
+    </author>
+    <author>
+      <name>Raghvendra Kumar</name>
+    </author>
+    <author>
+      <name>Akash Ghosh</name>
+    </author>
+    <author>
+      <name> Anushka</name>
+    </author>
+    <author>
+      <name>Sriparna Saha</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2303.08112v6</id>
+    <title>Eliciting Latent Predictions from Transformers with the Tuned Lens</title>
+    <updated>2025-11-11T01:13:28Z</updated>
+    <link href="https://arxiv.org/abs/2303.08112v6" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2303.08112v6" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We analyze transformers from the perspective of iterative inference, seeking to understand how model predictions are refined layer by layer. To do so, we train an affine probe for each block in a frozen pretrained model, making it possible to decode every hidden state into a distribution over the vocabulary. Our method, the tuned lens, is a refinement of the earlier "logit lens" technique, which yielded useful insights but is often brittle.
+  We test our method on various autoregressive language models with up to 20B parameters, showing it to be more predictive, reliable and unbiased than the logit lens. With causal experiments, we show the tuned lens uses similar features to the model itself. We also find the trajectory of latent predictions can be used to detect malicious inputs with high accuracy. All code needed to reproduce our results can be found at https://github.com/AlignmentResearch/tuned-lens.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-03-14T17:47:09Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Nora Belrose</name>
+    </author>
+    <author>
+      <name>Igor Ostrovsky</name>
+    </author>
+    <author>
+      <name>Lev McKinney</name>
+    </author>
+    <author>
+      <name>Zach Furman</name>
+    </author>
+    <author>
+      <name>Logan Smith</name>
+    </author>
+    <author>
+      <name>Danny Halawi</name>
+    </author>
+    <author>
+      <name>Stella Biderman</name>
+    </author>
+    <author>
+      <name>Jacob Steinhardt</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.02486v1</id>
+    <title>Cultural Awareness is Represented but Not Decoded: Tracing Mythological Knowledge across 18 Open-Source LLMs</title>
+    <updated>2026-08-03T16:53:15Z</updated>
+    <link href="https://arxiv.org/abs/2608.02486v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.02486v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Open-source LLMs reliably name Zeus, Jupiter, and Thor, but recover their counterparts in less-represented traditions like Finnish, Slavic, Egyptian, or Chinese mythology far less consistently. We ask where inside the model this cultural default is produced. On a parallel cross-cultural substrate of Thompson-motif entities, we instrument 18 open-source LLMs from 8 architecture families with linear probing, logit lens, activation patching, and output extraction. The residual stream cleanly distinguishes cultures, well above a name-string baseline, yet the decoder collapses culturally-specific tokens onto dominant-tradition ones. The failure is at readout, not at representation. Asking the same question in the target culture's native language versus English produces failures that cluster within language but decouple across language: the decoder is gated on prompt language. We release a per-entity (probe, output) decomposition framework, a citation-anchored cross-cultural ground truth, a within- versus cross-mode correlation test for language-conditioned readout, and per-entity predictions for all 18 models.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-03T16:53:15Z</published>
+    <arxiv:comment>45 pages, 23 figures, 18 tables. Dataset: https://huggingface.co/datasets/Aragoner/folkmotif Code: https://github.com/AragonerUA/folkmotif</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Iaroslav Chelombitko</name>
+    </author>
+    <author>
+      <name>Ekaterina Chelombitko</name>
+    </author>
+    <author>
+      <name>Mika Hämäläinen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.08879v4</id>
+    <title>CulTrace: Tracing Internal Cultural Reasoning in Large Language Models</title>
+    <updated>2026-08-21T13:59:55Z</updated>
+    <link href="https://arxiv.org/abs/2508.08879v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.08879v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The growing deployment of large language models (LLMs) across diverse cultural contexts necessitates a deeper understanding of models' hidden representations of different cultures. Prior work has evaluated cultural awareness in LLMs by analysing their outputs. This approach overlooks how cultures are represented within the model parameters, missing why models generate incorrect responses. To bridge this gap, we propose CulTrace, a mechanistic interpretability-based method that probes the internal representations of LLMs for cultural knowledge. With CulTrace, we inspect how cultural knowledge is processed across layers and how it is integrated during cultural QA. We find a consistent staged trajectory of cultural reasoning. Models first engage with the question's domain, then resolve the relevant culture, and finally narrow in on an answer. We also demonstrate that models' cultural reasoning is imbalanced, showing delayed relevant culture resolution and more confusion with less-represented cultures.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-12T12:05:32Z</published>
+    <arxiv:comment>22 pages, 15 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Haeun Yu</name>
+    </author>
+    <author>
+      <name>Arnav Arora</name>
+    </author>
+    <author>
+      <name>Seogyeong Jeong</name>
+    </author>
+    <author>
+      <name>Nadav Borenstein</name>
+    </author>
+    <author>
+      <name>Siddhesh Pawar</name>
+    </author>
+    <author>
+      <name>Jisu Shin</name>
+    </author>
+    <author>
+      <name>Jiho Jin</name>
+    </author>
+    <author>
+      <name>Junho Myung</name>
+    </author>
+    <author>
+      <name>Alice Oh</name>
+    </author>
+    <author>
+      <name>Isabelle Augenstein</name>
+    </author>
+  </entry>
+</feed>

@@ -1,0 +1,8 @@
+\section*{Limitations}
+
+Exact-string counts in one open corpus are a proxy for how often a model saw an entity; the models we study were trained on other, undisclosed data.
+Counts depend on spelling and transliteration, which vary widely for Indian names, and our entity extraction misses some entities and fails to find a span in others.
+Depth is defined on a multiple-choice format with a fixed prompt, and it is measured only where the model is correct, so it describes a selected subset.
+Lenses read out what is linearly decodable through the unembedding or a learned translator; information can be present earlier in a form neither lens decodes.
+Patching swaps one entity for another of the same attribute, which also changes token length and familiarity.
+We study three base models of 7 to 9 billion parameters.

@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/RJmzTBTvLN/WopamDSRujH1137M</id>
+  <title>arXiv Query: search_query=ti:CultureScope&amp;id_list=&amp;start=0&amp;max_results=10</title>
+  <updated>2026-10-08T17:34:06Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=ti:CultureScope&amp;start=0&amp;max_results=10&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2509.16188v1</id>
+    <title>CultureScope: A Dimensional Lens for Probing Cultural Understanding in LLMs</title>
+    <updated>2025-09-19T17:47:48Z</updated>
+    <link href="https://arxiv.org/abs/2509.16188v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.16188v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As large language models (LLMs) are increasingly deployed in diverse cultural environments, evaluating their cultural understanding capability has become essential for ensuring trustworthy and culturally aligned applications. However, most existing benchmarks lack comprehensiveness and are challenging to scale and adapt across different cultural contexts, because their frameworks often lack guidance from well-established cultural theories and tend to rely on expert-driven manual annotations. To address these issues, we propose CultureScope, the most comprehensive evaluation framework to date for assessing cultural understanding in LLMs. Inspired by the cultural iceberg theory, we design a novel dimensional schema for cultural knowledge classification, comprising 3 layers and 140 dimensions, which guides the automated construction of culture-specific knowledge bases and corresponding evaluation datasets for any given languages and cultures. Experimental results demonstrate that our method can effectively evaluate cultural understanding. They also reveal that existing large language models lack comprehensive cultural competence, and merely incorporating multilingual data does not necessarily enhance cultural understanding. All code and data files are available at https://github.com/HoganZinger/Culture</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-19T17:47:48Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jinghao Zhang</name>
+    </author>
+    <author>
+      <name>Sihang Jiang</name>
+    </author>
+    <author>
+      <name>Shiwei Guo</name>
+    </author>
+    <author>
+      <name>Shisong Chen</name>
+    </author>
+    <author>
+      <name>Yanghua Xiao</name>
+    </author>
+    <author>
+      <name>Hongwei Feng</name>
+    </author>
+    <author>
+      <name>Jiaqing Liang</name>
+    </author>
+    <author>
+      <name>Minggui HE</name>
+    </author>
+    <author>
+      <name>Shimin Tao</name>
+    </author>
+    <author>
+      <name>Hongxia Ma</name>
+    </author>
+  </entry>
+</feed>
