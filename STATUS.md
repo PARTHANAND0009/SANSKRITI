@@ -51,7 +51,7 @@ Matched comparison, same 1536 questions, original prompts:
 In every model the calibrated gold-top-1 share first exceeds 0.5 exactly at the median
 l*_cal: crystallisation is a sharp, model-specific event (d = 0.56 / 0.71 / 0.67).
 
-Checks on the real models: lens at the last layer reproduces the model's full-vocabulary
+Checks on all three real models (Llama, Qwen, Gemma incl. softcap): lens at the last layer reproduces the model's full-vocabulary
 output exactly (with disk offload); stored-fp16 readout agrees with model output on all
 checked questions; no fp16 overflow (Llama max |x| 28).
 
