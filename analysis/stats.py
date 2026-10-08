@@ -23,6 +23,8 @@ For each model and each depth metric (as d = layers / L):
   per state median depth with percentile bootstrap CIs (resampling questions within state).
   Holm  p_holm: Holm-Bonferroni across the depth metrics, within (model, estimator,
         freq_measure, term).
+  equivalence  beta_std = beta / SD(depth); equivalent_null when the 90% CI of beta_std
+        lies within +/- EQUIV_BOUND (0.10), the pre-registered smallest effect of interest.
 
 Outputs (every file says PRELIMINARY): results/prelim/PRELIMINARY_*.csv + README.md.
 
@@ -114,10 +116,19 @@ def fit_mixed(d: pd.DataFrame):
     return r, "ok"
 
 
-def coef_row(res, term, kind):
+EQUIV_BOUND = 0.10   # pre-registered smallest effect of interest, |beta_std| (ANALYSIS_PLAN.md)
+
+
+def coef_row(res, term, kind, y_sd=None):
     ci = res.conf_int().loc[term]
-    return {"estimator": kind, "term": term, "beta": res.params[term], "ci_low": ci[0], "ci_high": ci[1],
-            "p": res.pvalues[term]}
+    ci90 = res.conf_int(alpha=0.10).loc[term]
+    row = {"estimator": kind, "term": term, "beta": res.params[term], "ci_low": ci[0], "ci_high": ci[1],
+           "p": res.pvalues[term]}
+    if y_sd:
+        # standardised: depth SDs per SD of the predictor (predictors are z-scored)
+        row.update(beta_std=res.params[term] / y_sd, ci90_low_std=ci90[0] / y_sd, ci90_high_std=ci90[1] / y_sd)
+        row["equivalent_null"] = bool(-EQUIV_BOUND < row["ci90_low_std"] and row["ci90_high_std"] < EQUIV_BOUND)
+    return row
 
 
 def permutation_state(d: pd.DataFrame, n_perm: int, rng: np.random.Generator) -> dict:
@@ -179,8 +190,8 @@ def main(argv=None):
                     base = {"label": LABEL, "model": m, "freq_measure": fm, "metric": metric, "n": len(d), "L": L,
                             "mixed_status": status}
                     if mixed is not None:
-                        reg.append({**base, **coef_row(mixed, term, "mixedlm_state_re")})
-                    reg.append({**base, **coef_row(ols, term, "ols_cluster_state")})
+                        reg.append({**base, **coef_row(mixed, term, "mixedlm_state_re", d.y.std())})
+                    reg.append({**base, **coef_row(ols, term, "ols_cluster_state", d.y.std())})
                 perm.append({"label": LABEL, "model": m, "freq_measure": fm, "metric": metric, "n": len(d),
                              **permutation_state(d, args.n_perm, rng)})
                 if fm == "raw":   # per-state medians do not depend on the frequency measure

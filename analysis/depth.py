@@ -278,7 +278,18 @@ def reliability(a: pd.DataFrame, b: pd.DataFrame, metrics=SINGLE_ORDER_METRICS, 
 AGG_METRICS = ("l_star_mean", "l_star_cal_mean", "l_star_cyc", "d_margin", "d_soft")
 
 
-def split_half(tables: dict, prompts: pd.DataFrame, base_seed: int, halves=(("cyc0", "cyc2"), ("cyc1", "cyc3"))) -> pd.DataFrame:
+def bootstrap_spearman_ci(x: np.ndarray, y: np.ndarray, n_boot: int = 1000, seed: int = 1234):
+    rng = np.random.default_rng(seed)
+    n = len(x)
+    rs = []
+    for _ in range(n_boot):
+        i = rng.integers(0, n, n)
+        rs.append(spearmanr(x[i], y[i])[0])
+    return float(np.nanquantile(rs, 0.025)), float(np.nanquantile(rs, 0.975))
+
+
+def split_half(tables: dict, prompts: pd.DataFrame, base_seed: int, halves=(("cyc0", "cyc2"), ("cyc1", "cyc3")),
+               n_boot: int = 1000) -> pd.DataFrame:
     """Reliability of the across-variant metrics: aggregate each half of the rotations
     separately, correlate per question (correct in both halves), and project to the
     full set of rotations with Spearman-Brown (k = 2). Each half holds 2 rotations, so
@@ -291,7 +302,54 @@ def split_half(tables: dict, prompts: pd.DataFrame, base_seed: int, halves=(("cy
     r = reliability(a, b, metrics=AGG_METRICS)
     r["halves"] = f"{'+'.join(halves[0])} vs {'+'.join(halves[1])}"
     r["spearman_brown_full"] = [spearman_brown(x, 2) for x in r.spearman]
+    j = a.merge(b, on="qid", suffixes=("_a", "_b"))
+    j = j[j.correct_final_a & j.correct_final_b]
+    lo, hi = [], []
+    for m in r.metric:
+        x = j[f"{m}_a"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
+        y = j[f"{m}_b"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
+        ok = ~(np.isnan(x) | np.isnan(y))
+        if ok.sum() > 10 and n_boot:
+            c = bootstrap_spearman_ci(x[ok], y[ok], n_boot)
+            lo.append(spearman_brown(c[0], 2))
+            hi.append(spearman_brown(c[1], 2))
+        else:
+            lo.append(np.nan)
+            hi.append(np.nan)
+    r["sb_full_ci_low"], r["sb_full_ci_high"] = lo, hi
     return r
+
+
+PRIMARY_DEFAULT = "d_soft"
+PRIMARY_CHALLENGERS = ("l_star_cyc", "d_margin")
+PRIMARY_MARGIN = 0.10
+
+
+def choose_primary(splithalf: dict) -> tuple[str, str]:
+    """Pre-registered decision rule (ANALYSIS_PLAN.md). splithalf: model -> split_half()
+    table (logit lens). d_soft stays primary unless a challenger (l_star_cyc, d_margin)
+    has a Spearman-Brown split-half reliability at least 0.10 higher than d_soft in at
+    least two of the models, with its 95% CI lower bound above d_soft's CI upper bound in
+    those models. If both challengers qualify, the one with the higher mean reliability
+    wins. Returns (metric, reason)."""
+    wins = {}
+    for c in PRIMARY_CHALLENGERS:
+        k = 0
+        for m, tab in splithalf.items():
+            t = tab.set_index("metric")
+            if c not in t.index or PRIMARY_DEFAULT not in t.index:
+                continue
+            d, x = t.loc[PRIMARY_DEFAULT], t.loc[c]
+            if (x.spearman_brown_full - d.spearman_brown_full >= PRIMARY_MARGIN
+                    and x.sb_full_ci_low > d.sb_full_ci_high):
+                k += 1
+        wins[c] = k
+    qualified = [c for c, k in wins.items() if k >= 2]
+    if not qualified:
+        return PRIMARY_DEFAULT, f"no challenger clearly more reliable (wins per challenger: {wins})"
+    best = max(qualified, key=lambda c: np.mean([tab.set_index("metric").loc[c].spearman_brown_full
+                                                  for tab in splithalf.values()]))
+    return best, f"{best} clearly more reliable in {wins[best]} models (wins: {wins})"
 
 
 def spearman_brown(r: float, k: int) -> float:
