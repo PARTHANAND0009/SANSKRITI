@@ -4,10 +4,10 @@
   "pageviews_mode": "cached-only",
   "pageviews_complete": false,
   "pageviews_needed": 877,
-  "pageviews_not_fetched": 769,
+  "pageviews_not_fetched": 125,
   "n_entities": 1864,
   "n_states": 36,
   "log_freq_primary": "corpus_count",
   "log_freq_fallback": "wiki_pageviews_en",
-  "written": "2026-10-06T17:39:22Z"
+  "written": "2026-10-08T16:06:37Z"
 }
