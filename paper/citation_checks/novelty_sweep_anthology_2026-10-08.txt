@@ -1,0 +1,25 @@
+ACL Anthology event pages scanned 2026-10-08: acl-2026, findings-2026, eacl-2026, lrec-2026 (naacl/coling/emnlp-2026 pages: 404, not yet published).
+Titles matching (cultural|India|Indic|regional|SANSKRITI) AND (lens|layer|mechanis|interpretab|neuron|patching|probing|internal|represent|SAE), or logit/tuned lens, long-tail, entity frequency, popularity:
+
+/2026.abjadnlp-1.7/ HCMUS_PrompterXPrompter at AbjadMed: When Classification Meets Retrieval: Taming the Long Tail in Arabic Medical Text Classification
+/2026.acl-long.1725/ Grammar as Control: Modular Language Generation for the Long Tail
+/2026.acl-long.18/ MINTQA: A Multi-Hop Question Answering Benchmark for Evaluating LLMs on New and Long-tail Knowledge
+/2026.acl-long.2085/ PolitNuggets: Benchmarking Agentic Discovery of Long-Tail Political Facts
+/2026.acl-srw.46/ The Silence of the Facts: Popularity as a Barrier to Machine Unlearning
+/2026.acl-srw.83/ Filling the Long Tail: Structure-Aware Curriculum-Gap Completion for Medical Education with LLMs
+/2026.bionlp-2.3/ zzucs at PsyDefDetect: Bridging Long-Tail Imbalance and Clinical Rubrics for DMRS Defense-Level Detection
+/2026.c3nlp-1.15/ One Style Fits All? Cultural Values Embedded in Conversational AI via a People-Pleasing Lens
+/2026.eacl-long.155/ Finding Culture-Sensitive Neurons in Vision-Language Models
+/2026.eacl-long.55/ Lexical Popularity: Quantifying the Impact of Pre-training for LLM Performance
+/2026.findings-acl.1632/ Multilingual Tokenization through the Lens of Indian Languages: Challenges and Insights
+/2026.findings-acl.2018/ CANDICE: Agentic Causal Disentanglement with Class Conditional Knowledge Integration for Long Tailed Domain Generalization
+/2026.findings-acl.278/ Deciphering Cultural Representations in Large Language Models via Sparse Autoencoders
+/2026.findings-eacl.314/ Event Detection with a Context-Aware Encoder and LoRA for Improved Performance on Long-Tailed Classes
+/2026.findings-eacl.63/ Hire Your Anthropologist! Rethinking Culture Benchmarks Through an Anthropological Lens
+/2026.lrec-1.177/ AgriChain: Visually-Grounded Expert-Verified Reasoning for Interpretable Agricultural Vision–Language Models
+/2026.lrec-1.405/ LongTailQA: Benchmarking LLMs and RAG Models on Disambiguated Long-Tail Entities
+/2026.lrec-1.467/ Task-Lens: Cross-Task Utility Based Speech Dataset Profiling for Low-Resource Indian Languages
+/2026.lrec-1.692/ Cultural and Knowledge Biases in LLMs through the Lens of Entity-Aware Machine Translation
+/2026.lrec-1.776/ The Chronicles of RiDiC: Generating Datasets with Controlled Popularity Distribution for Long-form Factuality Evaluation
+/2026.semeval-1.438/ GUIR at SemEval-2026 Task 7: Probing Cultural Knowledge in LLMs via Multi-Agent Debate
+/2026.vardial-1.14/ Indic-TunedLens: Interpreting Multilingual Models in Indian Languages
