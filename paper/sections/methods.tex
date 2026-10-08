@@ -74,7 +74,7 @@ d \sim z(\text{entity freq}) + z(\text{state freq}) + \text{acc} \\
 \end{multline*}
 where acc is the share of the four rotations answered correctly.
 The registered estimator is a linear mixed model with a random intercept per state; when its random-effect variance is estimated at the boundary, OLS with standard errors clustered by state is reported instead (both are saved).
-The entity-frequency test (H1) is two-sided with Holm correction across the five depth metrics within each model \todocite{Holm 1979}.
+The entity-frequency test (H1) is two-sided with Holm correction across the five depth metrics within each model \citep{holm1979simple}.
 The state-frequency test (H2) is a permutation test that shuffles state frequencies across states (1{,}000 permutations).
 A result is positive if the primary metric's Holm-adjusted $p < 0.05$ with a negative coefficient in at least two of three models, and null if in at least two models the 90\% interval of the standardised coefficient lies within $\pm 0.10$ depth standard deviations per standard deviation of frequency.
 
