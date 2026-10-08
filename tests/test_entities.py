@@ -95,3 +95,20 @@ def test_client_caches_only_answers(tmp_path, monkeypatch):
     assert len(list((tmp_path / "s").glob("*.json"))) == 2          # a and b only
     assert c.request("s", "POST", "u", body={"q": "a"}) == (200, {"count": 3}) and c.hits == 1
     assert c.request("s", "POST", "u", body={"q": "x"}, cache_only=True) == (None, None)
+
+
+def test_length_adjusted_frequency():
+    import numpy as np
+    import pandas as pd
+
+    from data.frequency import add_length_adjusted
+
+    n_tok = np.array([1, 2, 3, 4, 6, 8, 2, 3])
+    count = np.round(np.expm1(10 - 2 * np.log(n_tok) + np.array([0, 0, 0, 0, 0, 0, 1, -1])))
+    fe = pd.DataFrame({"entity": ["a", "a b", "a b c", "w x y z", "a b c d e f", "a b c d e f g h", "p q", "r s t"],
+                       "corpus_count": count, "corpus_n_tokens": n_tok})
+    out, fit = add_length_adjusted(fe)
+    assert fit["slope"] < 0 and fit["n"] == 8
+    assert out.log_freq_lenadj.iloc[6] > 0 > out.log_freq_lenadj.iloc[7]        # above / below the length trend
+    assert abs(np.corrcoef(np.log(n_tok), out.log_freq_lenadj)[0, 1]) < 1e-6      # orthogonal to log length
+    assert out.entity_n_words.tolist() == [1, 2, 3, 4, 6, 8, 2, 3]
