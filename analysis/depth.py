@@ -9,7 +9,8 @@ For each question in the stage 2 shards and each readout layer 0..L
 Questions the model gets wrong at layer L have l* = None (kept, not dropped).
 
 Output: results/depth_{model}_{variant}_logit.parquet with
-  qid, l_star, d, correct_final, gold_prob_final, gold_prob_by_layer (list),
+  qid, l_star, d, correct_final, l_star_cal, d_cal, correct_final_cal (letter-prior
+  calibrated secondary readout, see letter_prior_calibrated), gold_prob_final, gold_prob_by_layer (list),
   gold_rank_by_layer (list), option_probs_by_layer (flattened [(L+1)*4]), and the
   stage 2 run metadata in results/*.meta.json.
 
@@ -35,6 +36,18 @@ from crystal.io import load_acts, load_prompts, load_run_config, model_config, r
 from crystal.lens import crystallization_layer, gold_rank, lens_option_logits
 
 
+def letter_prior_calibrated(probs: np.ndarray, gold: np.ndarray):
+    """Secondary readout. probs [n, L+1, 4]. Per layer, subtract each letter's mean
+    log-probability over the n questions (the layer's letter prior), then take the
+    top option. Returns (l_star_cal list, top1_is_gold [n, L+1]). The primary l*
+    is unchanged; this column exists because uncalibrated early layers rank one
+    default letter first for every question (pilot finding)."""
+    lp = np.log(probs + 1e-12)
+    cal = lp - lp.mean(0, keepdims=True)
+    top = cal.argmax(-1) == gold[:, None]
+    return [crystallization_layer(r) for r in top], top
+
+
 @torch.no_grad()
 def depth_table(model, qids, acts: np.ndarray, gold: np.ndarray, option_ids, batch: int = 256) -> pd.DataFrame:
     """acts [n, L+1, d] -> one row per question."""
@@ -51,11 +64,15 @@ def depth_table(model, qids, acts: np.ndarray, gold: np.ndarray, option_ids, bat
     ranks = gold_rank(p, g[:, None].expand(-1, n_read)).numpy()
     gold_p = p.gather(-1, g[:, None, None].expand(-1, n_read, 1))[..., 0].numpy()
     lstar = [crystallization_layer(r == 0) for r in ranks]
+    lstar_cal, top_cal = letter_prior_calibrated(probs, gold.astype(np.int64))
     return pd.DataFrame({
         "qid": list(qids),
         "l_star": pd.array(lstar, dtype="Int64"),
         "d": [None if x is None else x / L for x in lstar],
         "correct_final": ranks[:, -1] == 0,
+        "l_star_cal": pd.array(lstar_cal, dtype="Int64"),
+        "d_cal": [None if x is None else x / L for x in lstar_cal],
+        "correct_final_cal": top_cal[:, -1],
         "gold_prob_final": gold_p[:, -1],
         "gold_prob_by_layer": list(gold_p.astype(np.float32)),
         "gold_rank_by_layer": list(ranks.astype(np.int8)),
@@ -108,6 +125,10 @@ def main(argv=None):
         print(f"correct at layer L: {len(c)}; l* median {int(c.l_star.median())}, "
               f"d mean {c.d.astype(float).mean():.3f}, median {c.d.astype(float).median():.3f}")
         print("d quartiles:", np.round(np.quantile(c.d.astype(float), [0.25, 0.5, 0.75]), 3).tolist())
+        cc = tab[tab.correct_final_cal]
+        print(f"letter-prior calibrated: final 'correct' {tab.correct_final_cal.mean():.3f}; l*_cal median "
+              f"{int(cc.l_star_cal.median())}, d_cal mean {cc.d_cal.astype(float).mean():.3f}, quartiles "
+              f"{np.round(np.quantile(cc.d_cal.astype(float), [0.25, 0.5, 0.75]), 3).tolist()}")
         print("\nby question_type (correct only):")
         print(c.groupby("question_type").agg(n=("qid", "size"), d_mean=("d", lambda s: s.astype(float).mean()))
               .round(3).to_string())

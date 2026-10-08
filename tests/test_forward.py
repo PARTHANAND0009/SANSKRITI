@@ -176,3 +176,24 @@ def test_depth_table_on_tiny_model(tok):
         assert (pd.isna(r.l_star) and not r.correct_final) or r.l_star == crystallization_layer(r.gold_rank_by_layer == 0)
         if not pd.isna(r.l_star):
             assert r.d == r.l_star / N_LAYERS
+
+
+def test_letter_prior_calibration_removes_constant_bias():
+    from analysis.depth import letter_prior_calibrated
+
+    # 8 questions, 3 layers, every layer carries the same B prior (+3).
+    # Layer 0: gold is slightly disfavoured (-1), so only the prior can make it top-1
+    # (raw readout: gold-B questions look "crystallized" at layer 0).
+    # Layers 1-2: gold gets +5.
+    gold = np.array([0, 1, 2, 3, 0, 1, 2, 3])
+    logits = np.zeros((8, 3, 4))
+    logits[:, :, 1] += 3.0
+    logits[np.arange(8), 0, gold] -= 1.0
+    for l in (1, 2):
+        logits[np.arange(8), l, gold] += 5.0
+    probs = np.exp(logits) / np.exp(logits).sum(-1, keepdims=True)
+    lstar, top = letter_prior_calibrated(probs, gold)
+    assert top[:, 1:].all()
+    assert lstar == [1] * 8
+    raw_top = probs.argmax(-1) == gold[:, None]
+    assert raw_top[gold == 1, 0].all()  # the raw readout is fooled at layer 0 for gold B
