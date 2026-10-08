@@ -1,0 +1,1145 @@
+                                         CulTrace: Tracing Internal Cultural Reasoning in Large Language Models
+
+                                                        Haeun Yu1 Arnav Arora1 Seogyeong Jeong2 Nadav Borenstein1
+                                                            Siddhesh Pawar1 Jisu Shin2 Jiho Jin2 Junho Myung2
+                                                                      Alice Oh2 Isabelle Augenstein1
+                                                                            1                                2
+                                                                                University of Copenhagen         KAIST
+                                                                                          hayu@di.ku.dk
+
+
+                                                               Abstract
+arXiv:2508.08879v4 [cs.CL] 21 Aug 2026
+
+
+
+
+                                             The growing deployment of large language
+                                             models (LLMs) across diverse cultural contexts
+                                             necessitates a deeper understanding of mod-
+                                             els’ hidden representations of different cultures.
+                                             Prior work has evaluated cultural awareness
+                                             in LLMs by analysing their outputs. This ap-
+                                             proach overlooks how cultures are represented
+                                             within the model parameters, missing why mod-
+                                             els generate incorrect responses. To bridge
+                                             this gap, we propose CulTrace, a mechanis-           Figure 1: We present an overview of the proposed
+                                             tic interpretability-based method that probes        framework. Given a cultural question about a target
+                                             the internal representations of LLMs for cul-        culture (Ethiopia), CulTrace decodes the model’s in-
+                                             tural knowledge. With CulTrace, we inspect           ternal representations at each layer to reveal what the
+                                             how cultural knowledge is processed across           model encodes, spanning from topic (e.g., food) and
+                                             layers and how it is integrated during cultural      answer candidates (e.g., injera) to cultural context (e.g.,
+                                             QA. We find a consistent staged trajectory of        misattributed cultures such as Kenya or Japan).
+                                             cultural reasoning. Models first engage with
+                                             the question’s domain, then resolve the relevant
+                                             culture, and finally narrow in on an answer. We      domain of the question, cultural context, candidate
+                                             also demonstrate that models’ cultural reason-       answers and more (Figure 1).
+                                             ing is imbalanced, showing delayed relevant
+                                                                                                     CulTrace (§3) builds on LatentQA (Pan et al.,
+                                             culture resolution and more confusion with less-
+                                             represented cultures.                                2026), a method for decoding model activations
+                                                                                                  into natural language by training decoders that take
+                                         1   Introduction                                         model activations and a question as input and a cor-
+                                                                                                  responding answer as output. The trained decoder
+                                         Cultural alignment has become an important as-           generalises to tasks beyond training, allowing one
+                                         pect of LLM development due to their worldwide           to successfully probe the activations for various
+                                         deployment. Most existing evaluations of cul-            tasks like recovering hidden system prompts, pre-
+                                         tural alignment are extrinsic, measuring model out-      dicting future generations, or extracting relational
+                                         puts on cultural understanding or simulation tasks.      knowledge through a decoding question. While
+                                         While these approaches can reveal when models            Pan et al. (2026) use a specific layer from the model
+                                         produce culturally inaccurate responses, they pro-       to decode activations, we adapt it by training de-
+                                         vide limited insight into why, making it challenging     coders for each layer and creating a chain of inter-
+                                         to improve performance. To address this gap, we          mediate reasoning across the model’s layers. This
+                                         introduce CulTrace, a diagnostic mechanistic in-         helps verbalise how information emerges and is
+                                         terpretability framework that verbalises layer-wise      refined across the layers (Table 1). We apply this
+                                         model representations of cultural reasoning into         framework to cultural QA as it is a challenging
+                                         natural language. Using CulTrace, we output chain        task with subjective answers compared to domains
+                                         of reasonings across layers within a model, allow-       like math or code, making it crucial to understand
+                                         ing us to inspect when the model is focusing on          intermediate reasoning and cultural bias.
+                                         various elements pertaining to a query, e.g., the           We employ CulTrace for two cultural probing
+tasks, tracing intermediate cultural reasoning and              parts of the query happens1 .
+identifying the target culture, when answering a             4. Our analysis produces insights into interme-
+cultural question. For the former (§4), we generate             diate cultural reasoning and bias amongst cul-
+intermediate reasoning at each layer and charac-                tures within the layers of the model, support-
+terise whether the model is processing the ques-                ing evidence from existing studies conducting
+tion’s domain, cultural context, or answer selec-               extrinsic analysis.
+tion, amongst others. For the latter (§5), we probe
+for which culture the model is encoding at each          2       Related Work
+layer while processing a culturally grounded ques-       Cultural Understanding in LLMs Previous
+tion, allowing us to compare model behaviour             work has proposed evaluation datasets and frame-
+across cultures and analyse cultural confusions.         works to assess LLMs’ cultural understanding abil-
+We show the effectiveness of our method across           ity acquired during pre-training (Keleg and Magdy,
+three widely used open-weight LLMs, using two            2023; Naous and Xu, 2025; Pawar et al., 2025a).
+culturally grounded question-answering datasets,         BLEnD (Myung et al., 2024) provides a multilin-
+BLEnD (Myung et al., 2024) and CANDLE QA                 gual and multi-domain commonsense QA dataset
+(Nguyen et al., 2023), both covering ten cultures        spanning 16 cultures and regions, with six topics,
+and various facets of culture.                           designed to uncover cross-cultural disparities in ev-
+   Our results reveal a consistent staged trajectory     eryday knowledge. Other multilingual benchmarks
+of cultural reasoning. Models first engage with the      (Zhou et al., 2025; Hasan et al., 2025; Wang et al.,
+question’s domain, then resolve the relevant cul-        2024a; Cao et al., 2024) construct culturally lo-
+ture, and finally narrow in on an answer. While          calised evaluation datasets that span domains such
+domain engagement begins at similar depths across        as cuisine, proverbs, news, and reasoning. Across
+cultures, the layer at which the target culture is       these datasets, performance gaps are consistently
+resolved varies, with less-represented cultures tend-    observed between high-resource and underrepre-
+ing to be resolved later. Tracing this broad-to-         sented languages and cultures, often linked to pre-
+specific process also reveals how cultural confu-        training data imbalances that favour dominant re-
+sions emerge internally. Before resolving the tar-       gions (Naous and Xu, 2025). While these efforts
+get culture, models often represent a broader geo-       highlight important cross-cultural disparities, they
+graphical region, a proximate culture, or a model-       perform an extrinsic evaluation, overlooking the un-
+specific default culture. Such intermediate associ-      derlying mechanism and cultural knowledge space
+ations occur more frequently for less-represented        embedded in LLMs. To address this gap, our paper
+cultures, indicating that cultural disparities are re-   aims to reveal how cultural knowledge is embedded
+flected not only in model outputs but also in how        in models’ internal representations.
+cultural knowledge is retrieved and resolved across
+internal layers. Our findings suggest that cultural      Mechanistic Interpretability MI seeks to ex-
+alignment interventions could target the layers at       plain LLM behaviour in terms of internal structure,
+which cultural context is being resolved, rather than    from individual components such as neurons and at-
+operating solely on final outputs. In sum, our con-      tention heads (Meng et al., 2022; Geva et al., 2023;
+tributions are:                                          Yu et al., 2024a) to natural-language verbalizers
+                                                         that render representations as text (Hernandez et al.,
+                                                         2024; Geva et al., 2022; Belrose et al., 2025). Early
+  1. We present the first diagnostic framework us-       verbalizers such as the logit lens and Patchscope
+     ing mechanistic interpretability to identify and    are restricted to single-token projections and can-
+     study patterns of cultural reasoning across lay-    not capture information distributed across multiple
+     ers in the model.                                   tokens (Ghandeharioun et al., 2024; Belrose et al.,
+  2. We train and release layer-specific decoders        2025). LatentQA (Pan et al., 2026) instead trains
+     for three models, allowing us to probe various      a decoder to answer questions directly over model
+     cultural and non-cultural knowledge across          activations spanning multiple tokens, providing a
+     the layers in those LLMs.                           more flexible probe that leverages the language
+  3. We create a dataset and taxonomy of interme-        capabilities of LLMs.
+     diate cultural reasoning, tracing where across          1
+                                                             Codes, models, datasets are available at https://
+     the model layers reasoning related to various       github.com/copenlu/CulTrace
+                                                            plained, and a decoder model D, trained on paired
+                                                            activations and QA examples to translate those rep-
+                                                            resentations into natural language. At inference
+                                                            time, M processes an input and produces a hidden
+                                                            representation; this representation is patched into
+                                                            D, and a decoding question guides D to describe
+                                                            a specific aspect of the representation in natural
+                                                            language. For example, a decoding question can be
+                                                            about predicting what persona the target model is
+                                                            going to generate Pan et al. (2026). CulTrace con-
+                                                            sists of three stages that adapt LatentQA to enable
+                                                            layer-wise cultural reasoning tracing.
+
+                                                            3.1   Method
+                                                            Step 1. Training In LatentQA, the layer from
+                                                            which representations are extracted is treated as
+                                                            a hyperparameter and is fixed during evaluation.
+Figure 2: CulTrace first trains the decoder LLM for a       Since we are interested in tracing cultural reason-
+unique adapter weight with a shared base weight by          ing across all layers, we train separate decoders
+LoRA at the Training stage. After training, in the Rep-     for each layer of the target model. We always
+resentation extraction stage, the target LLM generates      patch into layer 0 of the decoder. To keep this
+an answer to the question, and we extract the representa-   tractable, trained decoder models share the base de-
+tion at layer l. Then, during Representation decoding,      coder parameters, and we train only a lightweight
+with a decoding question, we translate the representation
+                                                            LoRA adapter per layer. At inference time, decod-
+into natural language. Here, we show example output
+where the decoder model is asked to identify the target     ing from a different layer requires only swapping
+culture (China).                                            the adapter. Following LatentQA, we validate the
+                                                            trained decoders on recovery of factual associa-
+                                                            tions (Appendix B.2). For more technical details
+   Recent work applies MI to culture: isolat-               and training details, we refer to Appendix B.1.
+ing culture-specific neurons (Namazifard and
+Galke Poech, 2025), extracting cultural steering            Step 2. Representation Extraction The target
+vectors (Veselovsky et al., 2026), and discovering          model M encodes a cultural question q about a tar-
+interpretable cultural features with sparse autoen-         get culture c and an instruction I (“Answer with a
+coders (Khanuja et al., 2026). These methods iden-          single term.” in Figure 2) and generates an answer
+tify where cultural information is stored or how to         followed by its rationale. Generating a rationale
+steer it, but they treat cultural processing within         encourages representations that encode the cultural
+models as a static property of components or di-            knowledge supporting the answer, not only the an-
+rections. Going beyond the localisation of cultural         swer itself. We then extract the hidden state of
+knowledge, our work traces the cultural reasoning           I, denoted xIl , rather than the full sequence: this
+throughout the forward pass, characterising each            prevents the decoder from reading q directly and
+layer’s role in LLMs’ cultural reasoning.                   ensures it relies on the M’s internal state. We
+                                                            show the impact of extraction position in Appendix
+3   CulTrace: Tracing Cultural Reasoning                    C.2. Extracting xIl at every layer lets us trace how
+    within Internal Layers                                  culturally relevant knowledge is retrieved and re-
+                                                            fined through the forward pass. The input prompt
+Translating LLMs’ internal representations into nat-
+                                                            is provided in Figure 12.
+ural language can reveal knowledge stored in the
+cultural concept space. We devise CulTrace, build-          Step 3. Representation Decoding At this stage,
+ing on LatentQA (Pan et al., 2026), an established          the decoder model generates an answer (Chinese
+method that trains a decoder model to answer ques-          culture in Figure 2) to a decoding question (“What
+tions directly over another model’s activations.            culture is the model reasoning about?” in Figure
+   LatentQA involves two models: a target model             2) using the patched representation xIl . We de-
+M, whose internal representations are to be ex-             sign decoding questions that reveal how cultural
+knowledge is retrieved and refined across layers.
+Following LatentQA, the prompt starts with a se-
+quence of placeholder tokens ‘?’ of a length match-
+ing the internal representations to be patched. At
+layer 0, we replace the hidden representation of the
+placeholder tokens with xI .
+   With CulTrace, we can generate chain of reason-
+ings across layers within a model. This allows us
+to inspect how the model processes its parametric
+knowledge while answering culturally grounded
+questions. We examine models’ internal represen-
+                                                        Figure 3: We compare the semantic similarity of Cul-
+tations of cultural knowledge using two cultural        Trace across layers with different set-ups. The result
+QA datasets.                                            shows that CulTrace decodes cultural reasoning spe-
+                                                        cific to cultural questions (Figure 3), demonstrating the
+3.2    Cultural QA Datasets                             method’s domain transferability.
+
+We select BLEnD (Myung et al., 2024), a cul-
+tural commonsense QA dataset. BLEnD is a hand-          3.4    Evaluation of CulTrace
+crafted multilingual benchmark designed to eval-
+                                                        LatentQA demonstrates its effectiveness for ver-
+uate LLMs’ everyday knowledge across diverse
+                                                        balising future predictions from hidden representa-
+cultures. In addition, we use CANDLE, which
+                                                        tions, recovering hidden system prompt personas
+is a comprehensive cultural commonsense knowl-
+                                                        from user prompt representations with over 80%
+edge base that provides 1.1m assertions about vari-
+                                                        accuracy. Since it has not been evaluated in the
+ous cultures sourced from CommonCrawl (Nguyen
+                                                        culture domain, we test whether this verbalisation
+et al., 2023). Specifically, we use the filtered ver-
+                                                        competence can transfer to the culture domain to
+sion of CANDLE from Pawar et al. (2025b), which
+                                                        validate CulTrace. We assess how faithfully Cul-
+retains only assertions with specific, distinctive
+                                                        Trace recovers the model’s reasoning for its answer
+cultural knowledge. We convert those assertions
+                                                        from internal representations. Just as the hidden
+into QA format using an LLM (Qwen3.6-27B-FP8
+                                                        persona serves as ground truth in the persona task,
+(Qwen Team, 2026)). An example assertion is
+                                                        the model’s generated reasoning serves as ground
+“Sangria is a Spanish wine cocktail made of red
+                                                        truth here. If CulTrace can recover reasoning from
+or white wine and fresh fruit”. The resulting con-
+                                                        an intermediate layer representation extracted be-
+verted question is “What is the Spanish wine cock-
+                                                        fore the reasoning is generated, then the represen-
+tail made of red or white wine and fresh fruit?”.
+                                                        tation genuinely encodes the reasoning path the
+The input prompt and validation details for conver-
+                                                        model follows, and the decoder model is capable
+sion are in Appendix A.2. We refer to the created
+                                                        of capturing it.
+dataset as CANDLE QA. We use English questions
+for both datasets as LatentQA is trained for English.      We set the decoding question to “What is the
+To keep a similar culture distribution between the      answer and why?” and compute the semantic simi-
+two datasets, we select ten cultures to study (Table    larity between the reasoning decoded by CulTrace
+6). Dataset details can be found in Appendix A.1.       and the reasoning generated by the target LLM as
+                                                        part of the output. To calculate semantic similar-
+                                                        ity, we first encode the reasoning into embeddings
+3.3    Models
+                                                        using an embedding model.3 Then, we measure
+As MI methods require access to full model              cosine similarity between the two sequence embed-
+parameters, we use three popular open-weight            dings.
+LLMs: Meta-Llama-3.1-8B-Instruct (Llama-8b,                As ablations, we compare the semantic simi-
+Grattafiori et al. (2024)), gemma-3-4b-it               larity of the generated reasonings from CulTrace
+(gemma-4b, Gemma-Team et al. (2025)), and               with those generated by patching representations
+Ministral-8B-Instruct-2410 (Ministral-8b2 ).            from MMLU science questions (Hendrycks et al.,
+   2                                                       3
+    https://huggingface.co/mistralai/                       https://huggingface.co/google/
+Ministral-8B-Instruct-2410                              embeddinggemma-300m
+    Question: What are the most commonly eaten snacks at shopping malls in South Korea?
+    LLM Answer: Hotteok — Reasoning: Hotteok is a popular Korean-style pancake-like snack that is commonly sold at shopping malls in South Korea.
+    It is typically filled with sweet fillings such as honey, sugar, and cinnamon, or savory fillings.
+    Layer     Reasoning Trace                                                                                                LLM labels
+    0         The assistant is contemplating the concept of infinity, focusing on its abstract and paradoxical nature.       Junk
+    2         The assistant is contemplating the concept of time and its perception.                                         Junk
+    4         The assistant is contemplating the concept of time and its subjective nature.                                  Junk
+    6         The assistant is contemplating the concept of a cultural phenomenon that is both widely accepted and           Culture (Unspecified)
+              criticized.
+    8         The assistant is contemplating the cultural significance of a particular snack and its widespread appeal.      Culture (Unspecified), Domain
+    10        The assistant is contemplating the cultural significance of a particular snack in Japan.                       Culture (Proximate), Domain
+    12        The assistant is contemplating the most popular snack among Japanese people.                                   Culture (Proximate), Domain
+    14        The assistant is contemplating the most popular snack among students in Japan.                                 Culture (Proximate), Domain
+    16        The assistant is contemplating the reasons why snacks are popular among students during exams.                 Domain
+    18        The assistant is contemplating the cultural significance of Korean snacks, particularly the popular Korean     Culture (Target), Domain, Answer
+              Fried Chicken.                                                                                                 (Candidate)
+    20        The assistant is contemplating the cultural significance of Korean snacks and how they have become a           Culture (Target), Domain
+              popular aspect of Korean culture.
+    22        The assistant is contemplating the popular Korean snack, Hotteok, and its widespread appeal.                   Culture (Target), Domain, Answer
+                                                                                                                             (Generated)
+    24        The assistant is contemplating the reasons why Korean-style convenience stores have become so popular          Culture (Target), Domain
+              globally.
+    26        The assistant is contemplating the cultural significance of snacks in Korean society and how they contribute   Culture (Target), Domain
+              to social gatherings.
+    28        The assistant is contemplating the cultural significance of snacks in Korean society and how they contribute   Culture (Target), Domain
+              to social interactions.
+    30        The assistant is contemplating the reasons behind the user’s preference for certain foods, seeking to          Domain
+              understand the underlying motivations.
+
+
+Table 1: Example outputs using CulTrace for even-number layers. Bold text in the Reasoning Trace column denotes
+key phrases driving the label; italic text in the LLM judge labels column gives the annotated category. Row color
+indicates label category: Junk (off-topic reasoning), Culture (Unspecified) (culture-relevant but unanchored),
+Culture (Proximate) (anchored to a related-but-incorrect culture), Culture (Target) (anchored to the correct
+culture, South Korea), and Answer (Generated) (final answer emerges). Domain indicates the trace references
+the snack/question topic and Answer (Candidate) indicates a candidate answer is being considered.
+
+
+2021) instead of cultural questions4 . If the decoder                                  the model retrieves and refines cultural knowledge
+model were generating from the decoding ques-                                          across layers by verbalising intermediate reasoning
+tion alone rather than the patched representation,                                     in each layer.
+these out-of-domain representations would match
+the cultural explanation as well as CulTrace does.                                     4.1      Method
+We expect higher semantic similarity scores for                                       To uncover the reasoning of the model across its
+CulTrace than for both random and out-of-domain                                       representations, we generate layer-wise explana-
+representations.                                                                      tions with CulTrace using the decoding question
+   Figure 3 shows per-layer semantic similarity                                       “What is the assistant thinking about?”, referring
+scores compared with those from MMLU science                                          to the model as the assistant, which gives us ver-
+questions. We present results with Gaussian noise                                     balised reasoning at that layer. This simple prompt
+vectors in Appendix C.1. CulTrace achieves higher                                     works surprisingly well, as shown in Table 1, fol-
+semantic similarity scores than random and out-of-                                    lowing the simple prompts used in Pan et al. (2026).
+domain representations from layer 6 onwards with                                      Layers 1-4 typically output reasoning that is not
+three different models. We also present outputs                                       related to the question or culture, reflecting the pat-
+from ablations in Table 14 and Table 15.                                              tern we saw in the evaluation of CulTrace (Section
+                                                                                      3.4). For Layer 5 onwards, we see that the model
+4           Intermediate Cultural Reasoning                                           starts reasoning about the topic of the question and
+                                                                                      culture at large, eventually narrowing down to the
+In Section 3.4, we show that CulTrace can faithfully                                  answer. The model also goes down the wrong path,
+extract the future generations from its intermediate                                  thinking about Japanese snacks rather than Korean
+representations, prior to generating them. With the                                   ones before correcting itself and eventually getting
+validity of the representation verbalising method                                     to the right answer. These layer reasoning chains
+established, we now use CulTrace to trace how                                         are incredibly useful for several analyses, allow-
+        4
+   We use questions from college physics, biology, and                                ing us to inspect what the model is focusing on
+chemistry subtopics.                                                                  and whether errors are due to a lack of cultural
+ Dim.      Label         Description
+           Unspecified   Mentions culture without specific
+                         culture name
+ Culture
+           Misattributed Mentions a culture unrelated to
+                         the target culture
+           Proximate     Mentions a culture similar to the
+                         target culture
+           Target        Mentions a culture the question is
+                         about
+ Domain    ✓/ ×          Engages with the question’s topic
+                         area
+           Generated     Mentions the model’s own answer
+ Answer
+           Candidate     Mentions a plausible alternative
+ Reflection ✓/ ×         Meta-cognitive evaluation of the
+                         model’s own reasoning
+ Syntax    ✓/ ×          Processing of task format or out-
+                         put planning
+ Junk      ✓/ ×          Unrelated to the given task
+
+Table 2: Dimensions, labels, and descriptions for in-
+termediate cultural reasoning characterisation across
+layers. ✓/ × represent binary labels of presence.
+
+
+
+                                                              Figure 4: We show the layer position at which each di-
+knowledge or overlooking certain parts of the ques-           mension is annotated for the BLEnD dataset and CAN-
+tion. They also mimic the intermediate steps for              DLE QA with Llama-8b. The size of the circle scales
+math, code or other related domains, allowing us              with the number of questions that are annotated for that
+to potentially design better process rewards for im-          label. The pipe symbol represents the mean layer index.
+provement in cultural reasoning.
+                                                              4.2   Results
+   To better analyse these intermediate layer reason-
+ings, we assign discrete labels to them, allowing             Characterisation of the Layers for Cultural
+for quantitative analysis. To design the labels, the          Reasoning Figure 4 shows the layer position
+authors qualitatively analysed reasoning chains and           at which each dimension is annotated, averaged
+inductively created labels for each intermediate rea-         across questions, for BLEnD and CANDLE QA
+soning step. We also supplied several examples                with Llama-8b. Overall, we see a clear order of
+of reasoning chains to Claude Opus 4.8 in High                intermediate reasoning steps; the model identifies
+Thinking Mode, prompting it to suggest labels. Af-            the domain of the question and gradually resolves
+ter manually reviewing each suggested label, we               culture, then answers. We find CulTrace gener-
+compared and integrated these suggestions, finally            ates irrelevant layer reasoning to culture early in
+creating a taxonomy of labels across several dimen-           the model, consistent with low reasoning recov-
+sions (see Table 2).                                          ery scores in those layers (§3.4). The domain and
+                                                              syntax dimensions appear consistently across the
+   We then prompt an LLM to annotate each in-                 model, while syntax appears less frequently. We
+termediate reasoning based on labels from the tax-            also note that Reflection emerges in layers closer
+onomy. The prompt (listed in App.D.1) contains                to the final generation, implying the model actively
+descriptions of labels, annotation guidelines, and            refines its answer after resolving other reasoning
+examples. We use Qwen3.6-27B-FP8 (Qwen Team,                  dimensions. Specifically, we observe that Culture
+2026) as our LLM annotator. We evaluated the                  (Misattributed) and Culture (Proximate) precede
+annotations on a randomly sampled set of 100 rea-             Culture (Target), suggesting that the model often
+sonings against two annotators, achieving an aver-            focuses on proximate or wrong cultures in the early
+age accuracy of 96.9% across all dimensions. We               layers before arriving at the one the question is
+further report details about the human annotation,            about in the later layers. Our results show a con-
+agreement, and accuracy in Appendix D.1.                      sistent trend on both BLEnD and CANDLE QA.
+              China      US        Spain      S. Korea    Indonesia                    Llama-8b   Ministral-8b    gemma-4b
+               12.8      13.2       13.9         15.5       15.6
+BLEnD
+              Greece     Iran     Ethiopia   Azerbaijan    Algeria            Spain     0.531         0.388         0.461
+               15.8      16.5       17.9        18.4        21.9             Greece     0.527         0.319         0.374
+                                                                              China     0.506         0.360         0.622
+               US        Spain     China      Greece      S. Korea
+               12.0       12.7      13.4       14.4          14.6       South Korea     0.498         0.322         0.429
+CANDLE QA                                                                 Indonesia     0.476         0.371         0.401
+             Indonesia   Brazil    Peru         Iran       Nepal
+               15.0       15.1     17.0         17.1        17.4
+                                                                           Ethiopia     0.444         0.322         0.344
+                                                                                Iran    0.404         0.259         0.450
+                                                                       United States    0.377         0.515         0.235
+Table 3: We present the mean first layer that Culture                    Azerbaijan     0.218         0.095         0.121
+(Target) appears within intermediate cultural reasoning                     Algeria     0.069         0.026         0.032
+across questions. The results are with Llama-8b.
+                                                                      Table 4: We present averaged accuracies across layers
+                                                                      for ten cultures with BLEnD. We mark the highest accu-
+Plots for gemma-4b and Ministral-8b show simi-                        racy with bold and the lowest accuracy with underline.
+lar patterns, as in Figure 10 in the Appendix.
+Culture-level differences in Reasoning Process                        question leads to better generation with CulTrace.
+To understand cross-cultural differences in how                       To extract culture names from the sentences gener-
+quickly a culture is resolved across model layers,                    ated by CulTrace, we construct a dictionary of cul-
+we show the mean layer index of the first appear-                     ture names to pattern match against. We initialise
+ance that Culture (Target) is annotated for, across                   the dictionary with the original culture names and
+cultures in Table 3. We find that China, the US,                      iteratively expand it by either adding new or related
+Spain, and S.Korea appear in the top-5 cultures on                    culture names that appear in the generations. We
+both datasets, suggesting that the model resolves                     provide the dictionary and the parsing success rate
+target culture for those high-resourced cultures con-                 in Appendix F.1.
+sistently earlier than remaining cultures. Under-
+represented cultures like Algeria, Azerbaijan, and                    5.2   Results
+Nepal have the furthest first-layer indices, taking
+                                                                      Culture-Wise Accuracies Table 4 shows aver-
+the longest to resolve. Table 9 shows that order-
+                                                                      aged accuracies across layers for target culture
+ing by the mean first layer of Culture (Target) is
+                                                                      identification on the BLEnD dataset. We see that
+preserved with gemma-4b and Ministral-8b. Our
+                                                                      all models consistently have the lowest accuracies
+result implies that the imbalanced encoding of cul-
+                                                                      with Algeria and Azerbaijan. On the other hand,
+tural representation within the model parameters
+                                                                      China and Spain rank within the top 3 with all mod-
+can be attributed to delayed target culture resolu-
+                                                                      els. Among models, Llama-8b shows the biggest
+tion with less-represented cultures.
+                                                                      variation across cultures and gemma-4b is the most
+5     Measuring Cultural Encoding                                     consistent. Notably, Llama-8b and gemma-4b show
+                                                                      low accuracies with the US, which implies that the
+With intermediate cultural reasonings, we find that                   models cannot verbalise the US when answering
+LLMs actively engage with culture in early-middle                     the cultural question about the US. This aligns with
+layers, reasoning about culture at a general level                    previous studies showing that the model defaults
+in the early layers, then pinning down to a specific                  to the US when the culture is not specified in the
+culture, which can be the target culture or misat-                    prompt (Wang et al., 2024b; Dai et al., 2025).
+tributed culture (Japan in Figure 1). We next study
+which culture the model focuses on across layers,                     Error Analysis on Target Culture Identifica-
+zooming in on this misattribution.                                    tion We then look at cultures the LLM incor-
+                                                                      rectly predicts while processing cultural knowl-
+5.1     Target Culture Identification                                 edge to answer the given question per target cul-
+To identify which culture the model is internally                     ture. Analysing incorrect culture predictions tells
+representing, we prompt the decoder model to ver-                     us what cultures are closely associated within the
+balise the culture encoded in each layer’s represen-                  model representations. Table 5 shows the list of
+tation. We set the prompt to the decoder as “What                     incorrectly predicted cultures for each culture with
+is the culture the assistant is thinking about and the                Llama-8b on the BLEnD dataset. As we see zero
+topic of the question?”. Empirically, we find that                    accuracy across all cultures until layer 5, we dis-
+additionally probing for the topic in the decoding                    regard those layers when aggregating occurrence
+    Target culture   Incorrectly predicted cultures (Top-5 Er-   those layers. Those layers collaborate to resolve
+                     ror)
+                                                                 cultural knowledge through distinct and ordered
+    Algeria          Japan, North Africa, France, Morocco,       stages of intermediate reasoning, comprised of do-
+                     Middle East
+    Azerbaijan       Japan, Russia, Turkey, Kazakhstan, Cau-     main engagement, target culture resolution, answer
+                     casus                                       selection, and reflection (§4.2).
+    China            Japan, Asia, Australia, US, South Korea
+    Ethiopia         Japan, Africa, South Africa, Kenya, US         At the same time, our results show that early lay-
+    Greece           Japan, Italy, Spain, US, UK
+    Indonesia        Japan, Asia, Australia, US, China           ers play an important role that output-based eval-
+    Iran             Japan, Middle East, Turkey, US, China       uation cannot reveal. The model engages with the
+    South Korea      Japan, US, Asia, China, Australia
+    Spain            Japan, France, US, UK, Italy
+                                                                 domain of the question before any culture is re-
+    USA              Japan, Western, UK, China, Canada           solved, and it is in these earlier layers that broader
+                                                                 or misattributed cultural context emerges ahead
+Table 5: Top-5 incorrectly predicted cultures for each           of the target culture. This broad-to-narrow trajec-
+target culture. The result is with Llama-8b on the               tory is consistent with general MI findings, where
+BLEnD dataset.
+                                                                 early layers enrich representations with a wide set
+                                                                 of related concepts and middle-to-later layers se-
+frequencies. Results on other models and datasets                lect those most relevant to the task (Geva et al.,
+are presented in Appendix F.2. We find a model-                  2023; Farahani and Johansson, 2024; Yu et al.,
+specific default culture (Japan for Llama-8b, US                 2024b). In the cultural setting, this means early
+for gemma-4b) that the model erroneously outputs                 layers activate a broad cultural neighbourhood, of-
+when answering questions about any culture. This                 ten a geographical region or a dominant culture,
+mirrors the finding by De Landa et al. (2026) that               from which the specific target culture is only later
+LLMs tend to refer to certain cultures (Japan, US,               pinned down. This narrowing is where cultural
+India) when they do not mention the target culture.              misattribution occurs: before resolving the target
+   We also observe that for most cultures, the model             culture, LLMs often settle on a proximate one,
+thinks about the broader geographical region be-                 reasoning about North Africa before Algeria or
+fore it reaches a specific culture. For instance, for            the Middle East before Iran, or falling back on
+questions pertaining to Algeria, the model reasons               a model-specific default (Japan for Llama-8b, the
+about North Africa, for Iran, the Middle East and                US for gemma-4b). Finally, we also see how higher-
+for the US, the West. This suggests that the model               resourced cultures are resolved earlier in the layers
+often reasons about the broader region of the world              but lower-represented ones are only resolved in the
+before pinning down the specific culture.                        later layers, showing signs of potential cultural bias
+                                                                 in how different cultures are processed internally.
+6     Discussion & Conclusion
+                                                                    These findings have clear implications for cul-
+In this work, we propose a framework CulTrace                    tural alignment of LLMs. Because misattribution
+to probe and elicit latent intermediate reasonings               is established during the narrowing process rather
+across the layers of a model when answering cul-                 than at the output, interventions may be most effec-
+tural questions. The method generalises to any task              tive at the middle layers where the target culture
+pertaining to LLMs, however in this study, we fo-                is resolved, rather than at the final layers. The
+cus on cultural reasoning due to its challenging                 depth of culture resolution also differs across cul-
+and subjective nature. The intermediate reasonings               tures, so targeted data augmentation or fine-tuning
+show how the model focuses on different parts of                 for less-represented cultures could aim specifically
+the cultural question across the layers - early lay-             at strengthening mid-layer retrieval, where our re-
+ers focus on the syntax of the query and culture                 sults show the gap is largest. More broadly, trac-
+more broadly, while later layers focus on specific               ing culture layer by layer offers a way to monitor
+cultures, answer generation, and reflection.                     whether an alignment intervention improves cul-
+   Prior work simply localises cultural knowledge                tural balance internally, not only in the model’s
+in deeper layers (Namazifard and Galke Poech,                    surface outputs. We intend to release the datasets
+2025; Zou et al., 2026) by showing that perturbing               of intermediate cultural reasonings as well as the
+those layers brings the most performance degrada-                trained decoder checkpoints for all models, which
+tion. Our findings extend this monolithic finding                we hope will allow future research on interpretabil-
+by further attributing specific reasoning roles to               ity of LLMs.
+Limitations                                                adaptation of recipes. Transactions of the Associa-
+                                                           tion for Computational Linguistics, 12:80–99.
+Dataset-related Although a growing number of
+benchmarks evaluate cultural knowledge in LLMs,          Xunlian Dai, Li Zhou, Benyou Wang, and Haizhou
+                                                           Li. 2025. From word to world: Evaluate and miti-
+few are suitable for our setup. To compare cultural        gate culture bias in LLMs via word association test.
+knowledge across cultures, datasets must maintain          In Proceedings of the 2025 Conference on Empiri-
+a consistent QA format. As a result, our analyses          cal Methods in Natural Language Processing, pages
+inherit limitations of existing benchmarks, such as        24510–24526, Suzhou, China. Association for Com-
+                                                           putational Linguistics.
+limited coverage of fine-grained cultures or sub-
+cultures. Nevertheless, our method is model- and         Joseba Fernandez De Landa, Carla Perez-Almendros,
+task-agnostic and can be applied to any dataset that       and Jose Camacho-Collados. 2026. Why are all llms
+satisfies these requirements.                              obsessed with japanese culture? on the hidden cul-
+                                                           tural and regional biases of llms.
+CulTrace-related Due to computational con-
+                                                         Mehrdad Farahani and Richard Johansson. 2024. De-
+straints, our experiments are limited to models of        ciphering the interplay of parametric and non-
+approximately 8B parameters. Even though we               parametric memory in retrieval-augmented language
+evaluate the faithfulness and domain transferability      models. In Proceedings of the 2024 Conference on
+of CulTrace, further stress tests of these verbalisers    Empirical Methods in Natural Language Processing,
+                                                          pages 16966–16977, Miami, Florida, USA. Associa-
+are necessary.                                            tion for Computational Linguistics.
+Miscellaneous An AI writing assistant tool is            Team Gemma-Team, Aishwarya Kamath, Johan Fer-
+used for a grammar check and stylistic improve-            ret, Shreya Pathak, Nino Vieillard, Ramona Merhej,
+ment. None of the AI generations is used as is.            Sarah Perrin, Tatiana Matejovicova, Alexandre Ramé,
+                                                           Morgane Rivière, Louis Rouillard, Thomas Mesnard,
+Acknowledgements                                           Geoffrey Cideron, Jean bastien Grill, Sabela Ramos,
+                                                           et al. 2025. Gemma 3 technical report.
+          This research was co-funded by the Euro-       Mor Geva, Jasmijn Bastings, Katja Filippova, and Amir
+pean Union (ERC, ExplainYourself, 101077481),             Globerson. 2023. Dissecting recall of factual associa-
+the Carlsberg Foundation under grant number               tions in auto-regressive language models. In Proceed-
+CF22-1461, a DFF Sapere Aude research leader              ings of the 2023 Conference on Empirical Methods in
+                                                          Natural Language Processing, pages 12216–12235,
+grant under grant agreement No 0171-00034B, and
+                                                          Singapore. Association for Computational Linguis-
+supported by the Pioneer Centre for AI, DNRF              tics.
+grant number P1. It was also supported by Insti-
+tute of Information & communications Technol-            Mor Geva, Avi Caciularu, Guy Dar, Paul Roit, Shoval
+                                                          Sadde, Micah Shlain, Bar Tamir, and Yoav Goldberg.
+ogy Planning & Evaluation (IITP) grant funded             2022. LM-debugger: An interactive tool for inspec-
+by the Korea government (MSIT) (No. RS-2024-              tion and intervention in transformer-based language
+00509258 and No. RS-2024-00469482, Global AI              models. In Proceedings of the 2022 Conference on
+Frontier Lab). Views and opinions expressed are           Empirical Methods in Natural Language Processing:
+                                                          System Demonstrations, pages 12–21, Abu Dhabi,
+however those of the author(s) only and do not nec-
+                                                          UAE. Association for Computational Linguistics.
+essarily reflect those of the European Union or the
+European Research Council. Neither the European          Asma Ghandeharioun, Avi Caciularu, Adam Pearce, Lu-
+Union nor the granting authority can be held re-           cas Dixon, and Mor Geva. 2024. Patchscopes: a
+                                                           unifying framework for inspecting hidden represen-
+sponsible for them. We also thank Sarah Masud for          tations of language models. In Proceedings of the
+their careful proof-reading.                               41st International Conference on Machine Learning,
+                                                           ICML’24. JMLR.org.
+
+References                                               Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri,
+                                                           Abhinav Pandey, Abhishek Kadian, Ahmad Al-
+Nora Belrose, Igor Ostrovsky, Lev McKinney, Zach           Dahle, Aiesha Letman, Akhil Mathur, Alan Schel-
+  Furman, Logan Smith, Danny Halawi, Stella Bider-         ten, Alex Vaughan, Amy Yang, Angela Fan, Anirudh
+  man, and Jacob Steinhardt. 2025. Eliciting latent        Goyal, Anthony Hartshorn, Aobo Yang, et al. 2024.
+  predictions from transformers with the tuned lens.       The llama 3 herd of models.
+
+Yong Cao, Yova Kementchedjhieva, Ruixiang Cui, An-       Md Arid Hasan, Maram Hasanain, Fatema Ah-
+  tonia Karamolegkou, Li Zhou, Megan Dare, Lucia          mad, Sahinur Rahman Laskar, Sunaya Upadhyay,
+  Donatelli, and Daniel Hershcovich. 2024. Cultural       Vrunda N Sukhadia, Mucahid Kutlu, Shammur Absar
+  Chowdhury, and Firoj Alam. 2025. NativQA: Multi-        Alexander Pan, Lijie Chen, and Jacob Steinhardt. 2026.
+  lingual culturally-aligned natural query for LLMs. In     LatentQA: Teaching LLMs to decode activations into
+  Findings of the Association for Computational Lin-        natural language. In The Fourteenth International
+  guistics: ACL 2025, pages 14886–14909, Vienna,            Conference on Learning Representations.
+  Austria. Association for Computational Linguistics.
+                                                          Siddhesh Pawar, Junyeong Park, Jiho Jin, Arnav
+Dan Hendrycks, Collin Burns, Steven Basart, Andy            Arora, Junho Myung, Srishti Yadav, Faiz Ghifari
+  Zou, Mantas Mazeika, Dawn Song, and Jacob Stein-          Haznitrama, Inhwa Song, Alice Oh, and Isabelle Au-
+  hardt. 2021. Measuring massive multitask language         genstein. 2025a. Survey of cultural awareness in
+  understanding. Proceedings of the International Con-      language models: Text and beyond. Computational
+  ference on Learning Representations (ICLR).               Linguistics, pages 1–98.
+Evan Hernandez, Belinda Z. Li, and Jacob Andreas.         Siddhesh Milind Pawar, Arnav Arora, Lucie-Aimée Kaf-
+  2024. Inspecting and editing knowledge represen-           fee, and Isabelle Augenstein. 2025b. Presumed cul-
+  tations in language models. In First Conference on         tural identity: How names shape LLM responses. In
+  Language Modeling.                                        Findings of the Association for Computational Lin-
+Amr Keleg and Walid Magdy. 2023. DLAMA: A frame-             guistics: EMNLP 2025, pages 22147–22172, Suzhou,
+ work for curating culturally diverse facts for prob-        China. Association for Computational Linguistics.
+  ing the knowledge of pretrained language models.
+  In Findings of the Association for Computational        Qwen Team. 2026. Qwen3.6-27B: Flagship-level cod-
+ Linguistics: ACL 2023, pages 6245–6266, Toronto,          ing in a 27B dense model.
+  Canada. Association for Computational Linguistics.
+                                                          Veniamin Veselovsky, Berke Argın, Benedikt Stroebl,
+Simran Khanuja, Hongbin Liu, Shujian Zhang, John            Chris Wendler, Robert West, James Evans, Thomas L.
+  Lambert, Mingqing Chen, Rajiv Mathews, and Lun            Griffiths, and Arvind Narayanan. 2026. Localized
+  Wang. 2026. Steering llms for culturally localized        cultural knowledge is conserved and controllable in
+  generation.                                               large language models. In Findings of the Associa-
+                                                            tion for Computational Linguistics: ACL 2026, pages
+Kevin Meng, David Bau, Alex Andonian, and Yonatan           43152–43178, San Diego, California, United States.
+  Belinkov. 2022. Locating and editing factual asso-        Association for Computational Linguistics.
+  ciations in gpt. In Proceedings of the 36th Interna-
+  tional Conference on Neural Information Processing      Bin Wang, Zhengyuan Liu, Xin Huang, Fangkai Jiao,
+  Systems, NIPS ’22, Red Hook, NY, USA. Curran              Yang Ding, AiTi Aw, and Nancy Chen. 2024a. SeaE-
+  Associates Inc.                                           val for multilingual foundation models: From cross-
+                                                            lingual alignment to cultural reasoning. In Proceed-
+Junho Myung, Nayeon Lee, Yi Zhou, Jiho Jin, Rifki           ings of the 2024 Conference of the North American
+  Putri, Dimosthenis Antypas, Hsuvas Borkakoty, Eu-         Chapter of the Association for Computational Lin-
+  nsu Kim, Carla Perez-Almendros, Abinew Ali Ayele,         guistics: Human Language Technologies (Volume 1:
+  et al. 2024. Blend: A benchmark for llms on ev-           Long Papers), pages 370–390, Mexico City, Mexico.
+  eryday knowledge in diverse cultures and languages.       Association for Computational Linguistics.
+  Advances in Neural Information Processing Systems,
+  37:78104–78146.                                         Wenxuan Wang, Wenxiang Jiao, Jingyuan Huang, Ruyi
+Danial Namazifard and Lukas Galke Poech. 2025. Iso-         Dai, Jen-tse Huang, Zhaopeng Tu, and Michael Lyu.
+  lating culture neurons in multilingual large language     2024b. Not all countries celebrate thanksgiving: On
+  models. In Proceedings of the 14th International          the cultural dominance in large language models. In
+  Joint Conference on Natural Language Processing          Proceedings of the 62nd Annual Meeting of the As-
+  and the 4th Conference of the Asia-Pacific Chapter of     sociation for Computational Linguistics (Volume 1:
+  the Association for Computational Linguistics, pages     Long Papers), pages 6349–6384, Bangkok, Thailand.
+  768–785, Mumbai, India. The Asian Federation of          Association for Computational Linguistics.
+  Natural Language Processing and The Association
+                                                          Haeun Yu, Pepa Atanasova, and Isabelle Augenstein.
+  for Computational Linguistics.
+                                                            2024a. Revealing the parametric knowledge of lan-
+Tarek Naous and Wei Xu. 2025. On the origin of cul-         guage models: A unified framework for attribution
+  tural biases in language models: From pre-training        methods. In Proceedings of the 62nd Annual Meeting
+  data to linguistic phenomena. In Proceedings of           of the Association for Computational Linguistics (Vol-
+  the 2025 Conference of the Nations of the Americas        ume 1: Long Papers), pages 8173–8186, Bangkok,
+  Chapter of the Association for Computational Lin-         Thailand. Association for Computational Linguistics.
+  guistics: Human Language Technologies (Volume 1:
+  Long Papers), pages 6423–6443, Albuquerque, New         Lei Yu, Meng Cao, Jackie CK Cheung, and Yue Dong.
+  Mexico. Association for Computational Linguistics.        2024b. Mechanistic understanding and mitigation
+                                                            of language model non-factual hallucinations. In
+Tuan-Phong Nguyen, Simon Razniewski, Aparna Varde,          Findings of the Association for Computational Lin-
+  and Gerhard Weikum. 2023. Extracting cultural com-        guistics: EMNLP 2024, pages 7943–7956, Miami,
+  monsense knowledge at scale. In Proceedings of the        Florida, USA. Association for Computational Lin-
+  ACM Web Conference.                                       guistics.
+Li Zhou, Taelin Karidi, Wanlong Liu, Nicolas Garneau,
+   Yong Cao, Wenyu Chen, Haizhou Li, and Daniel
+   Hershcovich. 2025. Does mapo tofu contain coffee?
+   probing LLMs for food-related cultural knowledge.
+   In Proceedings of the 2025 Conference of the Na-
+   tions of the Americas Chapter of the Association for
+   Computational Linguistics: Human Language Tech-
+   nologies (Volume 1: Long Papers), pages 9840–9867,
+   Albuquerque, New Mexico. Association for Compu-
+   tational Linguistics.
+
+Chenye Zou, Difan Jiao, and Lijie Hu. 2026. Decipher-
+  ing cultural representations in large language models
+  via sparse autoencoders. In Findings of the Associa-
+  tion for Computational Linguistics: ACL 2026, pages
+  5656–5677, San Diego, California, United States.
+  Association for Computational Linguistics.
+A     Dataset
+A.1    Dataset Details
+In our experiments, we utilise BLEnD (Myung
+et al., 2024) and CANDLE QA (Nguyen et al.,
+2023). BLEnD comprises 500 short-answer
+question-answer pairs for each culture, where the
+answers vary depending on the cultural or regional
+context. The filtered version of CANDLE from
+Pawar et al. (2025b) contains 23,421 assertions,
+with five domains. To reduce computational cost,
+we select ten cultures from BLEnD and CANDLE
+QA, ensuring equal distribution across the globe.
+                                                        Figure 5: We present losses from the trained model on
+For CANDLE QA, we also sample 40 assertions
+                                                        the test set from LatentQA.
+from each facet for each culture, and for cultures
+that do not have 200 assertions, we include all as-
+sertions. As a result, 1,967 assertions are selected.   of one LoRA adapter took 1.5 hours on one Nvidia
+We provide brief data statistics and dataset charac-    B200 gpu.
+teristics in Table 6.
+                                                        B.2    Evaluation of Trained Models
+A.2    Creation of CANDLE QA                            We train one model per layer, and evaluate in two
+As CANDLE is not inherently in a QA format, we          ways: a test set from LatentQA and attribute ex-
+convert those assertions into questions having anno-    traction as in Patchscopes (Ghandeharioun et al.,
+tated concepts as gold answers. Before conversion,      2024) and LatentQA. Figure 5 shows evaluation
+we remove assertions that do not have the annotated     loss on the test set from each layer. We see lower
+concept verbatim in their assertion, which leaves       evaluation losses on middle layers.
+us 1,916 assertions. Authors manually inspect con-         We also evaluate trained models on the relational
+verted questions to determine whether the LLM’s         knowledge extraction task as in LatentQA. In the
+conversion is coherent and does not contain a gold      relational knowledge extraction task, given hidden
+answer. The prompt we use for the conversion is         representations of a sentence containing a subject
+provided in Figure 13. Along with an assertion, the     (e.g., “The official currency of the United States”),
+model is given the target culture, domain, and the      the decoder model is asked to answer the decod-
+concept.                                                ing question (e.g., “What is the currency of the
+                                                        country?”). We use the evaluation dataset from
+B     Training of CulTrace                              Patchscopes (Ghandeharioun et al., 2024). Figure
+                                                        6 shows relational knowledge extraction accuracies
+B.1    Training details
+                                                        from each layer with all models. We see that, for
+We train 102 LoRA adapters to obtain decoder mod-       each model, accuracies vary by less than 0.03.
+els for each layer with three different LLMs. We           We release the LoRA fine-tuned adapter
+train all models for one epoch, with the training       weights publicly (gemma-4b5 , llama-8b6 ,
+data from LatentQA. For Llama-8b, we adapt train-       Ministral-8b7 )
+ing hyperparameters from Pan et al. (2026): batch
+size 8, 16 gradient accumulation steps, learning rate   C     Evaluation of CulTrace
+1e-4, LoRA rank 32 and alpha 64. For gemma-4b
+                                                        C.1    Comparison with Gaussian Noise Vector
+and Ministral-8b, we perform a small sweep for
+training hyperparameter searching and track the         We compare the semantic similarity of CulTrace
+evaluation loss with 10% of the training dataset.       across layers with a Gaussian noise vector, which
+We train gemma-4b with batch size 8, 16 gradient           5
+                                                             https://huggingface.co/copenlu/
+accumulation steps, learning rate 5e-5, LoRA rank       CulTrace-latentqa-decoder-gemma-3-4b-it
+                                                           6
+32 and alpha 64. Ministral-8b is trained with                https://huggingface.co/copenlu/
+                                                        CulTrace-latentqa-decoder-llama-3-8b-instruct
+batch size 2, 64 gradient accumulation steps, learn-       7
+                                                             https://huggingface.co/copenlu/
+ing rate 5e-5, LoRA rank 32 and alpha 64. Training      CulTrace-latentqa-decoder-ministral-8b-instruct
+      Dataset                  Task            Number of Questions           Domain (# of Qs)                  List of Cultures
+                                                                     Education (488)                      Africa: Algeria, Ethiopia
+                                                                     Food (979)                           Europe: Spain, Greece
+    BLEnD                   Cultural                                 Holidays/Celebration/Leisure (816)   North America: United States
+                                                      4,020
+Myung et al. (2024)      Commonsense QA                              Sport (816)                          East Asia: China, South Korea
+                                                                     Work life (452)                      South Asia: Indonesia
+                                                                     Family (469)                         West Asia: Iran, Azerbaijan
+                                                                                                          Europe: Spain, Greece
+                                                                     Food (585)
+                                                                                                          North America: United States
+                                                                     Traditions (516)
+  CANDLE QA                                                                                               South America: Brazil, Peru
+                       Cultural knowledge QA          1,916          Rituals (406)
+Nguyen et al. (2023)                                                                                      East Asia: China, South Korea
+                                                                     Drink (322)
+                                                                                                          South Asia: Indonesia, Nepal
+                                                                     Clothing (87)
+                                                                                                          West Asia: Iran
+
+                                                Table 6: Details for the datasets
+
+
+                                                                     out relying on direct access to the question. We
+                                                                     expect a small gap between the semantic similarity
+                                                                     scores from CulTrace and those from full-sequence.
+                                                                     Processing 200 questions takes two hours on one
+                                                                     partition of Nvidia B200 gpu (1/7 of the entire
+                                                                     gpu).
+                                                                        Figure 9 presents layer-wise semantic similar-
+                                                                     ity scores for the two extraction settings on the
+                                                                     BLEnD dataset. Full-sequence extraction achieves
+                                                                     consistently high semantic similarity scores with
+                                                                     the model outputs since the decoder model answers
+                                                                     the question directly. We find that the gap between
+                                                                     CulTrace and the full-sequence upper bound is
+Figure 6: We present relational knowledge extraction
+                                                                     smallest in the middle-to-late layers and largest
+accuracies from the trained model on the test set from
+LatentQA.                                                            in the early layers.
+
+                                                                     D     LLM Annotator Details
+serves as a dummy vector. Higher semantic simi-                      D.1    Prompt
+larity scores than Gaussian noise vectors show that
+                                                                     To develop the prompt, the authors prompted
+culturally relevant outputs from CulTrace are de-
+                                                                     Claude Opus 4.8 to generate a seed prompt for
+coded from patched representations. Figure 8 and
+                                                                     labelling with the provided taxonomy. The authors
+Figure 7 show the layer-wise semantic similarity
+                                                                     then manually revised the prompt, elaborating each
+scores with different set-ups.
+                                                                     dimension, fixing the output formatting, and adding
+                                                                     annotation guidelines for additional context. This
+C.2     Position of Representation Extraction
+                                                                     was followed by repeated iterations of evaluation
+With CulTrace, we extract the representation at the                  on a validation set of 50 reasonings, which were
+position of the instruction I rather than the full                   qualitatively assessed for correctness. Based on the
+input sequence to ensure that the decoder model                      above, the authors revised the prompt by adding
+decodes the model’s reasoning toward Y . Extract-                    further annotation guidelines or more examples. In
+ing representations from the full sequence, which                    addition to the prompt, the LLM is provided with
+includes the question q, risks introducing a con-                    the intermediate reasoning, along with the ques-
+found: the decoder LLM may simply read and                           tion, target culture, and the model’s answer, for
+answer the question directly rather than decode the                  additional context, which helps produce the labels.
+target LLM’s internal reasoning. We therefore treat
+full-sequence extraction as an upper bound on rep-                   D.2    Human Evaluation
+resentation decoding performance and compare it                      To evaluate LLM annotations, two authors annotate
+against CulTrace to verify that our instruction ex-                  100 reasonings from the CulTrace outputs. Table 7
+traction captures the target LLM’s reasoning with-                   shows agreement statistics between the two anno-
+(a) Comparison between CulTrace and patching Gaussian      (b) Comparison between cultural questions from the CAN-
+noise vectors                                              DLE QA and science questions from MMLU
+
+           Figure 7: We present semantic similarity scores with different set-ups with CANDLE QA.
+
+
+
+
+        Dimension       Agreement     Kappa
+           Culture        0.920        0.861
+          Domain          0.970        0.930
+           Answer         0.960        0.483
+         Reflection       0.970        0.556
+            Syntax        0.990        0.000
+              Junk        0.940        0.844
+              Mean        0.958        0.613
+                                                          Figure 8: We present semantic similarity scores from
+Table 7: Agreement statistics between the two annota-     CulTrace and patching a Gaussian noise vector with the
+tors for the human evaluation. Agreement reflects the     BLEnD dataset.
+percentage of samples where labels are an exact match.
+Kappa represents Cohen’s kappa score for all samples.
+Syntax Kappa is 0 since one of the annotators did not     tators. Human evaluation achieves 0.95 agreement
+output any labels for syntax.                             and 0.613 Cohen’s Kappa across all dimensions
+                                                          on average, demonstrating substantial agreement.
+                                                          Table 8 further shows LLM Annotator accuracies
+                                                          per dimension, measured across the instances with
+                                                          consensus between the two annotators. Accuracy
+     Dimension        Accuracy    N_consensus             of the LLM is high across all dimensions, with
+                                                          scores varying from 90% for syntax to 99% for
+        Culture        0.989            92                Reflection.
+       Domain          0.979            97
+        Answer         0.979            96                E     Results on Intermediate Cultural
+      Reflection       0.990            97                      Reasoning
+         Syntax        0.909            99
+           Junk        0.968            94                Figure 10 shows results with gemma-4b and
+                                                          Ministral-8b. We see a similar order of layer
+           Mean        0.969         95.833
+                                                          reasoning in Llama-8b.
+Table 8: LLM Annotator accuracies per dimension for
+the gold subset where both human annotators have con-
+                                                          F     Target Culture Identification
+sensus over the labels. N_consensus represents the num-   F.1    Parsing Implementation Details
+ber of samples (out of 100) with consensus, over which
+the LLM was evaluated.                                    Figure 11 presents the dictionary we use for parsing
+                                                          culture names from CulTrace generations. Table
+                                                          11 shows the parsing success rate on each model
+           (a) Results with the BLEnD dataset                               (b) Results with CANDLE QA
+
+Figure 9: We compare semantic similarity scores across layers between CulTrace and extracting representations
+from the full sequence (full-sequence).
+
+
+
+
+               (a) Result with gemma-4b                                     (b) Result with Ministral-8b
+
+Figure 10: We show the layer position at which each dimension is annotated with gemma-4b and Ministral-8b.
+The size of the circle scales with the number of questions that is annotated for that label. The pipe symbol represents
+the average layer index.
+                                Ministral-8b                                        gemma-4b
+                        BLEnD                CANDLE QA                   BLEnD                CANDLE QA
+                  China          13.65     China          14.45    US            14.36       US           16.61
+                  US             13.82     US             14.69    China         17.75       Greece       17.01
+                  Spain          18.71     Spain          19.13    Spain         18.44       China        17.90
+                  S. Korea       19.38     Brazil         19.29    S. Korea      19.31       Spain        19.08
+                  Greece         20.60     Greece         19.62    Indonesia     20.44       S. Korea     19.15
+                  Iran           21.39     S. Korea       20.70    Greece        21.10       Indonesia    19.84
+                  Ethiopia       21.41     Nepal          21.40    Ethiopia      22.67       Brazil       20.03
+                  Indonesia      21.61     Indonesia      23.14    Iran          23.56       Iran         21.15
+                  Azerbaijan     22.62     Iran           23.88    Azerbaijan    24.28       Peru         21.98
+                  Algeria        26.15     Peru           24.13    Algeria       25.89       Nepal        22.18
+
+Table 9: We present the mean first layer that Culture (Target) appears within intermediate cultural reasoning across
+questions with gemma-4b and Ministral-8b.
+
+
+                                                                                     Llama-8b     Ministral-8b    gemma-4b
+                                                                      US             0,583        0,632           0,369
+ Target culture    Incorrectly predicted cultures (Top-5 error)       Spain          0,561        0,432           0,514
+                          gemma-4b                                    South Korea    0,490        0,334           0,331
+                                                                      Brazil         0,469        0,396           0,394
+ Algeria           US, Middle East, Maasai, Japan, Morocco
+ Azerbaijan        US, Maasai, Japan, Russia, Middle East             China          0,461        0,409           0,617
+ China             Japan, US, Maasai, Philippines, Ancient Egypt      Indonesia      0,423        0,344           0,368
+ Ethiopia          US, Maasai, Philippines, Japan, Middle East        Greece         0,354        0,317           0,357
+ Greece            US, Maasai, Japan, Italy, Philippines              Iran           0,340        0,275           0,366
+ Indonesia         US, Japan, Maasai, Philippines, Thailand           Peru           0,330        0,197           0,194
+ Iran              US, Japan, Middle East, Maasai, Philippines        Nepal          0,292        0,153           0,255
+ South Korea       Japan, US, Maasai, Philippines, Ancient Egypt
+ Spain             US, Japan, Maasai, UK, Philippines              Table 12: We present averaged accuracies for ten cul-
+ US                Maasai, Japan, UK, Ancient Egypt, Mexico
+                                                                   tures with CANDLE QA.
+                         Ministral-8b
+ Algeria           Inuit, Japan, France, North Africa, Morocco
+ Azerbaijan        Inuit, Japan, Russia, Iran, US                  and dataset with the dictionary.
+ China             Inuit, Japan, US, Australia, Ancient Greece
+ Ethiopia          Inuit, Japan, India, Maasai, US                 F.2   Results
+ Greece            Inuit, Japan, Ancient Greece, US, France
+ Indonesia         Inuit, Japan, China, Indian, US                 Table 12 shows averaged accuracies with CANDLE
+ Iran              Inuit, Japan, India, US, China                  QA. We see the US as the highest on Llama-8b
+ South Korea       Japan, Inuit, China, US, India
+ Spain             Inuit, Japan, France, US, Mexico
+                                                                   and Ministral-8b. China achieves highest with
+ US                Inuit, Japan, China, Western, Spain             gemma-4b. Table 10 and Table 13 show top-5 in-
+                                                                   correctly predicted cultures.
+Table 10: Top-5 incorrectly predicted cultures for each
+target culture. The result is on the BLEnD dataset.
+
+
+
+
+                           BLEnD        CANDLE QA
+     Llama-8b              0,906        0,889
+     gemma-4b              0,758        0,749
+     Ministral-8b          0,776        0,754
+
+    Table 11: We present the parsing success rate.
+“american": “United States", “british": “United Kingdom", “french": “France", “spanish": “Spain", “italian": “Italy",
+“dutch": “Netherlands", “irish": “Ireland", “scottish": “Scotland", “welsh": “Wales", “greek": “Greece", “german":
+“Germany", “norwegian": “Norway", “swedish": “Sweden", “danish": “Denmark", “portuguese": “Portugal", “swiss":
+“Switzerland", “czech": “Czech Republic", “russian": “Russia", “serbian": “Serbia", “albanian": “Albania", “georgian":
+“Georgia", “turkish": “Turkey", “azerbaijani": “Azerbaijan", “kazakh": “Kazakhstan", “turkmen": “Turkmenistan",
+“mongolian": “Mongolia", “chinese": “China", “japanese": “Japan", “korean": “South Korea", “indian": “India",
+“tibetan": “Tibet", “filipino": “Philippines", “ethiopian": “Ethiopia", “algerian": “Algeria", “moroccan": “Morocco",
+“egyptian": “Egypt", “sudanese": “Sudan", “somali": “Somalia", “ghanaian": “Ghana", “malian": “Mali", “south
+african": “South Africa", “mexican": “Mexico", “argentinian": “Argentina", “australian": “Australia", “indonesian":
+“Indonesia", “iranian": “Iran", “persian": “Iran", “kenyan": “Kenya", “brazilian": “Brazil", “armenian": “Armenia",
+“nepalese": “Nepal", “nepali": “Nepal", “peruvian": “Peru", “andean": “Peru", “nigerian": “Nigeria", “romanian":
+“Romania", “ukrainian": “Ukraine", “austrian": “Austria", “malaysian": “Malaysia", “pakistani": “Pakistan", “afghan":
+“Afghanistan", “macedonian": “North Macedonia", “slovenian": “Slovenia", “hungarian": “Hungary", “canadian":
+“Canada", “thai": “Thailand", “african": “Africa", “north african": “North Africa", “european": “Europe", “eastern
+european": “Eastern Europe", “asian": “Asia", “middle eastern": “Middle East", “scandinavian": “Scandinavia",
+“mediterranean": “Mediterranean",
+
+
+ Figure 11: We present the dictionary used to parse CulTrace generations for target culture identification.
+
+
+
+
+“Do not use any markdown or special formatting. Question: {Question}\nThink about the answer, provide it in a single
+term, followed by your reasoning.”
+
+
+      Figure 12: An input prompt used during the Representation extraction stage for the target LLM.
+
+
+
+
+You rewrite fill-in-the-blank sentences about cultural knowledge into natural questions.
+You are given a country, a topic, a gold answer, and a cloze sentence in which the gold answer has been replaced by the
+marker [blank]. Write one question whose correct answer is exactly the gold answer.
+Rules: 1. The question must be answerable with the gold answer, and the gold answer must be the single most natural
+answer to it. 2. Keep every descriptive cue that the sentence provides, including the country, culture, or region it names.
+The question must be no easier and no harder than the cloze: it carries the same information, only re-phrased. 3. Never
+write the gold answer, a translation of it, an inflected form of it, or a near-synonym that gives it away, anywhere in the
+question. 4. Add no facts that are not in the sentence, and drop none that are. 5. Output exactly one question: a single
+sentence, ending in a question mark, no quotes, no preamble, no explanation. 6. Do not mention [blank], the sentence, or
+the task itself. 7. When the gold answer is the name of a thing, prefer the natural “What is ... called?” / “What is the
+name of ...?” phrasing over an awkward inversion. 8. Keep the tense and number of the original sentence (a sentence
+about the past asks a past-tense question). 9. If the sentence contains [blank] more than once, every occurrence stands
+for the same gold answer. Still write only one question.
+Answer with a JSON object of the form “question”: “<the question>”.
+
+
+      Figure 13: An input prompt used during the Representation extraction stage for the target LLM.
+“""You are an expert annotator for a research project studying how language models process cultural knowledge internally.
+You will receive a single layer description — a natural language verbalization of what an LLM is representing at a
+ specific layer — along with metadata about the question being answered. Your task is to annotate the layer across six
+ categories.
+ ## Category Definitions
+ ### Culture Processing
+ Captures whether the layer is engaging with cultural information, and if so, how accurately it identifies the target culture.
+- ‘Target‘: The correct target culture is explicitly named or unambiguously referenced (e.g., “Iranian society “ when the
+ country is Iran, “Ethiopian cuisine “ when the country is Ethiopia).
+- ‘Proximate‘: A culture that is geographically, linguistically, or typologically related to the target is named (e.g., “Middle
+ Eastern traditions “ for Iran, “Japanese culture “ for South Korea, “East African customs “ for Ethiopia). The named
+ culture must share a plausible regional or cultural-historical connection with the target.
+- ‘Misattributed‘: A specific culture is named that has no meaningful proximity to the target (e.g., “Japanese society “ for
+ Ethiopia, “Scottish traditions “ for Indonesia, “Japanese art of origami “ for Iran).
+- ‘Unspecified‘: The layer uses cultural language — words like “cultural significance, “ “traditions, “ “heritage, “ “cultural
+ identity, “ “cultural context “ — but does not name or imply any specific culture or region.
+- Empty: The layer contains no cultural processing at all. Note: merely discussing a topic (e.g., food, holidays) without
+ cultural framing is Domain, not Culture: Unspecified.
+ ### Domain Processing
+ Captures whether the layer engages with the topic area of the question.
+- ‘x‘: The layer engages with either the question’s core subject matter or the broader topic area surrounding it. For
+ example, for a question about a sport commentator, both “a particular commentator’s style “ and “a player’s decision to
+ retire from soccer “ count as domain processing. - Empty: No engagement with the topic area.
+ ### Answer Processing
+ Captures whether a specific answer to the question is identifiable in the layer.
+- ‘Generated‘: The model’s actual output answer is specifically identifiable — either named explicitly or described with
+ enough specificity to uniquely identify it. Be conservative: vague references to the topic do not count. “A traditional
+ Ethiopian dish “ does NOT qualify as Generated even if the model answered “Injera. “ “Traditional Ethiopian foods,
+ particularly injera “ DOES qualify. The test is: could you identify the specific answer from the description alone?
+- ‘Candidate‘: A plausible alternative answer to the question surfaces — a specific, identifiable item distinct from the
+ model’s generated answer. The same test as Generated applies: could you identify the specific alternative from the
+ description alone? A named entity qualifies (e.g., “moussaka “ when the model answered “Gyro"). The named entity does
+ not need to be framed as an answer — a layer simply discussing a specific instance of the question’s answer type counts
+(e.g., a layer about “the sport of cycling “ is a Candidate when the question asks which sport and the model answered
+“Water Polo"). A superlative or descriptive phrase that does not uniquely identify an entity — “the most successful
+ football club, “ “a famous local team, “ “the most iconic superhero “ — does NOT qualify; that is Domain processing. In
+ particular, a phrase that merely restates or generalizes the question’s own framing (e.g., “the most successful club in the
+world “ for a question about the most popular team in a country) is not an answer at all. The test is naming, not framing:
+ named specific entity of the answer type → Candidate; unnamed description → Domain at most.
+- Empty: No specific answer is identifiable. “""
+
+
+               Figure 14: An input prompt used for annotating intermediate cultural reasonings.
+ ### Reflection
+ Captures meta-cognitive processing — the model reasoning about the *substance* of its own answer or reasoning.
+- ‘x‘: The layer describes the model evaluating, justifying, or revisiting the reasoning behind a specific response it has
+ given or is about to give. The layer must take its own reasoning or answer as the object of thought. Indicators include:
+“the reasoning behind its previous response, “ “ensuring the answer is logically sound, “ “logical justification for its
+ conclusion, “ “weighing whether its answer is correct."
+- Empty: everything else, including the two cases below.
+ Reflection is NOT: generic statements about how the response should be phrased (→ Syntax: ‘Task/Response‘), nor
+ restatements of the prompt or the annotation situation (→ Syntax: ‘Echo‘). Both describe the response or the task rather
+ than evaluating any particular reasoning; their indicators are listed under Syntax Processing below.
+The test: could you name the specific reasoning or answer being evaluated? If not, it is not Reflection.
+ ### Syntax Processing
+ Captures layers about *how to respond* rather than *what the answer is* — the task format, the response as an object,
+ or the prompt framing. Use the sub-values below so that downstream analysis can separate genuine task processing from
+ degenerate self-description.
+- ‘x‘: representing what the task requires, the shape of the expected output, or the manner in which the response should be
+ phrased — with no reference to the answer’s content. This covers both the format of the task and the style of the response;
+ do not try to separate them. Indicators include: “the impact of a single word in a sentence “ (for fill-in-the-blank tasks),
+“the constraints of the task, “ “selecting a single word to fill the blank, “ “how to convey a message in a single word,
+ followed by a brief explanation, “ “the importance of brevity and clarity in its responses, “ “how to convey its thoughts in
+ a concise manner, “ “prepared to articulate in a concise manner, “ “how to provide a helpful and accurate response."
+ ### Junk Captures layer descriptions unrelated to any aspect of the task.
+- ‘x‘: The description is coherent but has no connection to the question, answer, domain, culture, or task structure.
+ Common patterns include abstract philosophical musings about time, infinity, perception, or consciousness.
+- Empty: The layer is relevant to at least one other category.
+- A layer describing the task, the prompt, or how the response should be phrased is Syntax, not Junk — however
+ contentless it looks. Junk is for content about something else entirely.
+- **Junk is mutually exclusive with all other categories.** If junk is ‘x‘, all other fields must be empty.
+ ## Annotation Guidelines
+1. Every layer must receive at least one label. If no other category applies, the layer is Junk — but check Syntax first,
+ see guideline 8. An annotation with every field empty is invalid — never output one. 2. Multiple categories can fire
+ simultaneously, except for junk. A layer can have culture, domain, answer, reflection, and syntax labels all at once.
+ 3. When in doubt between a more specific and a less specific label, prefer the less specific one. 4. Proximate vs.
+ Misattributed depends on the target country. The same named culture can be Proximate for one target and Misattributed
+ for another (e.g., “Japanese “ is Proximate for South Korea but Misattributed for Ethiopia). 5. Do not infer answer labels
+ from domain processing. A layer discussing “food “ for a food question is Domain, not Answer — unless a specific
+ food item matching the model’s answer is identifiable. This applies equally to Candidate: “the best/most popular/most
+ successful X “ without a name identifying which X is Domain, not Candidate. 6. Culture: Unspecified requires explicit
+ cultural language. A layer about “a particular dish “ is Domain only. A layer about “the cultural significance of a
+ particular dish “ is both Culture: Unspecified and Domain. 7. Domain is broad. Content tangentially related to the topic
+ area still counts. Junk is reserved for content with no connection to any aspect of the task. 8. Reflection, Syntax and
+Junk are decided in this order. If the layer evaluates the reasoning behind a specific answer → Reflection. Otherwise, if
+ it is about the task format, the phrasing of the response, or the prompt itself → Syntax. Only if it is about none of these
+ → Junk. A contentless layer is far more often Syntax than Reflection.
+ ## Output Format
+ Respond with ONLY a JSON object. No explanation, no reasoning, no markdown formatting. "culture": “", “domain":
+“", “answer": “", “reflection": “", “syntax": “", “junk": “"
+ Use exact label strings: ‘x‘ for domain, reflection, and junk. “""
+
+
+               Figure 15: An input prompt used for annotating intermediate cultural reasonings.
+ Target culture   Incorrectly predicted cultures (Top-5 error)
+                             Llama-8b
+ Brazil           Japan, Spain, Mexico, Africa, Inuit
+ China            Japan, Asia, Europe, Ancient Greece, Inuit
+ Greece           Inuit, Ancient Greece, Italy, US, Spain
+ Indonesia        Japan, Asia, Malaysia, Australia, India
+ Iran             Japan, Middle East, India, Jewish, Ancient Greece
+ Nepal            Japan, India, Tibet, Inuit, US
+ Peru             Japan, Mexico, Spain, US, Brazil
+ South Korea      Japan, Asia, China, Jewish, Tibet
+ Spain            Japan, Italy, Basque, Mexico, France
+ US               Japan, UK, Africa, Western, South Korea
+                             gemma-4b
+ Brazil           US, Maasai, Philippines, Japan, Mexico
+ China            Japan, US, Maasai, Ancient Egypt, Philippines
+ Greece           US, Maasai, Ancient Greece, Mediterranean, Italy
+ Indonesia        US, Philippines, Maasai, Japan, Asia
+ Iran             US, Middle East, Maasai, Japan, Philippines
+ Nepal            US, Maasai, India, Philippines, Japan
+ Peru             US, Maasai, Mexico, Philippines, Japan
+ South Korea      Japan, US, Maasai, Philippines, Ancient Egypt
+ Spain            US, Maasai, Italy, Japan, Mexico
+ US               Maasai, UK, Japan, Ancient Egypt, Italy
+                          Ministral-8b
+ Brazil           Inuit, Japan, Mexico, Spain, France
+ China            Inuit, Japan, Ancient Egypt, India, Ancient Rome
+ Greece           Inuit, Ancient Greece, Japan, Ancient Egypt, France
+ Indonesia        Inuit, Japan, India, China, Mexico
+ Iran             Inuit, Japan, India, Ancient Egypt, Middle East
+ Nepal            Inuit, India, Japan, China, Ancient Egypt
+ Peru             Inuit, Japan, Mexico, Spain, Ancient Egypt
+ South Korea      Japan, Inuit, China, Mexico, Russia
+ Spain            Inuit, Japan, Mexico, France, Netherlands
+ US               Inuit, Japan, France, UK, Africa
+
+
+Table 13: Top-5 incorrectly predicted cultures for each
+target culture. The result is on CANDLE QA. We see
+common incorrectly predicted cultures across models:
+Japan for Llama-8b, US for gemma-4b, and Inuit for
+Ministral-8b.
+Question     Based on the characteristic population curves that result from plotting population growth of a species, the most
+             effective means of controlling the mosquito population is to
+LLM Answer   D. increase the mortality rate. Reasoning: Population growth curves, particularly logistic curves, illustrate the
+             interplay between population size and environmental carrying capacity (K).
+Layer 0      The assistant provides the most suitable option by analysing the context and selecting the response that best fits
+             the situation.
+Layer 1      The assistant provides the most appropriate option from the given choices, along with a detailed explanation of
+             its reasoning.
+Layer 2      The assistant provides the most suitable option by evaluating each choice and selecting the one that best fits the
+             context.
+Layer 3      The assistant provides the most suitable option from the given choices, along with a detailed explanation of its
+             reasoning.
+Layer 4      The assistant provides the most appropriate option by evaluating each choice and selecting the one that best
+             aligns with the user’s needs.
+Layer 5      The assistant provides the most suitable option from the given choices, explaining its reasoning to justify the
+             selection.
+Layer 6      The assistant provides the most appropriate option as the answer, explaining its reasoning to justify the choice.
+Layer 7      The assistant provides the most suitable option by evaluating the context and selecting the response that best
+             fits the situation.
+Layer 8      The assistant provides the most suitable option by evaluating the context and selecting the one that best fits the
+             scenario.
+Layer 9      The assistant provides the most appropriate option by evaluating the context and selecting the answer that best
+             fits the scenario.
+Layer 10     The assistant provides the most suitable option by evaluating each choice and selecting the one that best
+             addresses the user’s query.
+Layer 11     The assistant provides the most appropriate option by analysing the context and selecting the answer that best
+             fits the scenario.
+Layer 12     The assistant provides the most appropriate option, which is the one that directly addresses the user’s query
+             about the relationship between the variables.
+Layer 13     The assistant provides the answer by selecting the option that best aligns with the principles of thermodynamics,
+             specifically focusing on the conservation of energy.
+Layer 14     The assistant provides the most appropriate option by evaluating each choice against the context of the question.
+Layer 15     The assistant provides the most appropriate answer by explaining the reasoning behind its choice, ensuring the
+             user understands the rationale.
+Layer 16     The assistant provides the answer by explaining the reasoning behind choosing the most effective strategy to
+             reduce the population.
+
+Table 14: An example of CulTrace outputs with patching representations of an MMLU science question from
+gemma-4b (layers 0–16). Layers 17–33 are shown in Table 15.
+Question     Based on the characteristic population curves that result from plotting population growth of a species, the most
+             effective means of controlling the mosquito population is to
+LLM Answer   D. increase the mortality rate. Reasoning: Population growth curves, particularly logistic curves, illustrate the
+             interplay between population size and environmental carrying capacity (K).
+Layer 17     The assistant should provide the answer by explaining the reasoning behind choosing the most effective method
+             to control the population size.
+Layer 18     The assistant provides the answer by explaining the reasoning behind it, ensuring the user understands the
+             rationale.
+Layer 19     The assistant provides the answer by explaining the reasoning behind its choice, ensuring the user understands
+             the rationale.
+Layer 20     The assistant provides the answer by explaining the reasoning behind the most effective method for controlling
+             population growth.
+Layer 21     The assistant provides the answer by explaining the reasoning behind it, ensuring the user understands the logic.
+Layer 22     The assistant provides the most appropriate answer by explaining the reasoning behind it, ensuring the user
+             understands the rationale.
+Layer 23     The assistant provides the most appropriate answer by explaining the reasoning behind it, ensuring the user
+             understands the rationale.
+Layer 24     The assistant provides the most appropriate answer by explaining the reasoning behind it, ensuring the user
+             understands the rationale.
+Layer 25     The assistant provides the answer by explaining the reasoning behind the most effective population control
+             strategy.
+Layer 26     The assistant provides the most appropriate answer by explaining the reasoning behind it, ensuring the user
+             understands the logic.
+Layer 27     The assistant provides the answer by explaining the reasoning behind the most effective control method for
+             population growth.
+Layer 28     The assistant provides the answer that the most effective way to control population growth is to limit the number
+             of offspring each individual can have.
+Layer 29     The assistant provides the answer ‘Population control’ as the most appropriate solution, explaining that it is the
+             most effective way to manage the population of invasive species.
+Layer 30     The assistant provides the most appropriate answer by explaining the reasoning behind it, ensuring the user
+             understands the rationale.
+Layer 31     The answer is that the most appropriate option is to reduce the population of invasive species to prevent
+             overpopulation and ecological imbalance.
+Layer 32     The answer is that the most appropriate response is ‘None’, because the population growth is exponential and
+             cannot be sustained indefinitely.
+Layer 33     The assistant provides the answer that the most appropriate solution is to allow the population to grow without
+             constraints, as this is the most logical approach.
+
+                   Table 15: Continuation of Table 14: CulTrace outputs for layers 17–33.
+

@@ -23,7 +23,14 @@ These studies relate frequency to whether the answer is right; we ask whether it
 
 \paragraph{Culture inside the model.}
 SANSKRITI \citep{maji-etal-2025-sanskriti} evaluates knowledge of Indian culture across states, union territories and cultural attributes; we use it as released.
-CulTrace \citep{yu2025cultrace} traces how cultural knowledge is processed inside models.
-CultureScope \citep{zhang2025culturescope} probes cultural understanding along a set of cultural dimensions, as a benchmark.
-\citet{chelombitko2026cultural} trace mythological knowledge across 18 open models and find that it is represented in internal layers even when it is not decoded at the output.
-We add a frequency-controlled, layer-resolved measure for a single, large regional benchmark.
+CultureScope \citep{zhang2025culturescope} probes cultural understanding along a set of cultural dimensions, as a benchmark; it is behavioural.
+Two layer-wise studies are closest to ours.
+CulTrace \citep{yu2025cultrace} trains one decoder per layer (LoRA adapters on a decoder LLM, following LatentQA) that verbalises the hidden states at the instruction tokens after a free-form cultural question, and labels each layer's text with an LLM judge.
+On BLEnD and a question set built from CANDLE, ten countries each, with three instruction-tuned models, it finds a staged order (question domain, then culture, then answer) and a later first mention of the target culture for less-represented countries.
+\citet{chelombitko2026cultural} probe 270 mythological entities from ten traditions, including Indian, in 18 instruction-tuned models with linear probes, the logit lens and activation patching.
+They find that culture is linearly decodable well before the gold name is emitted, that the gold name enters the logit lens late (last 12\% of layers) and about 1.3 layers later for non-Greco-Roman traditions, and that patching effects peak late.
+We share their question of where cultural knowledge resolves and their direction of interest, but differ in four ways.
+We work within one country, comparing entities across \nStates{} states and union territories rather than ten cultures.
+We measure documentation as corpus counts and test it per question with controls and a preregistered null, where both studies compare culture means against an assigned representation label.
+Our depth is the settling layer of a multiple-choice answer read directly from the model, debiased for answer letters and checked for reliability, rather than the first layer at which a decoder names a culture or a gold token enters the top-$k$.
+And we relate patching depth to lens depth per question rather than per model.
