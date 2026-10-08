@@ -4,5 +4,5 @@
 All code is in the repository: \texttt{data/prep.py} (prompts, option orders, leak flags), \texttt{data/entities.py} and \texttt{data/frequency.py} (entities and counts), \texttt{run/forward.py} (residual capture), \texttt{run/tune\_lens.py}, \texttt{analysis/depth.py} (metrics, aggregation, reliability, the primary-metric rule), \texttt{analysis/stats.py} (regressions, Holm, permutation, equivalence), \texttt{run/patch.py} and \texttt{analysis/figures.py}.
 The seed is 1234 throughout.
 The random permutation order of each question is derived from the seed and the question id, so it is the same on every machine.
-The analysis plan, \texttt{ANALYSIS\_PLAN.md}, was registered before the full run; any deviation is appended to it with a date and a reason.
+The analysis plan, \texttt{ANALYSIS\_PLAN.md}, was registered before the full run and after the 2{,}000-question pilot, so the pilot is exploratory and only the full run is confirmatory; any deviation is appended to the plan with a date and a reason.
 \todoresult{GPU type, run time per model and package versions from the results archive.}
